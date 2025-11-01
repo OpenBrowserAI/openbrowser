@@ -1,0 +1,4 @@
+packages:
+  - "packages/core"
+  - "packages/extension"
+  - "chromium-extension"

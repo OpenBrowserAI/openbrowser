@@ -1,0 +1,39 @@
+{
+  "name": "@openbrowser-ai/openbrowser",
+  "version": "1.0.0",
+  "description": "OpenBrowser Agent",
+  "scripts": {
+    "build": "webpack --config webpack.config.js"
+  },
+  "author": "OpenBrowserAI",
+  "license": "MIT",
+  "keywords": [
+    "openbrowser",
+    "openbrowser-ai"
+  ],
+  "dependencies": {
+    "@openbrowser-ai/core": "workspace:*",
+    "@openbrowser-ai/extension": "workspace:*",
+    "antd": "^5.22.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.158",
+    "@types/react": "^18.0.29",
+    "@types/react-dom": "^18.0.11",
+    "copy-webpack-plugin": "^9.0.1",
+    "css-loader": "^7.1.2",
+    "glob": "^7.1.6",
+    "prettier": "^2.2.1",
+    "rimraf": "^3.0.2 ",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^8.0.0",
+    "typescript": "^5.0.4",
+    "webpack": "^5.94.0",
+    "webpack-cli": "^4.0.0",
+    "webpack-merge": "^5.0.0"
+  }
+}

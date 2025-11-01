@@ -1,0 +1,47 @@
+{
+  "name": "OpenBrowser agent",
+  "description": "OpenBrowser Agent Extension",
+  "version": "3.0",
+  "manifest_version": 3,
+  "background": {
+    "type": "module",
+    "service_worker": "js/background.js"
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html",
+    "openPanelOnActionClick": true
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_idle",
+      "matches": ["<all_urls>"],
+      "js": ["js/content_script.js"]
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "windows",
+    "sidePanel",
+    "storage",
+    "scripting",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [
+    {
+      "matches": ["<all_urls>"],
+      "resources": []
+    }
+  ]
+}

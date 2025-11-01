@@ -1,0 +1,32 @@
+{
+  "name": "@openbrowser-ai/openbrowser",
+  "version": "1.0.0",
+  "description": "Empowering language to transform human words into action.",
+  "workspaces": [
+    "packages/core",
+    "packages/extension",
+    "extension"
+  ],
+  "scripts": {
+    "build": "pnpm -r --sequential build",
+    "test": "pnpm -r --sequential test",
+    "clean": "rm -rf node_modules && pnpm -r exec -- rm -rf node_modules dist"
+  },
+  "author": "OpenBrowserAI",
+  "license": "MIT",
+  "keywords": [
+    "openbrowser",
+    "openbrowser-ai"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenBrowserAI/openbrowser.git"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

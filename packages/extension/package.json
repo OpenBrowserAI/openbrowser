@@ -1,0 +1,52 @@
+{
+  "name": "@openbrowser-ai/extension",
+  "version": "1.0.0",
+  "description": "OpenBrowser extension",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist/",
+    "LICENSE",
+    "README.md",
+    "package.json"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs.js",
+      "import": "./dist/index.esm.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "rollup -c"
+  },
+  "author": "OpenBrowserAI",
+  "license": "MIT",
+  "keywords": [
+    "openbrowser",
+    "openbrowser-ai"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OpenBrowserAI/openbrowser.git"
+  },
+  "dependencies": {
+    "@openbrowser-ai/core": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.0.158",
+    "@rollup/plugin-commonjs": "^28.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "rollup": "^4.40.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.8.3"
+  }
+}

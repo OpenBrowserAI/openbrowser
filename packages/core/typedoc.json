@@ -1,0 +1,11 @@
+{
+  "name": "OPENBROWSER API",
+  "entryPoints": [
+    "src/index.ts"
+  ],
+  "exclude": ["node_modules", "test/**/*"],
+  "out": "../../../openbrowser-docs/public/api",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true
+}
