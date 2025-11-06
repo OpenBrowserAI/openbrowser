@@ -10,7 +10,7 @@ import { useAutoScroll } from "../hooks/useAutoScroll";
 import "../styles/sidebar.css";
 
 export const AppRun: React.FC = () => {
-  const { messages, currentAssistantMessage, addUserMessage } = useMessageHandler();
+  const { messages, currentAssistantMessage, addUserMessage, isLoading } = useMessageHandler();
   const { running, prompt, updateRunningState, updatePrompt } = useStorageSync();
   const { mode, markImageMode, setMode, setMarkImageMode } = useModeConfig();
   const messagesEndRef = useAutoScroll([messages, currentAssistantMessage]);
@@ -33,17 +33,27 @@ export const AppRun: React.FC = () => {
   return (
     <div className="app">
       <div className="chat-area">
-        {messages.map((msg) =>
-          msg.type === "user" ? (
-            <UserMessageBubble key={msg.id} message={msg} />
-          ) : (
-            <AssistantMessageBubble key={msg.id} message={msg} />
-          )
+        {isLoading ? (
+          <div className="typing-indicator">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        ) : (
+          <>
+            {messages.map((msg) =>
+              msg.type === "user" ? (
+                <UserMessageBubble key={msg.id} message={msg} />
+              ) : (
+                <AssistantMessageBubble key={msg.id} message={msg} />
+              )
+            )}
+            {currentAssistantMessage && (
+              <AssistantMessageBubble message={currentAssistantMessage} />
+            )}
+            {running && !currentAssistantMessage && <WorkingIndicator />}
+          </>
         )}
-        {currentAssistantMessage && (
-          <AssistantMessageBubble message={currentAssistantMessage} />
-        )}
-        {running && !currentAssistantMessage && <WorkingIndicator />}
         <div ref={messagesEndRef} />
       </div>
 

@@ -7,11 +7,29 @@ import {
   ToolItem,
 } from "../types/messages";
 import { parseWorkflowXML } from "../utils/xmlParser";
+import { messageStorage } from "../services/messageStorage";
 
 export const useMessageHandler = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentAssistantMessage, setCurrentAssistantMessage] =
     useState<AssistantMessage | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load messages from IndexedDB on mount
+  useEffect(() => {
+    const loadStoredMessages = async () => {
+      try {
+        const storedMessages = await messageStorage.loadMessages();
+        setMessages(storedMessages);
+      } catch (error) {
+        console.error("Failed to load messages from storage:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadStoredMessages();
+  }, []);
 
   useEffect(() => {
     const messageListener = (message: any) => {
@@ -21,7 +39,14 @@ export const useMessageHandler = () => {
         // Finalize current assistant message if exists
         setCurrentAssistantMessage((prev) => {
           if (prev) {
-            setMessages((msgs) => [...msgs, prev]);
+            setMessages((msgs) => {
+              const newMessages = [...msgs, prev];
+              // Persist to IndexedDB
+              messageStorage.addMessage(prev).catch((error) =>
+                console.error("Failed to save assistant message:", error)
+              );
+              return newMessages;
+            });
           }
           return null;
         });
@@ -118,11 +143,17 @@ export const useMessageHandler = () => {
     };
     setMessages((prev) => [...prev, userMsg]);
     setCurrentAssistantMessage(null);
+
+    // Persist user message to IndexedDB
+    messageStorage.addMessage(userMsg).catch((error) =>
+      console.error("Failed to save user message:", error)
+    );
   };
 
   return {
     messages,
     currentAssistantMessage,
     addUserMessage,
+    isLoading,
   };
 };
