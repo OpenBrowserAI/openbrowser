@@ -71,11 +71,14 @@ You are {name}, an autonomous AI Agent Planner.
 
 const PLAN_TASK_DESCRIPTION = `Your task is to understand the user's requirements, dynamically plan the user's tasks based on the Agent list, and please follow the steps below:
 - Analyze the Agents that need to be used based on the user's requirements.
-- Generate the Agent calling plan based on the analysis results.
+- Consider any conversation history provided to understand the context and previous interactions.
+- Generate the Agent calling plan based on the analysis results and conversation context.
 - About agent name, please do not arbitrarily fabricate non-existent agent names.
 - You only need to provide the steps to complete the user's task, key steps only, no need to be too detailed.
 - Try to break down tasks into independently completable subtasks, and for maximum efficiency, run multiple independent subtasks in parallel whenever possible.
 - Please strictly follow the output format and example output.
+- CRITICAL: You MUST always output complete, valid XML. Always close all XML tags properly, especially <root>, <thought>, <agents>, and <agent> tags.
+- Keep the <thought> section concise (1-2 sentences maximum) to ensure the complete XML structure fits within token limits.
 - The output language should follow the language corresponding to the user's task.`;
 
 const PLAN_EXAMPLE_LIST = [

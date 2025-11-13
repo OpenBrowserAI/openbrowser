@@ -63,7 +63,8 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
         {message.items.map((item, idx) => {
           if (item.type === "tool") {
             return <ToolDisplay key={idx} tool={item} />;
-          } else {
+          }
+          if (item.type === "text") {
             // Parse text for steps
             const cleanedText = removeElementIndexes(cleanText(item.text));
             const parsed = parseStepsFromText(cleanedText);
@@ -91,15 +92,16 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
                   )}
                 </div>
               );
-            } else {
-              // No steps found, display as regular markdown
-              return (
-                <div key={idx} className="text-response markdown-content">
-                  <Markdown remarkPlugins={[remarkGfm]}>{parsed.rawText || cleanedText}</Markdown>
-                </div>
-              );
             }
+            // No steps found, display as regular markdown
+            return (
+              <div key={idx} className="text-response markdown-content">
+                <Markdown remarkPlugins={[remarkGfm]}>{parsed.rawText || cleanedText}</Markdown>
+              </div>
+            );
           }
+          // Skip tool-result items (not displayed in UI)
+          return null;
         })}
 
         {/* Result */}

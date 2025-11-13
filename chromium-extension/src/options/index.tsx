@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Form, Input, Button, message, Card, Select, AutoComplete } from "antd";
+import "./styles/options.css";
 
 const { Option } = Select;
 
@@ -114,8 +115,12 @@ const OptionsPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <Card title="Model Config" className="shadow-md">
+    <div className="options-container">
+      <div className="options-header">
+        <h1 className="options-title">OpenBrowser Settings</h1>
+        <p className="options-subtitle">Configure your AI model and API settings</p>
+      </div>
+      <Card title="Model Configuration" className="shadow-md">
         <Form form={form} layout="vertical" initialValues={config}>
           <Form.Item
             name="llm"

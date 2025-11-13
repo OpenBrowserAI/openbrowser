@@ -12,7 +12,7 @@ export async function getLLMConfig(name: string = "llmConfig"): Promise<any> {
   return result[name];
 }
 
-export async function main(prompt: string): Promise<OpenBrowser> {
+export async function main(prompt: string, context: any[] = [], sessionId?: string): Promise<OpenBrowser> {
   let config = await getLLMConfig();
   if (!config || !config.apiKey) {
     chrome.runtime.sendMessage({
@@ -41,37 +41,73 @@ export async function main(prompt: string): Promise<OpenBrowser> {
     onMessage: async (message: StreamCallbackMessage) => {
       // Send structured messages to UI instead of plain text
       if (message.type == "workflow") {
-        chrome.runtime.sendMessage({
-          type: "message",
-          messageType: "workflow",
-          workflow: message.workflow.xml,
-          streamDone: message.streamDone
-        });
-      } else if (message.type == "text") {
+        // Handle null workflow gracefully
+        if (message.workflow && message.workflow.xml) {
+          chrome.runtime.sendMessage({
+            type: "message",
+            messageType: "workflow",
+            workflow: message.workflow.xml,
+            streamDone: message.streamDone,
+            sessionId: sessionId
+          });
+        }
+        return;
+      }
+      if (message.type == "text") {
         chrome.runtime.sendMessage({
           type: "message",
           messageType: "text",
           text: message.text,
-          streamDone: message.streamDone
+          streamDone: message.streamDone,
+          sessionId: sessionId
         });
-      } else if (message.type == "tool_streaming") {
+        return;
+      }
+      if (message.type == "tool_streaming") {
         chrome.runtime.sendMessage({
           type: "message",
           messageType: "tool_streaming",
           agentName: message.agentName,
           toolName: message.toolName,
-          paramsText: message.paramsText
+          paramsText: message.paramsText,
+          sessionId: sessionId
         });
-      } else if (message.type == "tool_use") {
+        return;
+      }
+      if (message.type == "tool_use") {
         chrome.runtime.sendMessage({
           type: "message",
           messageType: "tool_use",
           agentName: message.agentName,
           toolName: message.toolName,
-          params: message.params
+          toolId: message.toolId,
+          params: message.params,
+          sessionId: sessionId
+        });
+        return;
+      }
+      if (message.type == "tool_result") {
+        chrome.runtime.sendMessage({
+          type: "tool_result",
+          agentName: message.agentName,
+          nodeId: message.nodeId,
+          toolName: message.toolName,
+          toolId: message.toolId,
+          params: message.params,
+          toolResult: message.toolResult,
+          sessionId: sessionId
+        });
+        return;
+      }
+      if (message.type == "agent_result") {
+        chrome.runtime.sendMessage({
+          type: "message",
+          messageType: "result",
+          text: message.result || "",
+          success: !message.error,
+          sessionId: sessionId
         });
       }
-      console.log("message: ", JSON.stringify(message, null, 2));
     },
     onHumanConfirm: async (context, prompt) => {
       return doConfirm(prompt);
@@ -81,20 +117,22 @@ export async function main(prompt: string): Promise<OpenBrowser> {
   let agents = [new BrowserAgent()];
   let openbrowser = new OpenBrowser({ llms, agents, callback });
   openbrowser
-    .run(prompt)
+    .run(prompt, undefined, { conversationHistory: context })
     .then((res) => {
       chrome.runtime.sendMessage({
         type: "message",
         messageType: "result",
         text: res.result,
-        success: res.success
+        success: res.success,
+        sessionId: sessionId
       });
     })
     .catch((error) => {
       chrome.runtime.sendMessage({
         type: "message",
         messageType: "error",
-        text: error.toString()
+        text: error.toString(),
+        sessionId: sessionId
       });
     })
     .finally(() => {

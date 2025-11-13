@@ -1,0 +1,299 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* CSS Variables for Light Theme (default) */
+:root {
+  /* Background colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #e8eaed;
+  --bg-card: #ffffff;
+
+  /* Text colors */
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --text-tertiary: #80868b;
+
+  /* Border colors */
+  --border-light: #dadce0;
+  --border-medium: #bdc1c6;
+
+  /* Brand colors */
+  --color-primary: #202124;
+  --color-primary-hover: #17181c;
+  --color-success: #1a73e8;
+  --color-error: #d93025;
+
+  /* Input colors */
+  --input-bg: #ffffff;
+  --input-border: #dadce0;
+  --input-focus-border: #202124;
+  --input-disabled-bg: #f5f5f5;
+
+  /* Shadows */
+  --shadow-sm: rgba(32, 33, 36, 0.08);
+  --shadow-md: rgba(32, 33, 36, 0.16);
+  --shadow-card: 0 1px 3px rgba(32, 33, 36, 0.12);
+}
+
+/* Dark Theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Background colors */
+    --bg-primary: #202124;
+    --bg-secondary: #1a1c1f;
+    --bg-tertiary: #2a2d31;
+    --bg-card: #2a2d31;
+
+    /* Text colors */
+    --text-primary: #e8eaed;
+    --text-secondary: #bdc1c6;
+    --text-tertiary: #9aa0a6;
+
+    /* Border colors */
+    --border-light: #3c4043;
+    --border-medium: #5f6368;
+
+    /* Brand colors */
+    --color-primary: #e8eaed;
+    --color-primary-hover: #f1f3f4;
+    --color-success: #8ab4f8;
+    --color-error: #f28b82;
+
+    /* Input colors */
+    --input-bg: #1a1c1f;
+    --input-border: #3c4043;
+    --input-focus-border: #e8eaed;
+    --input-disabled-bg: #2a2d31;
+
+    /* Shadows */
+    --shadow-sm: rgba(0, 0, 0, 0.45);
+    --shadow-md: rgba(0, 0, 0, 0.6);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5);
+  }
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+#root {
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+/* Options Page Container */
+.options-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.options-header {
+  margin-bottom: 32px;
+}
+
+.options-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.options-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+/* Ant Design Overrides for Dark Mode */
+.ant-card {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-card) !important;
+}
+
+.ant-card-head {
+  background: transparent !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+}
+
+.ant-card-head-title {
+  color: var(--text-primary) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+/* Form Labels */
+.ant-form-item-label > label {
+  color: var(--text-primary) !important;
+  font-weight: 500 !important;
+}
+
+.ant-form-item-label > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+  color: var(--color-error) !important;
+}
+
+/* Input Fields */
+.ant-input,
+.ant-input-password,
+.ant-select-selector,
+.ant-input-affix-wrapper {
+  background: var(--input-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-input::placeholder,
+.ant-input-password::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
+.ant-input:hover,
+.ant-input-password:hover,
+.ant-select-selector:hover,
+.ant-input-affix-wrapper:hover {
+  border-color: var(--border-medium) !important;
+}
+
+.ant-input:focus,
+.ant-input-password:focus,
+.ant-input-affix-wrapper-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: var(--input-focus-border) !important;
+  box-shadow: 0 0 0 2px rgba(var(--text-primary), 0.1) !important;
+}
+
+.ant-input-disabled,
+.ant-input-password-disabled {
+  background: var(--input-disabled-bg) !important;
+  color: var(--text-tertiary) !important;
+}
+
+/* Password Input Eye Icon */
+.ant-input-password-icon {
+  color: var(--text-secondary) !important;
+}
+
+.ant-input-password-icon:hover {
+  color: var(--text-primary) !important;
+}
+
+/* Select Dropdown */
+.ant-select-dropdown {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-select-item {
+  color: var(--text-primary) !important;
+}
+
+.ant-select-item-option-selected {
+  background: var(--bg-tertiary) !important;
+  font-weight: 500 !important;
+}
+
+.ant-select-item-option-active {
+  background: var(--bg-secondary) !important;
+}
+
+.ant-select-arrow {
+  color: var(--text-secondary) !important;
+}
+
+/* AutoComplete Dropdown */
+.ant-select-dropdown .ant-select-item-option-content {
+  color: var(--text-primary) !important;
+}
+
+/* Button Styles */
+.ant-btn-primary {
+  background: var(--color-primary) !important;
+  border: none !important;
+  color: var(--bg-primary) !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+}
+
+.ant-btn-primary:hover {
+  background: var(--color-primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-md) !important;
+}
+
+.ant-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Message/Notification */
+.ant-message-notice-content {
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-light) !important;
+  color: var(--text-primary) !important;
+  border-radius: 8px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.ant-message-success .anticon {
+  color: var(--color-success) !important;
+}
+
+.ant-message-error .anticon {
+  color: var(--color-error) !important;
+}
+
+/* Form Error Messages */
+.ant-form-item-explain-error {
+  color: var(--color-error) !important;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Loading States */
+.ant-spin-dot-item {
+  background-color: var(--color-primary) !important;
+}
+
+/* Additional Card Styling */
+.shadow-md {
+  box-shadow: var(--shadow-card) !important;
+}
+
+/* Custom Success Message Styling */
+.ant-message {
+  z-index: 10000;
+}

@@ -389,6 +389,15 @@ export function fixXmlTag(code: string) {
   if (code.endsWith("<")) {
     code = code.substring(0, code.length - 1);
   }
+  // Fix unclosed XML comments
+  const commentStartCount = (code.match(/<!--/g) || []).length;
+  const commentEndCount = (code.match(/-->/g) || []).length;
+  if (commentStartCount > commentEndCount) {
+    // Add missing comment end tags
+    for (let i = 0; i < (commentStartCount - commentEndCount); i++) {
+      code += ' -->';
+    }
+  }
   if (code.indexOf('&') > -1) {
     code = code.replace(/&(?![a-zA-Z0-9#]+;)/g, '&amp;');
   }

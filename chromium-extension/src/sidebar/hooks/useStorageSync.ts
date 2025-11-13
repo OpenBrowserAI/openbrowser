@@ -21,7 +21,9 @@ export const useStorageSync = () => {
     const messageListener = (message: any) => {
       if (message?.type === "stop") {
         setRunning(false);
-        chrome.storage.local.set({ running: false });
+        // Clear prompt when work is done
+        setPrompt("");
+        chrome.storage.local.set({ running: false, prompt: "" });
       }
     };
 

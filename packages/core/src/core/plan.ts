@@ -43,11 +43,14 @@ export class Planner {
       userPrompt = taskPrompt;
       taskPromptStr = taskPrompt.text || "";
     }
+    // Get conversation history from context variables
+    const conversationHistory = this.context.variables.get("conversationHistory") || [];
     const messages: LanguageModelV2Prompt = [
       {
         role: "system",
         content: await getPlanSystemPrompt(this.context),
       },
+      ...conversationHistory,
       {
         role: "user",
         content: [userPrompt],

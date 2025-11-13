@@ -83,6 +83,10 @@ export function parseWorkflow(
       agents.push(agent);
     }
     if (done) {
+      // Validate that we have at least one agent
+      if (workflow.agents.length === 0) {
+        throw new Error("No agents found in workflow XML. The LLM may not have generated a valid plan. Please try rephrasing your request or check if it requires browser automation.");
+      }
       let agentTree = buildAgentTree(workflow.agents);
       while (true) {
         if (agentTree.type === "normal") {

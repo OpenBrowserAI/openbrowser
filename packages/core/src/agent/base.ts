@@ -75,6 +75,8 @@ export class Agent {
   public async run(context: Context, agentChain: AgentChain): Promise<string> {
     const mcpClient = this.mcpClient || context.config.defaultMcpClient;
     const agentContext = new AgentContext(context, this, agentChain);
+    // Read conversation history from context variables (if provided via contextParams)
+    const conversationHistory = context.variables.get("conversationHistory") || [];
     try {
       this.agentContext = agentContext;
       mcpClient &&
@@ -83,7 +85,8 @@ export class Agent {
       return await this.runWithContext(
         agentContext,
         mcpClient,
-        config.maxReactNum
+        config.maxReactNum,
+        conversationHistory
       );
     } finally {
       mcpClient && (await mcpClient.close());
