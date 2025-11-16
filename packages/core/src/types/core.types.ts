@@ -141,6 +141,7 @@ export type Workflow = {
   xml: string;
   modified?: boolean;
   taskPrompt?: string;
+  answer?: string;
 };
 
 export interface HumanCallback {

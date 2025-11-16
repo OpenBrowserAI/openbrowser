@@ -47,12 +47,14 @@ export function parseWorkflow(
     }
     const agents: WorkflowAgent[] = [];
     const thought = root.getElementsByTagName("thought")[0]?.textContent || "";
+    const answer = root.getElementsByTagName("answer")[0]?.textContent || "";
     const workflow: Workflow = {
       taskId: taskId,
       name: root.getElementsByTagName("name")[0]?.textContent || "",
       thought: thinking ? thinking + "\n" + thought : thought,
       agents: agents,
       xml: xml,
+      answer: answer || undefined,
     };
     let agentsNode = root.getElementsByTagName("agents");
     let agentsNodes =
@@ -82,11 +84,7 @@ export function parseWorkflow(
       }
       agents.push(agent);
     }
-    if (done) {
-      // Validate that we have at least one agent
-      if (workflow.agents.length === 0) {
-        throw new Error("No agents found in workflow XML. The LLM may not have generated a valid plan. Please try rephrasing your request or check if it requires browser automation.");
-      }
+    if (done && workflow.agents.length > 0) {
       let agentTree = buildAgentTree(workflow.agents);
       while (true) {
         if (agentTree.type === "normal") {

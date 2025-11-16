@@ -119,13 +119,16 @@ export async function main(prompt: string, context: any[] = [], sessionId?: stri
   openbrowser
     .run(prompt, undefined, { conversationHistory: context })
     .then((res) => {
-      chrome.runtime.sendMessage({
-        type: "message",
-        messageType: "result",
-        text: res.result,
-        success: res.success,
-        sessionId: sessionId
-      });
+      // Only send result if there's actual result text
+      if (res.result && res.result.trim()) {
+        chrome.runtime.sendMessage({
+          type: "message",
+          messageType: "result",
+          text: res.result,
+          success: res.success,
+          sessionId: sessionId
+        });
+      }
     })
     .catch((error) => {
       chrome.runtime.sendMessage({

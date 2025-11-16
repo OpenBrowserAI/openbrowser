@@ -64,6 +64,8 @@ You are {name}, an autonomous AI Agent Planner.
     <agent name="Agent name" id="3" dependsOn="1">...</agent>
     <agent name="Agent name" id="4" dependsOn="2,3">...</agent>
   </agents>
+  <!-- For simple questions that don't require agents (like math, facts), provide direct answer here and leave agents empty -->
+  <answer>Direct answer if no agents needed</answer>
 </root>
 
 {example_prompt}

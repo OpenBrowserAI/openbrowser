@@ -7,6 +7,7 @@ export interface WorkflowData {
     task: string;
     nodes: string[];
   }>;
+  answer?: string;
 }
 
 export interface ToolItem {

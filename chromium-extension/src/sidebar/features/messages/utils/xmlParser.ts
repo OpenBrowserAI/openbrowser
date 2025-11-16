@@ -7,6 +7,7 @@ export const parseWorkflowXML = (xml: string): WorkflowData | undefined => {
 
     const name = doc.querySelector("name")?.textContent || "";
     const thought = doc.querySelector("thought")?.textContent || "";
+    const answer = doc.querySelector("answer")?.textContent || "";
 
     const agents: Array<{ name: string; task: string; nodes: string[] }> = [];
     doc.querySelectorAll("agent").forEach((agentNode) => {
@@ -21,7 +22,7 @@ export const parseWorkflowXML = (xml: string): WorkflowData | undefined => {
       agents.push({ name: agentName, task, nodes });
     });
 
-    return { name, thought, agents };
+    return { name, thought, agents, answer: answer || undefined };
   } catch (e) {
     console.error("Failed to parse XML", e);
     return undefined;

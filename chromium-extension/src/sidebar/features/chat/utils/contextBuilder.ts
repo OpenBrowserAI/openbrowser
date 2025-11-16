@@ -1,4 +1,4 @@
-import { Message } from "../types/messages";
+import { Message } from "../features/messages/types/messages";
 
 /**
  * Convert Message[] to LanguageModelV2Prompt format
@@ -30,7 +30,7 @@ export function buildLLMContext(messages: Message[]) {
         msg.items.forEach((item) => {
           if (item.type === "text" && item.text) {
             // Only add text BEFORE any tool calls
-            if (assistantContent.every(c => c.type !== "tool-call")) {
+            if (assistantContent.every((c) => c.type !== "tool-call")) {
               assistantContent.push({
                 type: "text",
                 text: item.text,
@@ -82,4 +82,3 @@ export function buildLLMContext(messages: Message[]) {
   }
   return result;
 }
- 

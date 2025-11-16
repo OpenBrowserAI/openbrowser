@@ -17,13 +17,13 @@ export const SessionsList: React.FC<SessionsListProps> = ({
   return (
     <div className="sessions-list">
       <div className="sessions-header">
-        <span>Sessions</span>
+        <span>History</span>
         <button
           onClick={onNewSession}
           className="new-session-btn"
           title="New session"
         >
-          ➕
+          +
         </button>
       </div>
       {sessions.length === 0 ? (
@@ -46,7 +46,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
               className="session-delete-btn"
               title="Delete session"
             >
-              🗑️
+              ×
             </button>
           </div>
         ))

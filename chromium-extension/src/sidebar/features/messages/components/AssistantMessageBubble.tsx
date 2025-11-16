@@ -2,10 +2,14 @@ import React from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AssistantMessage } from "../types/messages";
-import { CollapsibleSection } from "./CollapsibleSection";
-import { ToolDisplay } from "./ToolDisplay";
-import { StepDisplay } from "./StepDisplay";
-import { parseStepsFromText, cleanText, removeElementIndexes } from "../utils/textParser";
+import { CollapsibleSection } from "../../workflow/components/CollapsibleSection";
+import { ToolDisplay } from "../../../components/ToolDisplay";
+import { StepDisplay } from "../../../components/StepDisplay";
+import {
+  parseStepsFromText,
+  cleanText,
+  removeElementIndexes,
+} from "../utils/textParser";
 
 interface AssistantMessageBubbleProps {
   message: AssistantMessage;
@@ -17,7 +21,12 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
   return (
     <div className="message-group assistant">
       <div className="avatar assistant-avatar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <path d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 22.5l-.394-1.933a2.25 2.25 0 00-1.423-1.423L12.75 18.75l1.933-.394a2.25 2.25 0 001.423-1.423l.394-1.933.394 1.933a2.25 2.25 0 001.423 1.423l1.933.394-1.933.394a2.25 2.25 0 00-1.423 1.423z" />
         </svg>
       </div>
@@ -59,6 +68,15 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
           </div>
         )}
 
+        {/* Answer Section for non-executable questions */}
+        {message.workflow?.answer && (
+          <div className="answer-section">
+            <Markdown remarkPlugins={[remarkGfm]}>
+              {message.workflow.answer}
+            </Markdown>
+          </div>
+        )}
+
         {/* Items in natural order */}
         {message.items.map((item, idx) => {
           if (item.type === "tool") {
@@ -75,7 +93,9 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
                 <div key={idx} className="text-response">
                   {parsed.introduction && (
                     <div className="introduction markdown-content">
-                      <Markdown remarkPlugins={[remarkGfm]}>{parsed.introduction}</Markdown>
+                      <Markdown remarkPlugins={[remarkGfm]}>
+                        {parsed.introduction}
+                      </Markdown>
                     </div>
                   )}
 
@@ -87,7 +107,9 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
 
                   {parsed.conclusion && (
                     <div className="conclusion markdown-content">
-                      <Markdown remarkPlugins={[remarkGfm]}>{parsed.conclusion}</Markdown>
+                      <Markdown remarkPlugins={[remarkGfm]}>
+                        {parsed.conclusion}
+                      </Markdown>
                     </div>
                   )}
                 </div>
@@ -96,7 +118,9 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
             // No steps found, display as regular markdown
             return (
               <div key={idx} className="text-response markdown-content">
-                <Markdown remarkPlugins={[remarkGfm]}>{parsed.rawText || cleanedText}</Markdown>
+                <Markdown remarkPlugins={[remarkGfm]}>
+                  {parsed.rawText || cleanedText}
+                </Markdown>
               </div>
             );
           }
@@ -106,20 +130,24 @@ export const AssistantMessageBubble: React.FC<AssistantMessageBubbleProps> = ({
 
         {/* Result */}
         {message.result && (
-          <div className={`result-line ${message.result.success ? "success" : "failure"}`}>
+          <div
+            className={`result-line ${
+              message.result.success ? "success" : "failure"
+            }`}
+          >
             <span className="result-icon">
               {message.result.success ? "✓" : "✗"}
             </span>
             <span className="markdown-content">
-              <Markdown remarkPlugins={[remarkGfm]}>{message.result.text}</Markdown>
+              <Markdown remarkPlugins={[remarkGfm]}>
+                {message.result.text}
+              </Markdown>
             </span>
           </div>
         )}
 
         {/* Error */}
-        {message.error && (
-          <div className="error-line">⚠ {message.error}</div>
-        )}
+        {message.error && <div className="error-line">⚠ {message.error}</div>}
       </div>
     </div>
   );

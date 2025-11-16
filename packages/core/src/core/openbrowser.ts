@@ -129,8 +129,16 @@ export class OpenBrowser {
   private async doRunWorkflow(context: Context): Promise<OpenBrowserResult> {
     const agents = context.agents as Agent[];
     const workflow = context.workflow as Workflow;
-    if (!workflow || workflow.agents.length == 0) {
+    if (!workflow) {
       throw new Error("Workflow error");
+    }
+    if (workflow.agents.length === 0) {
+        return {
+         success: true,
+        stopReason: "done",
+         taskId: context.taskId,
+        result: "" // Answer is already displayed via workflow.answer in UI
+      };
     }
     const agentNameMap = agents.reduce((map, item) => {
       map[item.Name] = item;

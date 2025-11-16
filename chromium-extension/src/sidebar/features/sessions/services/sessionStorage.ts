@@ -1,4 +1,4 @@
-import { STORAGE_CONFIG } from "../config/storage.config";
+import { STORAGE_CONFIG } from "../../../storage/config/storage.config";
 import { messageStorage } from "./messageStorage";
 
 export interface Session {
