@@ -1,6 +1,6 @@
 import { Message } from "../types/messages";
-import { STORAGE_CONFIG } from "../config/storage.config";
-import { sessionStorage } from "./sessionStorage";
+import { STORAGE_CONFIG } from "../../../storage/config/storage.config";
+import { sessionStorage } from "../../sessions/services/sessionStorage";
 
 class MessageStorageService {
   private db: IDBDatabase | null = null;

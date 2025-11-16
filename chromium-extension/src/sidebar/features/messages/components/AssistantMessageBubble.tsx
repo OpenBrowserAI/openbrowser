@@ -3,8 +3,8 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { AssistantMessage } from "../types/messages";
 import { CollapsibleSection } from "../../workflow/components/CollapsibleSection";
-import { ToolDisplay } from "../../../components/ToolDisplay";
-import { StepDisplay } from "../../../components/StepDisplay";
+import { ToolDisplay } from "./ToolDisplay";
+import { StepDisplay } from "./StepDisplay";
 import {
   parseStepsFromText,
   cleanText,

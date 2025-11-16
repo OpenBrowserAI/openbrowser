@@ -1,6 +1,6 @@
 import React from "react";
 import { ToolItem } from "../types/messages";
-import { CollapsibleSection } from "./CollapsibleSection";
+import { CollapsibleSection } from "../../workflow/components/CollapsibleSection";
 
 interface ToolDisplayProps {
   tool: ToolItem;

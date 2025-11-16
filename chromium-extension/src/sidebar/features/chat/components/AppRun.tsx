@@ -1,16 +1,16 @@
 import React from "react";
 import { Button, Input } from "antd";
 import { AssistantMessageBubble } from "../../messages/components/AssistantMessageBubble";
-import { UserMessageBubble } from "./UserMessageBubble";
+import { UserMessageBubble } from "../../messages/components/UserMessageBubble";
 import { WorkingIndicator } from "../../messages/components/WorkingIndicator";
-import { SessionsList } from "./SessionsList";
-import { useMessageHandler } from "../hooks/useMessageHandler";
+import { SessionsList } from "../../sessions/components/SessionsList";
+import { useMessageHandler } from "../../messages/hooks/useMessageHandler";
 import { useStorageSync } from "../../../storage/hooks/useStorageSync";
 import { useModeConfig } from "../hooks/useModeConfig";
 import { useAutoScroll } from "../../messages/hooks/useAutoScroll";
-import { useCurrentSession } from "../hooks/useCurrentSession";
-import { buildLLMContext } from "../../../utils/contextBuilder";
-import "../styles/sidebar.css";
+import { useCurrentSession } from "../../sessions/hooks/useCurrentSession";
+import { buildLLMContext } from "../utils/contextBuilder";
+import "../../../styles/sidebar.css";
 
 export const AppRun: React.FC = () => {
   const {

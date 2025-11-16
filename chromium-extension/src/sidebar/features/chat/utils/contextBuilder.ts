@@ -1,4 +1,4 @@
-import { Message } from "../features/messages/types/messages";
+import { Message } from "../../messages/types/messages";
 
 /**
  * Convert Message[] to LanguageModelV2Prompt format
