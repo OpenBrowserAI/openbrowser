@@ -15,6 +15,7 @@
     "@openbrowser-ai/core": "workspace:*",
     "@openbrowser-ai/extension": "workspace:*",
     "antd": "^5.22.4",
+    "lucide-react": "^0.554.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^10.1.0",

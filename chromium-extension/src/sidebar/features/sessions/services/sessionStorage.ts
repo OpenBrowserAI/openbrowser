@@ -112,7 +112,8 @@ class SessionStorageService {
   }
 
   /**
-   * Upsert session - Update updatedAt if exists, create if doesn't exist
+   * Upsert session - Update updatedAt if exists, create with title if doesn't exist
+   * Note: Title is ONLY set when creating a new session, never updated for existing sessions
    */
   async upsertSession(sessionId: string, title?: string): Promise<void> {
     if (!this.db) {
@@ -136,12 +137,12 @@ class SessionStorageService {
         const existingSession = getRequest.result as Session;
 
         if (existingSession) {
-          // Session exists - update updatedAt
+          // Session exists - only update updatedAt, DO NOT update title
           existingSession.updatedAt = Date.now();
           objectStore.put(existingSession);
           return;
         }
-        // Session doesn't exist - create it
+        // Session doesn't exist - create it with the provided title
         const newSession: Session = {
           id: sessionId,
           title: title || sessionId,

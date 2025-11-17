@@ -1,4 +1,5 @@
 import React from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Session } from "../services/sessionStorage";
 
 interface SessionsListProps {
@@ -23,7 +24,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
           className="new-session-btn"
           title="New session"
         >
-          +
+          <Plus size={16} />
         </button>
       </div>
       {sessions.length === 0 ? (
@@ -46,7 +47,7 @@ export const SessionsList: React.FC<SessionsListProps> = ({
               className="session-delete-btn"
               title="Delete session"
             >
-              ×
+              <Trash2 size={16} />
             </button>
           </div>
         ))

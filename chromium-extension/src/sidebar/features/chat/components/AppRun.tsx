@@ -1,5 +1,6 @@
 import React from "react";
 import { Button, Input } from "antd";
+import { History, Square, Send, Plus } from "lucide-react";
 import { AssistantMessageBubble } from "../../messages/components/AssistantMessageBubble";
 import { UserMessageBubble } from "../../messages/components/UserMessageBubble";
 import { WorkingIndicator } from "../../messages/components/WorkingIndicator";
@@ -144,9 +145,9 @@ export const AppRun: React.FC = () => {
                   onClick={handleToggleSessions}
                   className="control-select"
                   title="History"
-                  style={{ fontSize: "14px" }}
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
-                  ⏱
+                  <History size={16} />
                 </button>
               </div>
 
@@ -158,8 +159,15 @@ export const AppRun: React.FC = () => {
                     : () => handleNewSession(clearMessagesOnSessionChange)
                 }
                 className={`action-btn ${running ? "stop" : ""}`}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
               >
-                {running ? "■" : prompt.trim() ? "➤" : "+"}
+                {running ? (
+                  <Square size={16} fill="currentColor" />
+                ) : prompt.trim() ? (
+                  <Send size={16} />
+                ) : (
+                  <Plus size={16} />
+                )}
               </Button>
             </div>
           </div>

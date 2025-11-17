@@ -115,9 +115,19 @@ class MessageStorageService {
       await this.init();
     }
 
-    // Upsert session in DB (create if doesn't exist, update updatedAt if exists)
+    // Upsert session in DB (create if doesn't exist, update updatedAt and title if exists)
     if (message.sessionId) {
-      await sessionStorage.upsertSession(message.sessionId);
+      // Extract title from user message prompt (first 50 chars)
+      let title: string | undefined;
+      if (message.type === "user") {
+        const userMessage = message as Message & { text: string };
+        const trimmedText = userMessage.text.trim();
+        title = trimmedText.slice(0, 50);
+        if (trimmedText.length > 50) {
+          title += "...";
+        }
+      }
+      await sessionStorage.upsertSession(message.sessionId, title);
     }
 
     return new Promise((resolve, reject) => {
