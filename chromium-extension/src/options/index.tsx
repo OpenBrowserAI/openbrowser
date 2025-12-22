@@ -17,14 +17,23 @@ const OptionsPage = () => {
     },
   });
 
+  const [agentConfig, setAgentConfig] = useState({
+    mode: "normal" as "fast" | "normal" | "expert",
+    markImageMode: "dom" as "dom" | "draw",
+  });
+
   useEffect(() => {
-    chrome.storage.sync.get(["llmConfig"], (result) => {
+    chrome.storage.sync.get(["llmConfig", "agentConfig"], (result) => {
       if (result.llmConfig) {
         if (result.llmConfig.llm === "") {
           result.llmConfig.llm = "anthropic";
         }
         setConfig(result.llmConfig);
         form.setFieldsValue(result.llmConfig);
+      }
+      if (result.agentConfig) {
+        setAgentConfig(result.agentConfig);
+        form.setFieldsValue(result.agentConfig);
       }
     });
   }, []);
@@ -33,13 +42,31 @@ const OptionsPage = () => {
     form
       .validateFields()
       .then((values) => {
-        setConfig(values);
+        const llmConfig = {
+          llm: values.llm,
+          apiKey: values.apiKey,
+          modelName: values.modelName,
+          options: values.options,
+        };
+        const agentConfig = {
+          mode: values.mode,
+          markImageMode: values.markImageMode,
+        };
+        setConfig(llmConfig);
+        setAgentConfig(agentConfig);
         chrome.storage.sync.set(
           {
-            llmConfig: values,
+            llmConfig,
+            agentConfig,
           },
           () => {
             message.success("Save Success!");
+            // Notify background script of config change
+            chrome.runtime.sendMessage({
+              type: "update_mode",
+              mode: agentConfig.mode,
+              markImageMode: agentConfig.markImageMode
+            });
           }
         );
       })
@@ -120,8 +147,45 @@ const OptionsPage = () => {
         <h1 className="options-title">OpenBrowser Settings</h1>
         <p className="options-subtitle">Configure your AI model and API settings</p>
       </div>
+      <Card title="Agent Configuration" className="shadow-md" style={{ marginBottom: "20px" }}>
+        <Form form={form} layout="vertical" initialValues={{ ...config, ...agentConfig }}>
+          <Form.Item
+            name="mode"
+            label="Agent Mode"
+            rules={[
+              {
+                required: true,
+                message: "Please select an agent mode",
+              },
+            ]}
+          >
+            <Select placeholder="Choose agent mode">
+              <Option value="fast">Fast - Quick responses with basic reasoning</Option>
+              <Option value="normal">Normal - Balanced performance and accuracy</Option>
+              <Option value="expert">Expert - Deep reasoning and complex tasks</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="markImageMode"
+            label="Visual Marking Mode"
+            rules={[
+              {
+                required: true,
+                message: "Please select a marking mode",
+              },
+            ]}
+          >
+            <Select placeholder="Choose marking mode">
+              <Option value="dom">DOM - Use DOM tree for element detection</Option>
+              <Option value="draw">Draw - Use visual drawing for element marking</Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Card>
+
       <Card title="Model Configuration" className="shadow-md">
-        <Form form={form} layout="vertical" initialValues={config}>
+        <Form form={form} layout="vertical" initialValues={{ ...config, ...agentConfig }}>
           <Form.Item
             name="llm"
             label="LLM"

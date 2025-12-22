@@ -1,6 +1,6 @@
 import React from "react";
 import { Button, Input } from "antd";
-import { History, Square, Send, Plus } from "lucide-react";
+import { History, Square, Send, Plus, Settings, ChevronUp } from "lucide-react";
 import { AssistantMessageBubble } from "../../messages/components/AssistantMessageBubble";
 import { UserMessageBubble } from "../../messages/components/UserMessageBubble";
 import { WorkingIndicator } from "../../messages/components/WorkingIndicator";
@@ -29,10 +29,13 @@ export const AppRun: React.FC = () => {
     addUserMessage,
     clearMessagesOnSessionChange,
     isLoading,
+    hasMore,
+    isLoadingMore,
+    loadMoreMessages,
   } = useMessageHandler(currentSessionId);
   const { running, prompt, updateRunningState, updatePrompt } =
     useStorageSync();
-  const { mode, markImageMode, setMode, setMarkImageMode } = useModeConfig();
+  const { mode, markImageMode } = useModeConfig();
   const messagesEndRef = useAutoScroll([messages, currentAssistantMessage]);
 
   const handleClick = () => {
@@ -81,6 +84,21 @@ export const AppRun: React.FC = () => {
               </div>
             ) : (
               <>
+                {hasMore && (
+                  <div className="load-more-container">
+                    <Button
+                      onClick={loadMoreMessages}
+                      loading={isLoadingMore}
+                      className="load-more-btn"
+                      icon={!isLoadingMore && <ChevronUp size={14} />}
+                    >
+                      {isLoadingMore ? "Loading..." : "Load older messages"}
+                    </Button>
+                    <div className="load-more-divider">
+                      <span>Older messages</span>
+                    </div>
+                  </div>
+                )}
                 {messages.map((msg) => {
                   if (msg.type === "user") {
                     return <UserMessageBubble key={msg.id} message={msg} />;
@@ -120,27 +138,6 @@ export const AppRun: React.FC = () => {
               />
 
               <div className="controls">
-                <select
-                  value={mode}
-                  onChange={(e) =>
-                    setMode(e.target.value as "fast" | "normal" | "expert")
-                  }
-                  className="control-select"
-                >
-                  <option value="fast">Fast</option>
-                  <option value="normal">Normal</option>
-                  <option value="expert">Expert</option>
-                </select>
-                <select
-                  value={markImageMode}
-                  onChange={(e) =>
-                    setMarkImageMode(e.target.value as "dom" | "draw")
-                  }
-                  className="control-select"
-                >
-                  <option value="dom">DOM</option>
-                  <option value="draw">Draw</option>
-                </select>
                 <button
                   onClick={handleToggleSessions}
                   className="control-select"
@@ -148,6 +145,14 @@ export const AppRun: React.FC = () => {
                   style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
                   <History size={16} />
+                </button>
+                <button
+                  onClick={() => chrome.runtime.openOptionsPage()}
+                  className="control-select"
+                  title="Settings"
+                  style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+                >
+                  <Settings size={16} />
                 </button>
               </div>
 

@@ -8,14 +8,17 @@ import {
 } from "../types/messages";
 import { parseWorkflowXML } from "../utils/xmlParser";
 import { messageStorage } from "../services/messageStorage";
+import { sessionStorage } from "../../sessions/services/sessionStorage";
 
 export const useMessageHandler = (currentSessionId: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentAssistantMessage, setCurrentAssistantMessage] =
     useState<AssistantMessage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Load messages when session changes
+  // Load initial messages when session changes (most recent 50)
   useEffect(() => {
     const loadStoredMessages = async () => {
       if (!currentSessionId) {
@@ -24,8 +27,12 @@ export const useMessageHandler = (currentSessionId: string) => {
       }
 
       try {
-        const storedMessages = await messageStorage.loadMessagesBySession(currentSessionId);
-        setMessages(storedMessages);
+        const result = await messageStorage.loadMessagesBySessionPaginated(
+          currentSessionId,
+          10 // Load most recent 10 messages
+        );
+        setMessages(result.messages);
+        setHasMore(result.hasMore);
       } catch (error) {
         console.error("Failed to load messages from storage:", error);
       } finally {
@@ -36,8 +43,48 @@ export const useMessageHandler = (currentSessionId: string) => {
     loadStoredMessages();
   }, [currentSessionId]);
 
+  // Load more older messages
+  const loadMoreMessages = async () => {
+    if (!currentSessionId || isLoadingMore || !hasMore) {
+      return;
+    }
+
+    setIsLoadingMore(true);
+    try {
+      // Get the timestamp of the oldest loaded message
+      const oldestTimestamp = messages.length > 0 ? messages[0].timestamp : undefined;
+
+      const result = await messageStorage.loadMessagesBySessionPaginated(
+        currentSessionId,
+        10, // Load 10 more messages
+        oldestTimestamp
+      );
+
+      // Prepend older messages to the beginning
+      setMessages((prev) => [...result.messages, ...prev]);
+      setHasMore(result.hasMore);
+    } catch (error) {
+      console.error("Failed to load more messages:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
-    const messageListener = (message: any) => {
+    const messageListener = (message: {
+      type?: string;
+      messageType?: string;
+      sessionId?: string;
+      toolId?: string;
+      toolName?: string;
+      params?: Record<string, string | number | boolean | object>;
+      toolResult?: string | number | boolean | object;
+      workflow?: string;
+      text?: string;
+      streamDone?: boolean;
+      agentName?: string;
+      success?: boolean;
+    }) => {
       if (!message) return;
 
       if (message.type === "stop") {
@@ -173,15 +220,22 @@ export const useMessageHandler = (currentSessionId: string) => {
   }, [currentSessionId]);
 
   const addUserMessage = async (text: string) => {
+    const trimmedText = text.trim();
     const userMsg: UserMessage = {
       id: `user-${Date.now()}`,
       type: "user",
-      text: text.trim(),
+      text: trimmedText,
       timestamp: Date.now(),
       sessionId: currentSessionId,
     };
     setMessages((prev) => [...prev, userMsg]);
     setCurrentAssistantMessage(null);
+
+    // Create/update session with title from first user message (first 50 chars)
+    const title = trimmedText.slice(0, 50) + (trimmedText.length > 50 ? "..." : "");
+    sessionStorage.upsertSession(currentSessionId, title).catch((error) =>
+      console.error("Failed to upsert session:", error)
+    );
 
     // Save to IndexedDB directly as Message
     messageStorage.addMessage(userMsg).catch((error) =>
@@ -212,5 +266,8 @@ export const useMessageHandler = (currentSessionId: string) => {
     clearAllMessages,
     clearMessagesOnSessionChange,
     isLoading,
+    hasMore,
+    isLoadingMore,
+    loadMoreMessages,
   };
 };

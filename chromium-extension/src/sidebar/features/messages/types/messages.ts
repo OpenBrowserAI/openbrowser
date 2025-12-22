@@ -15,15 +15,15 @@ export interface ToolItem {
   agentName: string;
   toolName: string;
   toolId?: string; // Will be set when tool_use is received
-  params?: any;
+  params?: Record<string, string | number | boolean | object>;
 }
 
 export interface ToolResultItem {
   type: "tool-result";
   toolId: string;
   toolName: string;
-  params?: any;
-  result: any;
+  params?: Record<string, string | number | boolean | object>;
+  result: string | number | boolean | object;
 }
 
 export interface TextItem {

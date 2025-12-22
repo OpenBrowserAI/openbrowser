@@ -1,13 +1,39 @@
 import { Message } from "../../messages/types/messages";
 
+interface LLMTextContent {
+  type: "text";
+  text: string;
+}
+
+interface LLMToolCallContent {
+  type: "tool-call";
+  toolCallId: string;
+  toolName: string;
+  input: Record<string, string | number | boolean | object>;
+}
+
+interface LLMToolResultContent {
+  type: "tool-result";
+  toolCallId: string;
+  toolName: string;
+  output: { type: "text"; value: string } | { type: "json"; value: string | number | boolean | object };
+}
+
+type LLMContent = LLMTextContent | LLMToolCallContent | LLMToolResultContent;
+
+interface LLMMessage {
+  role: "user" | "assistant" | "tool";
+  content: LLMContent[];
+}
+
 /**
  * Convert Message[] to LanguageModelV2Prompt format
  * This format is used by core's Agent.runWithContext() historyMessages parameter
  *
  * @param messages - Messages for the current session (already filtered)
  */
-export function buildLLMContext(messages: Message[]) {
-  const result: any[] = [];
+export function buildLLMContext(messages: Message[]): LLMMessage[] {
+  const result: LLMMessage[] = [];
 
   for (const msg of messages) {
     if (msg.type === "user") {
@@ -23,8 +49,8 @@ export function buildLLMContext(messages: Message[]) {
       });
     } else if (msg.type === "assistant") {
       // Assistant message - includes text, tool calls, and tool results
-      const assistantContent: any[] = [];
-      const toolResultContent: any[] = [];
+      const assistantContent: LLMContent[] = [];
+      const toolResultContent: LLMToolResultContent[] = [];
 
       if (msg.items && Array.isArray(msg.items)) {
         msg.items.forEach((item) => {

@@ -1,6 +1,6 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, DependencyList } from "react";
 
-export const useAutoScroll = (dependencies: any[]) => {
+export const useAutoScroll = (dependencies: DependencyList) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
