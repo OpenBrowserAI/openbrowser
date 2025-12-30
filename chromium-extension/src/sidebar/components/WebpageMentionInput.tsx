@@ -482,48 +482,29 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
       {showDropdown && (
         <div
           data-tab-dropdown
-          style={{
-            position: "absolute",
-            bottom: "100%",
-            left: 0,
-            right: 0,
-            marginBottom: 4,
-            backgroundColor: "#ffffff",
-            border: "1px solid #d9d9d9",
-            borderRadius: 4,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-            zIndex: 1000,
-          }}
+          className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-300 rounded shadow-md z-[1000]"
         >
           {loadingTabs ? (
-            <div style={{ padding: 12, textAlign: "center" }}>
+            <div className="p-3 text-center">
               <Text type="secondary">Loading...</Text>
             </div>
           ) : filteredTabs.length === 0 ? (
-            <div style={{ padding: 12, textAlign: "center" }}>
+            <div className="p-3 text-center">
               <Text type="secondary">No tabs found</Text>
             </div>
           ) : (
             <div
               ref={tabListRef}
-              style={{
-                maxHeight: 300,
-                overflowY: "auto",
-              }}
+              className="max-h-[300px] overflow-y-auto"
             >
               {filteredTabs.map((tab, index) => {
                 const isActive = index === highlightedIndex;
                 return (
                   <div
                     key={tab.tabId || index}
-                    style={{
-                      cursor: "pointer",
-                      padding: "8px 12px",
-                      backgroundColor: isActive ? "#e6f4ff" : "transparent",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
+                    className={`cursor-pointer py-2 px-3 flex items-center gap-2 ${
+                      isActive ? "bg-blue-50" : "bg-transparent"
+                    }`}
                     onMouseDown={(e) => {
                       e.preventDefault();
                       insertWebpageReference(tab);
@@ -535,36 +516,21 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
                       <img
                         src={tab.favicon}
                         alt="icon"
-                        style={{
-                          width: "1em",
-                          height: "1em",
-                          borderRadius: "50%",
-                        }}
+                        className="w-4 h-4 rounded-full"
                       />
                     ) : (
                       <GlobalOutlined />
                     )}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="flex-1 min-w-0">
                       <Text
                         strong
-                        style={{
-                          display: "block",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
+                        className="block overflow-hidden text-ellipsis whitespace-nowrap"
                       >
                         {tab.title}
                       </Text>
                       <Text
                         type="secondary"
-                        style={{
-                          display: "block",
-                          fontSize: 12,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
+                        className="block text-xs overflow-hidden text-ellipsis whitespace-nowrap"
                       >
                         {tab.url}
                       </Text>

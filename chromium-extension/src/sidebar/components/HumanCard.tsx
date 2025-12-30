@@ -46,13 +46,9 @@ const HumanConfirmCard: React.FC<{
   return (
     <Card
       size="small"
-      style={{
-        marginBottom: 8,
-        backgroundColor: "#fff7e6",
-        border: "1px solid #ffd591",
-      }}
+      className="mb-2 bg-orange-50 border border-orange-300"
     >
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <MarkdownRenderer content={item.prompt} />
       </div>
       <Space>
@@ -72,7 +68,7 @@ const HumanConfirmCard: React.FC<{
           Cancel
         </Button>
         {item.responded && (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="text-xs">
             Result: {value || item.value}
           </Text>
         )}
@@ -98,16 +94,12 @@ const HumanInputCard: React.FC<{
   return (
     <Card
       size="small"
-      style={{
-        marginBottom: 8,
-        backgroundColor: "#e6f7ff",
-        border: "1px solid #91d5ff",
-      }}
+      className="mb-2 bg-blue-50 border border-blue-300"
     >
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <MarkdownRenderer content={item.prompt} />
       </div>
-      <Space direction="vertical" style={{ width: "100%" }}>
+      <Space direction="vertical" className="w-full">
         <TextArea
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
@@ -130,7 +122,7 @@ const HumanInputCard: React.FC<{
           Confirm
         </Button>
         {item.responded && (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="text-xs">
             Result: {inputValue.trim() || item.value}
           </Text>
         )}
@@ -168,16 +160,12 @@ const HumanSelectCard: React.FC<{
   return (
     <Card
       size="small"
-      style={{
-        marginBottom: 8,
-        backgroundColor: "#f6ffed",
-        border: "1px solid #b7eb8f",
-      }}
+      className="mb-2 bg-green-50 border border-green-300"
     >
-      <div style={{ marginBottom: 12 }}>
+      <div className="mb-3">
         <MarkdownRenderer content={item.prompt} />
       </div>
-      <Space direction="vertical" style={{ width: "100%" }}>
+      <Space direction="vertical" className="w-full">
         {item.multiple ? (
           <Checkbox.Group
             value={selectedValues}
@@ -216,7 +204,7 @@ const HumanSelectCard: React.FC<{
           Confirm
         </Button>
         {item.responded && (
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text type="secondary" className="text-xs">
             Result: {selectedValues.join(", ") || item.value}
           </Text>
         )}
@@ -251,15 +239,11 @@ const HumanHelpCard: React.FC<{
   return (
     <Card
       size="small"
-      style={{
-        marginBottom: 8,
-        backgroundColor: "#fff1f0",
-        border: "1px solid #ffccc7",
-      }}
+      className="mb-2 bg-red-50 border border-red-200"
     >
-      <Space direction="vertical" style={{ width: "100%" }}>
+      <Space direction="vertical" className="w-full">
         <Tag color="orange">{helpTypeText}</Tag>
-        <div style={{ marginBottom: 12 }}>
+        <div className="mb-3">
           <MarkdownRenderer content={item.prompt} />
         </div>
         <Space>
@@ -279,7 +263,7 @@ const HumanHelpCard: React.FC<{
             Cancel
           </Button>
           {item.responded && (
-            <Text type="secondary" style={{ fontSize: 12 }}>
+            <Text type="secondary" className="text-xs">
               Result: {value || item.value}
             </Text>
           )}

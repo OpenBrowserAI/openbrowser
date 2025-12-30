@@ -38,29 +38,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div
-      style={{
-        padding: "16px",
-        backgroundColor: "#ffffff",
-        borderTop: "1px solid #e8e8e8",
-      }}
-    >
+    <div className="p-4 bg-white border-t border-gray-200">
       {uploadedFiles.length > 0 && (
-        <div style={{ marginBottom: 8 }}>
+        <div className="mb-2">
           <Space wrap>
             {uploadedFiles.map((file) => {
               const isImage = file.mimeType.startsWith("image/");
               return (
                 <div
                   key={file.id}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "4px 8px",
-                    backgroundColor: "#f5f5f5",
-                    borderRadius: 4,
-                    border: "1px solid #d9d9d9",
-                  }}
+                  className="inline-flex items-center px-2 py-1 bg-gray-100 rounded border border-gray-300"
                 >
                   {isImage ? (
                     <Image
@@ -70,28 +57,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                           : `data:${file.mimeType};base64,${file.base64Data}`
                       }
                       alt={file.filename}
-                      style={{
-                        width: 40,
-                        height: 40,
-                        objectFit: "cover",
-                        borderRadius: 4,
-                        marginRight: 8,
-                      }}
+                      className="w-10 h-10 object-cover rounded mr-2"
                       preview={false}
                     />
                   ) : (
-                    <FileOutlined style={{ marginRight: 8, fontSize: 16 }} />
+                    <FileOutlined className="mr-2 text-base" />
                   )}
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      marginRight: 8,
-                      maxWidth: 150,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
+                  <Text className="text-xs mr-2 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
                     {file.filename}
                   </Text>
                   <Button
@@ -99,7 +71,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     size="small"
                     icon={<DeleteOutlined />}
                     onClick={() => onRemoveFile(file.id)}
-                    style={{ padding: 0, width: 20, height: 20 }}
+                    className="p-0 w-5 h-5"
                   />
                 </div>
               );
@@ -108,14 +80,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      <Space.Compact style={{ width: "100%", alignItems: "center" }}>
+      <Space.Compact className="w-full items-center">
         <input
           ref={fileInputRef}
           type="file"
           multiple
           accept="image/*,.pdf,.docx,.xlsx,.txt,.md,.json"
           onChange={onFileSelect}
-          style={{ display: "none" }}
+          className="hidden"
         />
         <Button
           icon={<PaperClipOutlined />}
@@ -143,7 +115,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             disabled={
               (!inputValue.trim() && uploadedFiles.length === 0) || sending
             }
-            style={{ padding: "0 10px" }}
+            className="px-2.5"
           >
             Send
           </Button>

@@ -19,7 +19,7 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
   return (
     <Card
       size="small"
-      style={{ marginTop: 8, backgroundColor: "#f5f5f5" }}
+      className="mt-2 bg-gray-100"
       title={
         <Space>
           <ToolOutlined />
@@ -66,14 +66,14 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
         />
       )}
       {item.running && item.runningText && (
-        <Paragraph type="secondary" style={{ marginTop: 8, marginBottom: 0 }}>
+        <Paragraph type="secondary" className="mt-2 mb-0">
           <MarkdownRenderer content={item.runningText} />
         </Paragraph>
       )}
       {item.result && (
         <Collapse
           size="small"
-          style={{ marginTop: 8 }}
+          className="mt-2"
           defaultActiveKey={item.result.isError ? ["result"] : []}
           items={[
             {
@@ -97,7 +97,7 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                           {JSON.stringify(JSON.parse(part.text), null, 2)}
                         </pre>
                       ) : (
-                        // <Paragraph key={index} style={{ margin: 0 }}>
+                        // <Paragraph key={index} className="m-0">
                         //   {part.text}
                         // </Paragraph>
                         <MarkdownRenderer key={index} content={part.text} />
@@ -114,7 +114,7 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                                 }`
                           }
                           alt="Tool result"
-                          style={{ maxWidth: "100%", marginTop: 8 }}
+                          className="max-w-full mt-2"
                         />
                       );
                     }

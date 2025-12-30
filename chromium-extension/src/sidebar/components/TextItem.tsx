@@ -10,9 +10,9 @@ interface TextItemProps {
 
 export const TextItem: React.FC<TextItemProps> = ({ text, streamDone }) => {
   return (
-    <div style={{ marginBottom: 8 }}>
+    <div className="mb-2">
       <MarkdownRenderer content={text} />
-      {!streamDone && <Spin size="small" style={{ color: "white" }} />}
+      {!streamDone && <Spin size="small" className="text-white" />}
     </div>
   );
 };

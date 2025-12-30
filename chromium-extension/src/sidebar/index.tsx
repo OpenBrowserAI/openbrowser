@@ -246,25 +246,11 @@ const AppRun = () => {
   }, [clearMessages]);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        backgroundColor: "#ffffff",
-      }}
-    >
+    <div className="flex flex-col h-screen bg-white">
       {/* Message area */}
       <div
         ref={messagesContainerRef}
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          padding: "16px",
-          backgroundColor: "#f5f5f5",
-          position: "relative",
-        }}
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-gray-100 relative"
       >
         {messages.length > 0 && (
           <Tooltip title="Clear messages" placement="left">
@@ -273,24 +259,14 @@ const AppRun = () => {
               size="small"
               icon={<ClearOutlined />}
               onClick={clearMessages}
-              style={{
-                position: "absolute",
-                top: "6px",
-                zIndex: 999,
-                width: "32px",
-                height: "32px",
-                padding: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              className="absolute top-1.5 z-[999] w-8 h-8 p-0 flex items-center justify-center"
             />
           </Tooltip>
         )}
         {messages.length === 0 ? (
           <Empty
             description="Start a conversation!"
-            style={{ marginTop: "20vh" }}
+            className="mt-[20vh]"
           />
         ) : (
           messages.map((message) => (

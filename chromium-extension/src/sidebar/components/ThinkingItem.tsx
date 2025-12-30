@@ -28,7 +28,7 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
   return (
     <Collapse
       size="small"
-      style={{ marginBottom: 8 }}
+      className="mb-2"
       activeKey={activeKey}
       onChange={(keys) => setActiveKey(keys as string[])}
       items={[
@@ -43,7 +43,7 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
           children: (
             <div>
               <MarkdownRenderer content={text} secondary />
-              {!streamDone && <Spin size="small" style={{ color: "white" }} />}
+              {!streamDone && <Spin size="small" className="text-white" />}
             </div>
           ),
         },

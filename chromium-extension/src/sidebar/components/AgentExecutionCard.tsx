@@ -50,18 +50,15 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
   return (
     <Card
       size="small"
-      style={{
-        marginBottom: 8,
-        borderLeft: `3px solid ${
-          status === "done"
-            ? "#52c41a"
-            : status === "error"
-            ? "#ff4d4f"
-            : status === "running"
-            ? "#1890ff"
-            : "#d9d9d9"
-        }`,
-      }}
+      className={`mb-2 ${
+        status === "done"
+          ? "border-l-4 border-l-green-500"
+          : status === "error"
+          ? "border-l-4 border-l-red-500"
+          : status === "running"
+          ? "border-l-4 border-l-blue-500"
+          : "border-l-4 border-l-gray-300"
+      }`}
       title={
         <Space>
           <Text strong>{agentNode.name}</Text>
@@ -80,7 +77,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
       }
     >
       {agentNode.task && (
-        <Paragraph type="secondary" style={{ marginBottom: 8 }}>
+        <Paragraph type="secondary" className="mb-2">
           {agentNode.task}
         </Paragraph>
       )}
@@ -113,7 +110,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
               return (
                 <div
                   key={`tool-${item.toolCallId}-${index}`}
-                  style={{ marginBottom: 8 }}
+                  className="mb-2"
                 >
                   <ToolCallItem item={item} />
                 </div>
@@ -128,7 +125,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
                       : `data:${item.mimeType};base64,${item.data}`
                   }
                   alt="Agent file"
-                  style={{ maxWidth: "100%", marginTop: 8, marginBottom: 8 }}
+                  className="max-w-full my-2"
                 />
               );
             } else if (item.type === "human_confirm") {
@@ -203,7 +200,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
                   : String(agent.error)
               }
               type="error"
-              style={{ marginTop: 8 }}
+              className="mt-2"
             />
           )}
         </>

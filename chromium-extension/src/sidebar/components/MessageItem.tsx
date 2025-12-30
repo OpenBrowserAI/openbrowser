@@ -110,50 +110,35 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
 
   if (message.role === "user") {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: 16,
-        }}
-      >
+      <div className="flex justify-end mb-4">
         <Card
-          style={{
-            maxWidth: "70%",
-            backgroundColor: "#1890ff",
-            color: "white",
-          }}
+          className="max-w-[70%] bg-blue-500 text-white"
           styles={{
             body: { padding: "12px 16px" },
           }}
         >
-          <Space direction="vertical" size="small" style={{ width: "100%" }}>
+          <Space direction="vertical" size="small" className="w-full">
             {(message.content || message.uploadedFiles?.length) && (
               <Space>
                 <UserOutlined />
                 {message.content && (
-                  <Paragraph style={{ margin: 0, color: "white" }}>
+                  <Paragraph className="m-0 text-white">
                     {userContent}
                   </Paragraph>
                 )}
                 {message.status == "waiting" && (
-                  <Spin size="small" style={{ color: "white" }} />
+                  <Spin size="small" className="text-white" />
                 )}
               </Space>
             )}
             {message.uploadedFiles && message.uploadedFiles.length > 0 && (
-              <div style={{ marginTop: 8 }}>
+              <div className="mt-2">
                 {message.uploadedFiles.map((file) => {
                   const isImage = file.mimeType.startsWith("image/");
                   return (
                     <div
                       key={file.id}
-                      style={{
-                        marginBottom: 8,
-                        padding: 8,
-                        backgroundColor: "rgba(255, 255, 255, 0.2)",
-                        borderRadius: 4,
-                      }}
+                      className="mb-2 p-2 bg-white/20 rounded"
                     >
                       {isImage ? (
                         <Image
@@ -163,17 +148,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
                               : `data:${file.mimeType};base64,${file.base64Data}`
                           }
                           alt={file.filename}
-                          style={{
-                            maxWidth: "100%",
-                            maxHeight: 200,
-                            borderRadius: 4,
-                          }}
+                          className="max-w-full max-h-[200px] rounded"
                           preview={false}
                         />
                       ) : (
                         <Space>
-                          <FileOutlined style={{ color: "white" }} />
-                          <Text style={{ color: "white", fontSize: 12 }}>
+                          <FileOutlined className="text-white" />
+                          <Text className="text-white text-xs">
                             {file.filename}
                           </Text>
                         </Space>
@@ -191,9 +172,9 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
 
   // AI message
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div className="mb-4">
       <Card
-        style={{ backgroundColor: "#fafafa" }}
+        className="bg-gray-50"
         title={
           <Space>
             <RobotOutlined />
@@ -227,7 +208,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
               return (
                 <div
                   key={`chat-tool-${item.toolCallId}-${index}`}
-                  style={{ marginBottom: 8 }}
+                  className="mb-2"
                 >
                   <ToolCallItem item={item} />
                 </div>
@@ -242,7 +223,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
                       : `data:${item.mimeType};base64,${item.data}`
                   }
                   alt="Message file"
-                  style={{ maxWidth: "100%", marginTop: 8, marginBottom: 8 }}
+                  className="max-w-full my-2"
                 />
               );
             } else if (
@@ -252,7 +233,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
               return (
                 <div
                   key={`chat-task-${item.taskId}-${index}`}
-                  style={{ marginBottom: 8 }}
+                  className="mb-2"
                 >
                   {item.task.workflow ? (
                     // Multi-agent workflow
@@ -270,7 +251,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
             return null;
           })
         ) : message.content ? (
-          <div style={{ marginBottom: 8 }}>
+          <div className="mb-2">
             <MarkdownRenderer content={message.content} />
           </div>
         ) : message.status == "waiting" ? (
@@ -283,7 +264,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({ message }) => {
             message="Error"
             description={String(message.error)}
             type="error"
-            style={{ marginTop: 8 }}
+            className="mt-2"
           />
         )}
       </Card>

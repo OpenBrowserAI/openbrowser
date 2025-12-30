@@ -41,7 +41,7 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({ task }) => {
   const agentGroups = buildAgentGroups();
 
   return (
-    <div style={{ marginTop: 16 }}>
+    <div className="mt-4">
       <Card
         size="small"
         title={
@@ -51,15 +51,15 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({ task }) => {
             {!task.workflowStreamDone && <Spin size="small" />}
           </Space>
         }
-        style={{ backgroundColor: "#f0f7ff" }}
+        className="bg-blue-50"
       >
         {workflow.thought && (
-          <Paragraph type="secondary" style={{ marginBottom: 16 }}>
+          <Paragraph type="secondary" className="mb-4">
             {workflow.thought}
           </Paragraph>
         )}
         {agentGroups.map((group, groupIndex) => (
-          <div key={groupIndex} style={{ marginBottom: 16 }}>
+          <div key={groupIndex} className="mb-4">
             {group.length === 1 ? (
               // Single agent
               <div>
@@ -68,12 +68,12 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({ task }) => {
             ) : (
               // Parallel agents
               <div>
-                <Text strong style={{ color: "#1890ff" }}>
+                <Text strong className="text-blue-500">
                   [{group.map((a) => a.name).join(", ")}]
                 </Text>
-                <div style={{ marginLeft: 16, marginTop: 8 }}>
+                <div className="ml-4 mt-2">
                   {group.map((agent) => (
-                    <div key={agent.id} style={{ marginBottom: 8 }}>
+                    <div key={agent.id} className="mb-2">
                       <AgentExecutionCard agentNode={agent} task={task} />
                     </div>
                   ))}

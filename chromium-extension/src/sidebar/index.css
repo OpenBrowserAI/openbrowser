@@ -1,12 +1,25 @@
+@import "tailwindcss";
+
 body {
   margin: 0 !important;
 }
 
+/* Animation for streaming cursor */
 .streaming-cursor {
   animation: blink 1s infinite;
   color: black;
 }
 
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Markdown body styles */
 .markdown-body {
   font-size: 14px;
   color: rgba(0, 0, 0, 0.88);
@@ -34,15 +47,7 @@ body {
   padding: 12px;
 }
 
-@keyframes blink {
-  0%, 50% {
-    opacity: 1;
-  }
-  51%, 100% {
-    opacity: 0;
-  }
-}
-
+/* Tool JSON pre formatting */
 .tool-json-pre {
   margin: 0;
   font-size: 12px;
@@ -55,6 +60,7 @@ body {
   display: none;
 }
 
+/* Chat input editor styles */
 .chat-input-rich-container {
   position: relative;
   flex: 1;
@@ -85,6 +91,7 @@ body {
   color: rgba(0, 0, 0, 0.25);
 }
 
+/* Webpage reference styles */
 .webpage-reference-display {
   color: #1677ff;
   background: rgba(22, 119, 255, 0.12);
