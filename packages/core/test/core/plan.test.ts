@@ -1,16 +1,16 @@
 import {
   OpenBrowser,
-  Agent,
   Log,
   LLMs,
+  Agent,
   uuidv4,
-  StreamCallbackMessage
+  StreamCallbackMessage,
 } from "../../src/index";
 import dotenv from "dotenv";
 import {
   SimpleFileAgent,
   SimpleBrowserAgent,
-  SimpleComputerAgent
+  SimpleComputerAgent,
 } from "./agents";
 
 dotenv.config();
@@ -24,17 +24,17 @@ const llms: LLMs = {
     model: "anthropic/claude-sonnet-4",
     apiKey: openaiApiKey || "",
     config: {
-      baseURL: openaiBaseURL
+      baseURL: openaiBaseURL,
     },
     fetch: (url, options) => {
       const body = JSON.parse(options?.body as string);
       console.log("====> body", JSON.stringify(body, null, 2));
       return fetch(url, {
         ...options,
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
-    }
-  }
+    },
+  },
 };
 
 async function testPlaner() {
@@ -51,12 +51,12 @@ async function testPlaner() {
         return;
       }
       console.log("message: ", JSON.stringify(message, null, 2));
-    }
+    },
   };
   const agents: Agent[] = [
     new SimpleBrowserAgent(),
     new SimpleComputerAgent(),
-    new SimpleFileAgent()
+    new SimpleFileAgent(),
   ];
   const openbrowser = new OpenBrowser({ llms, agents, callback });
   const workflow = await openbrowser.generate(

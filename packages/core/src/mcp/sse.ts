@@ -5,7 +5,7 @@ import {
   IMcpClient,
   McpCallToolParam,
   McpListToolParam,
-  McpListToolResult
+  McpListToolResult,
 } from "../types";
 
 type SseEventData = {
@@ -72,7 +72,7 @@ export class SimpleSseMcpClient implements IMcpClient {
             }, 500);
           }
           resolve();
-        }
+        },
       };
       connectSse(this.sseUrl, this.sseHandler, this.headers, signal);
     });
@@ -104,18 +104,18 @@ export class SimpleSseMcpClient implements IMcpClient {
       protocolVersion: this.protocolVersion,
       capabilities: {
         tools: {
-          listChanged: true
+          listChanged: true,
         },
-        sampling: {}
+        sampling: {},
       },
       clientInfo: {
         name: this.clientName,
-        version: "1.0.0"
-      }
+        version: "1.0.0",
+      },
     });
     try {
       await this.request("notifications/initialized", {});
-    } catch (ignored) {}
+    } catch(ignored) {}
   }
 
   private ping() {
@@ -129,7 +129,7 @@ export class SimpleSseMcpClient implements IMcpClient {
     const message = await this.request(
       "tools/list",
       {
-        ...param
+        ...param,
       },
       signal
     );
@@ -143,7 +143,7 @@ export class SimpleSseMcpClient implements IMcpClient {
     const message = await this.request(
       "tools/call",
       {
-        ...param
+        ...param,
       },
       signal
     );
@@ -172,17 +172,17 @@ export class SimpleSseMcpClient implements IMcpClient {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...this.headers
+          ...this.headers,
         },
         body: JSON.stringify({
           jsonrpc: "2.0",
           id: id,
           method: method,
           params: {
-            ...params
-          }
+            ...params,
+          },
         }),
-        signal: signal
+        signal: signal,
       });
       const body = await response.text();
       if (body == "Accepted") {
@@ -230,7 +230,7 @@ export class SimpleSseMcpClient implements IMcpClient {
     try {
       await this.request("notifications/cancelled", {
         requestId: uuidv4(),
-        reason: "User requested cancellation"
+        reason: "User requested cancellation",
       });
     } catch (ignored) {}
     this.pingTimer && clearInterval(this.pingTimer);
@@ -259,11 +259,11 @@ async function connectSse(
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        ...headers
+        ...headers,
       },
       body: null,
       keepalive: true,
-      signal: signal
+      signal: signal,
     });
     const reader = response.body?.getReader() as ReadableStreamDefaultReader;
     hander.close = () => {

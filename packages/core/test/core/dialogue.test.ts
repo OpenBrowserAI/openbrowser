@@ -1,17 +1,18 @@
 import {
-  Agent,
   Log,
   LLMs,
+  Agent,
+  uuidv4,
+  ChatAgent,
   StreamCallbackMessage,
-  OpenBrowserDialogue
 } from "../../src/index";
 import dotenv from "dotenv";
 import {
+  SimpleFileAgent,
   SimpleBrowserAgent,
   SimpleComputerAgent,
-  SimpleFileAgent
 } from "./agents";
-import { ChatStreamCallbackMessage } from "../../src/types";
+import { ChatStreamMessage } from "../../src/types";
 
 dotenv.config();
 
@@ -24,15 +25,15 @@ const llms: LLMs = {
     model: "anthropic/claude-sonnet-4",
     apiKey: openaiApiKey || "",
     config: {
-      baseURL: openaiBaseURL
-    }
-  }
+      baseURL: openaiBaseURL,
+    },
+  },
 };
 
 async function run() {
   Log.setLevel(0);
   const chatCallback = {
-    onMessage: async (message: ChatStreamCallbackMessage) => {
+    onMessage: async (message: ChatStreamMessage) => {
       if (message.type == "text" && !message.streamDone) {
         return;
       }
@@ -40,7 +41,7 @@ async function run() {
         return;
       }
       console.log("chat message: ", JSON.stringify(message, null, 2));
-    }
+    },
   };
   const taskCallback = {
     onMessage: async (message: StreamCallbackMessage) => {
@@ -54,52 +55,32 @@ async function run() {
         return;
       }
       console.log("openbrowser message: ", JSON.stringify(message, null, 2));
-    }
+    },
   };
   const agents: Agent[] = [
     new SimpleBrowserAgent(),
     new SimpleComputerAgent(),
-    new SimpleFileAgent()
+    new SimpleFileAgent(),
   ];
-  const segmentedExecution: boolean = true;
-  const dialogue = new OpenBrowserDialogue({
-    llms,
-    agents,
-    segmentedExecution
-  });
-  const result1 = await dialogue.chat({
-    user: "Hello",
+  const chatAgent = new ChatAgent({ llms, agents });
+  const result1 = await chatAgent.chat({
+    messageId: "msg-" + uuidv4(),
+    user: [{ type: "text", text: "Hello" }],
     callback: {
       chatCallback,
-      taskCallback
-    }
+      taskCallback,
+    },
   });
   console.log("=================>\nresult1: ", result1);
-  const result2 = await dialogue.chat({
-    user: "Search for information about Musk",
+  const result2 = await chatAgent.chat({
+    messageId: "msg-" + uuidv4(),
+    user: [{ type: "text", text: "Search for information about Musk" }],
     callback: {
       chatCallback,
-      taskCallback
-    }
+      taskCallback,
+    },
   });
   console.log("=================>\nresult2: ", result2);
-  if (segmentedExecution) {
-    const result3 = await dialogue.chat({
-      user: "Modify the plan: search on X and focus on Tesla information",
-      callback: {
-        chatCallback,
-        taskCallback
-      }
-    });
-    console.log("=================>\nresult3: ", result3);
-    const result4 = await dialogue.segmentedExecution({
-      callback: {
-        chatCallback,
-        taskCallback
-      }
-    });
-    console.log("=================>\nresult4: ", result4);
-  }
 }
 
 test.only("dialogue", async () => {

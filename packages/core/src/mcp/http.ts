@@ -5,7 +5,7 @@ import {
   IMcpClient,
   McpCallToolParam,
   McpListToolParam,
-  McpListToolResult
+  McpListToolResult,
 } from "../types";
 
 type SseEventData = {
@@ -42,21 +42,21 @@ export class SimpleHttpMcpClient implements IMcpClient {
         protocolVersion: this.protocolVersion,
         capabilities: {
           tools: {
-            listChanged: true
+            listChanged: true,
           },
-          sampling: {}
+          sampling: {},
         },
         clientInfo: {
           name: this.clientName,
-          version: "1.0.0"
-        }
+          version: "1.0.0",
+        },
       },
       signal
     );
     if (this.mcpSessionId) {
       try {
         await this.request("notifications/initialized", {});
-      } catch (ignored) {}
+      } catch(ignored) {}
     }
     this.connected = true;
   }
@@ -68,7 +68,7 @@ export class SimpleHttpMcpClient implements IMcpClient {
     const message = await this.request(
       "tools/list",
       {
-        ...param
+        ...param,
       },
       signal
     );
@@ -82,7 +82,7 @@ export class SimpleHttpMcpClient implements IMcpClient {
     const message = await this.request(
       "tools/call",
       {
-        ...param
+        ...param,
       },
       signal
     );
@@ -99,7 +99,7 @@ export class SimpleHttpMcpClient implements IMcpClient {
       try {
         await this.request("notifications/cancelled", {
           requestId: uuidv4(),
-          reason: "User requested cancellation"
+          reason: "User requested cancellation",
         });
       } catch (ignored) {}
       this.mcpSessionId = null;
@@ -125,22 +125,22 @@ export class SimpleHttpMcpClient implements IMcpClient {
           Accept: "application/json, text/event-stream",
           "MCP-Protocol-Version": this.protocolVersion,
           ...extHeaders,
-          ...this.headers
+          ...this.headers,
         },
         body: JSON.stringify({
           jsonrpc: "2.0",
           id: id,
           method: method,
           params: {
-            ...params
-          }
+            ...params,
+          },
         }),
         keepalive: true,
-        signal: signal
+        signal: signal,
       });
 
-      if (method.startsWith("notifications/")) {
-        return;
+      if (method.startsWith("notifications/")){
+          return;
       }
       if (method == "initialize") {
         this.mcpSessionId =
@@ -218,9 +218,7 @@ export class SimpleHttpMcpClient implements IMcpClient {
               : message.result.content[0].text)
         );
       } else {
-        throw new Error(
-          `MCP ${method} error: ` + JSON.stringify(message.result)
-        );
+        throw new Error(`MCP ${method} error: ` + JSON.stringify(message.result));
       }
     }
   }

@@ -1,20 +1,17 @@
-import { Agent, AgentParams } from "./base";
-import BaseFileAgent from "./file";
-import BaseShellAgent from "./shell";
-import BaseComputerAgent from "./computer";
+import { OpenBrowser } from "./openbrowser";
 import {
   BaseBrowserAgent,
   BaseBrowserLabelsAgent,
   BaseBrowserScreenAgent,
 } from "./browser";
+import { Agent, AgentParams } from "./base";
+
+export default OpenBrowser;
 
 export {
   Agent,
-  BaseFileAgent,
-  BaseShellAgent,
-  BaseComputerAgent,
+  type AgentParams,
   BaseBrowserAgent,
   BaseBrowserLabelsAgent,
   BaseBrowserScreenAgent,
-  type AgentParams,
 };

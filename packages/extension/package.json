@@ -2,10 +2,10 @@
   "name": "@openbrowser-ai/extension",
   "version": "1.0.0",
   "description": "OpenBrowser extension",
-  "main": "dist/index.cjs.js",
-  "module": "dist/index.esm.js",
-  "types": "dist/index.d.ts",
   "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.esm.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist/",
     "LICENSE",
@@ -14,9 +14,10 @@
   ],
   "exports": {
     ".": {
-      "require": "./dist/index.cjs.js",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.esm.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.esm.js"
     }
   },
   "scripts": {

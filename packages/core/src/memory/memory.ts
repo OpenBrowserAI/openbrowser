@@ -1,41 +1,26 @@
+import config from "../config";
 import { LanguageModelV2Message } from "@ai-sdk/provider";
+import { defaultMessageProviderOptions } from "../agent/agent-llm";
 import { toFile, uuidv4, getMimeType, sub } from "../common/utils";
-import { OpenBrowserMessage, LanguageModelV2Prompt } from "../types";
-import { defaultMessageProviderOptions } from "../agent/llm";
-
-export interface MemoryConfig {
-  maxMessages?: number;
-  maxTokens?: number;
-  enableCompression?: boolean;
-  compressionThreshold?: number;
-  compressionMaxLength?: number;
-}
+import { OpenBrowserMessage, LanguageModelV2Prompt, MemoryConfig } from "../types";
 
 export class OpenBrowserMemory {
-  protected systemPrompt: string;
+  protected systemPrompt?: string;
   protected messages: OpenBrowserMessage[];
-  private maxMessages: number;
-  private maxTokens: number;
-  private enableCompression: boolean;
-  private compressionThreshold: number;
-  private compressionMaxLength: number;
+  private memoryConfig: MemoryConfig;
 
   constructor(
-    systemPrompt: string,
+    systemPrompt?: string,
     messages: OpenBrowserMessage[] = [],
-    config: MemoryConfig = {}
+    memoryConfig: MemoryConfig = config.memoryConfig
   ) {
     this.messages = messages;
     this.systemPrompt = systemPrompt;
-    this.maxMessages = config.maxMessages ?? 15;
-    this.maxTokens = config.maxTokens ?? 16000;
-    this.enableCompression = config.enableCompression ?? false;
-    this.compressionThreshold = config.compressionThreshold ?? 10;
-    this.compressionMaxLength = config.compressionMaxLength ?? 4000;
+    this.memoryConfig = memoryConfig;
   }
 
   public genMessageId(): string {
-    return uuidv4();
+    return "msg-" + uuidv4();
   }
 
   public async import(data: {
@@ -48,6 +33,14 @@ export class OpenBrowserMemory {
     } else {
       await this.manageCapacity();
     }
+  }
+
+  public setSystemPrompt(systemPrompt: string): void {
+    this.systemPrompt = systemPrompt;
+  }
+
+  public getSystemPrompt(): string | undefined {
+    return this.systemPrompt;
   }
 
   public async addMessages(messages: OpenBrowserMessage[]): Promise<void> {
@@ -90,14 +83,16 @@ export class OpenBrowserMemory {
 
   public getEstimatedTokens(calcSystemPrompt: boolean = true): number {
     let tokens = 0;
-    if (calcSystemPrompt) {
+    if (calcSystemPrompt && this.systemPrompt) {
       tokens += this.calcTokens(this.systemPrompt);
     }
     return this.messages.reduce((total, message) => {
       const content =
         typeof message.content === "string"
           ? message.content
-          : JSON.stringify(message.content);
+          : JSON.stringify(
+              message.content.filter((part) => part.type != "file")
+            );
       return total + this.calcTokens(content);
     }, tokens);
   }
@@ -110,41 +105,32 @@ export class OpenBrowserMemory {
   }
 
   public async updateConfig(config: Partial<MemoryConfig>): Promise<void> {
-    if (config.maxMessages !== undefined) {
-      this.maxMessages = config.maxMessages;
+    if (config.maxMessageNum !== undefined) {
+      this.memoryConfig.maxMessageNum = config.maxMessageNum;
     }
-    if (config.maxTokens !== undefined) {
-      this.maxTokens = config.maxTokens;
+    if (config.maxInputTokens !== undefined) {
+      this.memoryConfig.maxInputTokens = config.maxInputTokens;
     }
     if (config.enableCompression !== undefined) {
-      this.enableCompression = config.enableCompression;
+      this.memoryConfig.enableCompression = config.enableCompression;
     }
     if (config.compressionThreshold !== undefined) {
-      this.compressionThreshold = config.compressionThreshold;
+      this.memoryConfig.compressionThreshold = config.compressionThreshold;
     }
     if (config.compressionMaxLength !== undefined) {
-      this.compressionMaxLength = config.compressionMaxLength;
+      this.memoryConfig.compressionMaxLength = config.compressionMaxLength;
     }
     await this.manageCapacity();
   }
 
-  protected async dynamicSystemPrompt(
-    messages: OpenBrowserMessage[]
-  ): Promise<void> {
-    // RAG dynamic system prompt
-  }
-
   protected async manageCapacity(): Promise<void> {
-    if (this.messages[this.messages.length - 1].role == "user") {
-      await this.dynamicSystemPrompt(this.messages);
-    }
-    if (this.messages.length > this.maxMessages) {
-      const excess = this.messages.length - this.maxMessages;
+    if (this.messages.length > this.memoryConfig.maxMessageNum) {
+      const excess = this.messages.length - this.memoryConfig.maxMessageNum;
       this.messages.splice(0, excess);
     }
     if (
-      this.enableCompression &&
-      this.messages.length > this.compressionThreshold
+      this.memoryConfig.enableCompression &&
+      this.messages.length > this.memoryConfig.compressionThreshold
     ) {
       // compress messages
       for (let i = 0; i < this.messages.length; i++) {
@@ -153,11 +139,15 @@ export class OpenBrowserMemory {
           message.content = message.content.map((part) => {
             if (
               part.type == "text" &&
-              part.text.length > this.compressionMaxLength
+              part.text.length > this.memoryConfig.compressionMaxLength
             ) {
               return {
                 type: "text",
-                text: sub(part.text, this.compressionMaxLength, true)
+                text: sub(
+                  part.text,
+                  this.memoryConfig.compressionMaxLength,
+                  true
+                ),
               };
             }
             return part;
@@ -167,11 +157,15 @@ export class OpenBrowserMemory {
           message.content = message.content.map((part) => {
             if (
               typeof part.result === "string" &&
-              part.result.length > this.compressionMaxLength
+              part.result.length > this.memoryConfig.compressionMaxLength
             ) {
               return {
                 ...part,
-                result: sub(part.result, this.compressionMaxLength, true)
+                result: sub(
+                  part.result,
+                  this.memoryConfig.compressionMaxLength,
+                  true
+                ),
               };
             }
             return part;
@@ -180,7 +174,7 @@ export class OpenBrowserMemory {
       }
     }
     while (
-      this.getEstimatedTokens(true) > this.maxTokens &&
+      this.getEstimatedTokens(true) > this.memoryConfig.maxInputTokens &&
       this.messages.length > 0
     ) {
       this.messages.shift();
@@ -205,11 +199,12 @@ export class OpenBrowserMemory {
       if (
         message.role == "user" &&
         lastMessage &&
-        lastMessage.role == "user" &&
-        message.content == lastMessage.content
+        lastMessage.role == "user"
+        // && message.content == lastMessage.content
       ) {
         // remove duplicate user messages
-        removeIds.push(message.id);
+        removeIds.push(lastMessage.id);
+        continue;
       }
       if (
         lastMessage &&
@@ -230,9 +225,9 @@ export class OpenBrowserMemory {
                 type: "tool-result",
                 toolCallId: part.toolCallId,
                 toolName: part.toolName,
-                result: "Error: No result"
+                result: "Error: No result",
               };
-            })
+            }),
         });
       }
       lastMessage = message;
@@ -240,10 +235,6 @@ export class OpenBrowserMemory {
     if (removeIds.length > 0) {
       removeIds.forEach((id) => this.removeMessageById(id));
     }
-  }
-
-  public getSystemPrompt(): string {
-    return this.systemPrompt;
   }
 
   public getFirstUserMessage(): OpenBrowserMessage | undefined {
@@ -277,24 +268,23 @@ export class OpenBrowserMemory {
               ? [
                   {
                     type: "text",
-                    text: message.content
-                  }
+                    text: message.content,
+                  },
                 ]
               : message.content.map((part) => {
                   if (part.type == "text") {
                     return {
                       type: "text",
-                      text: part.text
+                      text: part.text,
                     };
                   } else {
                     return {
                       type: "file",
                       data: toFile(part.data),
-                      mediaType: part.mimeType || getMimeType(part.data)
+                      mediaType: part.mimeType || getMimeType(part.data),
                     };
                   }
                 }),
-          providerOptions: defaultMessageProviderOptions()
         });
       } else if (message.role == "assistant") {
         llmMessages.push({
@@ -303,24 +293,20 @@ export class OpenBrowserMemory {
             if (part.type == "text") {
               return {
                 type: "text",
-                text: part.text
-              };
-            } else if (part.type == "reasoning") {
-              return {
-                type: "reasoning",
-                text: part.text
+                text: part.text,
               };
             } else if (part.type == "tool-call") {
               return {
                 type: "tool-call",
                 toolCallId: part.toolCallId,
                 toolName: part.toolName,
-                input: part.args as unknown
+                input: part.args || {},
+                providerOptions: part.providerOptions,
               };
             } else {
               return part;
             }
-          })
+          }),
         });
       } else if (message.role == "tool") {
         llmMessages.push({
@@ -334,24 +320,24 @@ export class OpenBrowserMemory {
                 typeof part.result == "string"
                   ? {
                       type: "text",
-                      value: part.result
+                      value: part.result,
                     }
                   : {
                       type: "json",
-                      value: part.result as any
-                    }
+                      value: part.result as any,
+                    },
             };
-          })
+          }),
         });
       }
     }
     return [
       {
         role: "system",
-        content: this.getSystemPrompt(),
-        providerOptions: defaultMessageProviderOptions()
+        content: this.getSystemPrompt() || "You are a helpful assistant.",
+        providerOptions: defaultMessageProviderOptions(),
       },
-      ...llmMessages
+      ...llmMessages,
     ];
   }
 }

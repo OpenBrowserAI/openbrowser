@@ -2,16 +2,16 @@ import {
   LanguageModelV2Prompt,
   LanguageModelV2TextPart,
   LanguageModelV2ToolCallPart,
-  LanguageModelV2FunctionTool
+  LanguageModelV2FunctionTool,
 } from "@ai-sdk/provider";
 import config from "../config";
 import { Tool } from "../types";
 import Log from "../common/log";
 import TaskSnapshotTool from "./snapshot";
-import { callAgentLLM } from "../agent/llm";
+import { callAgentLLM } from "../agent/agent-llm";
 import { RetryLanguageModel } from "../llm";
 import { fixJson, mergeTools, sub } from "../common/utils";
-import { AgentContext } from "../core/context";
+import { AgentContext } from "../agent/agent-context";
 
 export function extractUsedTool<T extends Tool | LanguageModelV2FunctionTool>(
   messages: LanguageModelV2Prompt,
@@ -85,10 +85,7 @@ async function doCompressAgentMessages(
   tools: LanguageModelV2FunctionTool[]
 ) {
   const openbrowserConfig = agentContext.context.config;
-  const rlm = new RetryLanguageModel(
-    openbrowserConfig.llms,
-    openbrowserConfig.compressLlms
-  );
+  const rlm = new RetryLanguageModel(openbrowserConfig.llms, openbrowserConfig.compressLlms);
   rlm.setContext(agentContext);
   // extract used tool
   const usedTools = extractUsedTool(messages, tools);
@@ -98,8 +95,8 @@ async function doCompressAgentMessages(
       type: "function",
       name: snapshotTool.name,
       description: snapshotTool.description,
-      inputSchema: snapshotTool.parameters
-    }
+      inputSchema: snapshotTool.parameters,
+    },
   ]);
   // handle messages
   let lastToolIndex = messages.length - 1;
@@ -117,9 +114,9 @@ async function doCompressAgentMessages(
     content: [
       {
         type: "text",
-        text: "Please create a snapshot backup of the current task, keeping only key important information and node completion status."
-      }
-    ]
+        text: "Please create a snapshot backup of the current task, keeping only key important information and node completion status.",
+      },
+    ],
   });
   // compress snapshot
   const result = await callAgentLLM(
@@ -130,7 +127,7 @@ async function doCompressAgentMessages(
     true,
     {
       type: "tool",
-      toolName: snapshotTool.name
+      toolName: snapshotTool.name,
     }
   );
   const toolCall = result.filter((s) => s.type == "tool-call")[0];
@@ -143,14 +140,16 @@ async function doCompressAgentMessages(
   if (callback) {
     await callback.onMessage(
       {
+        streamType: "agent",
+        chatId: agentContext.context.chatId,
         taskId: agentContext.context.taskId,
         agentName: agentContext.agent.Name,
         nodeId: agentContext.agentChain.agent.id,
         type: "tool_result",
-        toolId: toolCall.toolCallId,
+        toolCallId: toolCall.toolCallId,
         toolName: toolCall.toolName,
         params: args,
-        toolResult: toolResult
+        toolResult: toolResult,
       },
       agentContext
     );
@@ -169,7 +168,7 @@ async function doCompressAgentMessages(
     content: toolResult.content.filter((s) => s.type == "text") as Array<{
       type: "text";
       text: string;
-    }>
+    }>,
   });
 }
 
@@ -181,7 +180,7 @@ function compressLargeContextMessages(messages: LanguageModelV2Prompt) {
         if (c.type == "text" && c.text.length > config.largeTextLength) {
           return {
             ...c,
-            text: sub(c.text, config.largeTextLength, true)
+            text: sub(c.text, config.largeTextLength, true),
           };
         }
         return c;
@@ -191,7 +190,7 @@ function compressLargeContextMessages(messages: LanguageModelV2Prompt) {
         if (c.type == "text" && c.text.length > config.largeTextLength) {
           return {
             ...c,
-            text: sub(c.text, config.largeTextLength, true)
+            text: sub(c.text, config.largeTextLength, true),
           };
         }
         return c;
@@ -208,8 +207,8 @@ function compressLargeContextMessages(messages: LanguageModelV2Prompt) {
               ...c,
               output: {
                 ...output,
-                value: sub(output.value, config.largeTextLength, true)
-              }
+                value: sub(output.value, config.largeTextLength, true),
+              },
             };
           } else if (
             (output.type == "json" || output.type == "error-json") &&
@@ -227,16 +226,16 @@ function compressLargeContextMessages(messages: LanguageModelV2Prompt) {
                 output: {
                   ...output,
                   value: json_str,
-                  type: output.type == "error-json" ? "error-text" : "text"
-                }
+                  type: output.type == "error-json" ? "error-text" : "text",
+                },
               };
             } else {
               return {
                 ...c,
                 output: {
                   ...output,
-                  value: json_obj
-                }
+                  value: json_obj,
+                },
               };
             }
           } else if (output.type == "content") {
@@ -273,7 +272,7 @@ export function handleLargeContextMessages(messages: LanguageModelV2Prompt) {
           }
           content = {
             type: "text",
-            text: "[image]"
+            text: "[image]",
           };
           message.content[j] = content;
         } else if (content.type == "file") {
@@ -282,7 +281,7 @@ export function handleLargeContextMessages(messages: LanguageModelV2Prompt) {
           }
           content = {
             type: "text",
-            text: "[file]"
+            text: "[file]",
           };
           message.content[j] = content;
         }
@@ -305,7 +304,7 @@ export function handleLargeContextMessages(messages: LanguageModelV2Prompt) {
             }
             _content = {
               type: "text",
-              text: "[image]"
+              text: "[image]",
             };
             toolContent.value[r] = _content;
           }
@@ -324,7 +323,7 @@ export function handleLargeContextMessages(messages: LanguageModelV2Prompt) {
             }
             _content = {
               type: "text",
-              text: sub(_content.text, config.largeTextLength, true)
+              text: sub(_content.text, config.largeTextLength, true),
             };
             toolContent.value[r] = _content;
           }

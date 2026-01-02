@@ -1,7 +1,4 @@
-import {
-  AgentContext,
-  BaseBrowserLabelsAgent
-} from "@openbrowser-ai/core";
+import { AgentContext, BaseBrowserLabelsAgent } from "@openbrowser-ai/core";
 
 export default class BrowserAgent extends BaseBrowserLabelsAgent {
   protected async screenshot(
@@ -12,19 +9,19 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     try {
       dataUrl = await chrome.tabs.captureVisibleTab(windowId, {
         format: "jpeg",
-        quality: 60
+        quality: 60,
       });
     } catch (e) {
       await this.sleep(1000);
       dataUrl = await chrome.tabs.captureVisibleTab(windowId, {
         format: "jpeg",
-        quality: 60
+        quality: 60,
       });
     }
     let data = dataUrl.substring(dataUrl.indexOf("base64,") + 7);
     return {
       imageBase64: data,
-      imageType: "image/jpeg"
+      imageType: "image/jpeg",
     };
   }
 
@@ -39,7 +36,7 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     let windowId = await this.getWindowId(agentContext);
     let tab = await chrome.tabs.create({
       url: url,
-      windowId: windowId
+      windowId: windowId,
     });
     tab = await this.waitForTabComplete(tab.id);
     await this.sleep(200);
@@ -59,7 +56,7 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
   ): Promise<Array<{ tabId: number; url: string; title: string }>> {
     let windowId = await this.getWindowId(agentContext);
     let tabs = await chrome.tabs.query({
-      windowId: windowId
+      windowId: windowId,
     });
     let result: Array<{ tabId: number; url: string; title: string }> = [];
     for (let i = 0; i < tabs.length; i++) {
@@ -67,7 +64,7 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
       result.push({
         tabId: tab.id,
         url: tab.url,
-        title: tab.title
+        title: tab.title,
       });
     }
     return result;
@@ -85,7 +82,7 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     return {
       tabId: tab.id,
       url: tab.url,
-      title: tab.title
+      title: tab.title,
     };
   }
 
@@ -148,7 +145,7 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     let frameResults = await chrome.scripting.executeScript({
       target: { tabId: tabId as number },
       func: func,
-      args: args
+      args: args,
     });
     return frameResults[0].result;
   }
@@ -158,12 +155,12 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     let tabs = (await chrome.tabs.query({
       windowId,
       active: true,
-      windowType: "normal"
+      windowType: "normal",
     })) as any[];
     if (tabs.length == 0) {
       tabs = (await chrome.tabs.query({
         windowId,
-        windowType: "normal"
+        windowType: "normal",
       })) as any[];
     }
     return tabs[tabs.length - 1].id as number;
@@ -176,12 +173,16 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     if (windowId) {
       return windowId;
     }
+    windowId = agentContext.context.variables.get("windowId") as number
+    if (windowId) {
+      return windowId
+    }
     let window = await chrome.windows.getLastFocused({
-      windowTypes: ["normal"]
+      windowTypes: ["normal"],
     });
     if (!window) {
       window = await chrome.windows.getCurrent({
-        windowTypes: ["normal"]
+        windowTypes: ["normal"],
       });
     }
     if (window) {
@@ -189,12 +190,12 @@ export default class BrowserAgent extends BaseBrowserLabelsAgent {
     }
     let tabs = (await chrome.tabs.query({
       windowType: "normal",
-      currentWindow: true
+      currentWindow: true,
     })) as any[];
     if (tabs.length == 0) {
       tabs = (await chrome.tabs.query({
         windowType: "normal",
-        lastFocusedWindow: true
+        lastFocusedWindow: true,
       })) as any[];
     }
     return tabs[tabs.length - 1].windowId as number;
