@@ -7,6 +7,7 @@ import {
   PaperClipOutlined,
   PlusOutlined,
   HistoryOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import type { UploadedFile } from "../types";
 import { Button, Space, Image, Typography } from "antd";
@@ -111,7 +112,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
         {/* Bottom Action Bar */}
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2">
-          {/* Left: Attachment and History Buttons */}
+          {/* Left: Attachment, History, and Settings Buttons */}
           <Space size="small">
             <Button
               type="text"
@@ -124,6 +125,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               type="text"
               icon={<HistoryOutlined />}
               onClick={onShowSessionHistory}
+              disabled={sending || currentMessageId !== null}
+              className="text-gray-500 hover:text-gray-700"
+            />
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              onClick={() => chrome.runtime.openOptionsPage()}
               disabled={sending || currentMessageId !== null}
               className="text-gray-500 hover:text-gray-700"
             />
