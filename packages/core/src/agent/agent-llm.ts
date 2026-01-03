@@ -9,6 +9,7 @@ import {
   LLMRequest,
   DialogueTool,
   HumanCallback,
+  AssistantParts,
   AgentStreamCallback,
 } from "../types";
 import {
@@ -195,7 +196,7 @@ export async function callAgentLLM(
   toolChoice?: LanguageModelV2ToolChoice,
   callback?: AgentStreamCallback & HumanCallback,
   requestHandler?: (request: LLMRequest) => void
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>> {
+): Promise<AssistantParts> {
   await agentContext.context.checkAborted();
   if (
     !noCompress &&

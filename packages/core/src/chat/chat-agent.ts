@@ -1,14 +1,13 @@
 import {
   PageTab,
-  OpenBrowserMessage,
   ToolResult,
   DialogueTool,
+  AssistantParts,
   DialogueParams,
+  ChatStreamCallback,
+  OpenBrowserMessage,
   OpenBrowserDialogueConfig,
   OpenBrowserMessageUserPart,
-  ChatStreamCallback,
-  LanguageModelV2TextPart,
-  LanguageModelV2ToolCallPart,
   LanguageModelV2ToolResultPart,
 } from "../types";
 import {
@@ -229,7 +228,7 @@ export class ChatAgent {
   protected async handleCallResult(
     messageId: string,
     chatTools: DialogueTool[],
-    results: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>,
+    results: AssistantParts,
     chatStreamCallback?: ChatStreamCallback
   ): Promise<string | null> {
     let text: string | null = null;
@@ -241,6 +240,10 @@ export class ChatAgent {
       const result = results[i];
       if (result.type == "text") {
         text = result.text;
+        continue;
+      }
+      // Skip reasoning parts - they're only needed for conversation history
+      if (result.type == "reasoning") {
         continue;
       }
       let toolResult: ToolResult;

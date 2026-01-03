@@ -4,14 +4,14 @@ import {
 } from "@ai-sdk/provider";
 import {
   LLMRequest,
+  AssistantParts,
   ChatStreamCallback,
   OpenBrowserMessageToolPart,
   OpenBrowserMessageUserPart,
   LanguageModelV2Prompt,
-  OpenBrowserMessageAssistantPart,
   LanguageModelV2TextPart,
+  OpenBrowserMessageAssistantPart,
   LanguageModelV2ToolChoice,
-  LanguageModelV2ToolCallPart,
   LanguageModelV2FunctionTool,
 } from "../types";
 import { RetryLanguageModel, callLLM } from "../llm";
@@ -25,7 +25,7 @@ export async function callChatLLM(
   toolChoice?: LanguageModelV2ToolChoice,
   callback?: ChatStreamCallback,
   signal?: AbortSignal
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>> {
+): Promise<AssistantParts> {
   const streamCallback = callback?.chatCallback || {
     onMessage: async () => {},
   };
@@ -46,17 +46,23 @@ export async function callChatLLM(
 }
 
 export function convertAssistantToolResults(
-  results: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>
+  results: AssistantParts
 ): OpenBrowserMessageAssistantPart[] {
   return results.map((part) => {
     if (part.type == "text") {
       return {
-        type: "text",
+        type: "text" as const,
         text: part.text,
       };
-    } else if (part.type == "tool-call") {
+    } else if (part.type == "reasoning") {
       return {
-        type: "tool-call",
+        type: "reasoning" as const,
+        text: part.text,
+        providerOptions: part.providerOptions,
+      };
+    } else {
+      return {
+        type: "tool-call" as const,
         toolCallId: part.toolCallId,
         toolName: part.toolName,
         args:
@@ -66,7 +72,6 @@ export function convertAssistantToolResults(
         providerOptions: part.providerOptions,
       };
     }
-    return part;
   });
 }
 

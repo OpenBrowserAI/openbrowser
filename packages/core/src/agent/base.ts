@@ -21,6 +21,7 @@ import {
   ToolExecuter,
   WorkflowAgent,
   HumanCallback,
+  AssistantParts,
   AgentStreamCallback,
 } from "../types";
 import {
@@ -201,7 +202,7 @@ export class Agent {
     agentContext: AgentContext,
     messages: LanguageModelV2Prompt,
     agentTools: Tool[],
-    results: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>
+    results: AssistantParts
   ): Promise<string | null> {
     const user_messages: LanguageModelV2Prompt = [];
     const toolResults: LanguageModelV2ToolResultPart[] = [];

@@ -260,29 +260,14 @@ export class RetryLanguageModel {
       }
     }
     if (llm.provider == "openai") {
-      if (
-        !baseURL ||
-        baseURL.indexOf("openai.com") > -1 ||
-        llm.config?.organization ||
-        llm.config?.openai
-      ) {
-        return createOpenAI({
-          apiKey: apiKey,
-          baseURL: baseURL,
-          fetch: llm.fetch,
-          organization: llm.config?.organization,
-          project: llm.config?.project,
-          headers: llm.config?.headers,
-        }).languageModel(llm.model);
-      } else {
-        return createOpenAICompatible({
-          name: llm.model,
-          apiKey: apiKey,
-          baseURL: baseURL,
-          fetch: llm.fetch,
-          headers: llm.config?.headers,
-        }).languageModel(llm.model);
-      }
+      return createOpenAI({
+        apiKey: apiKey,
+        baseURL: baseURL,
+        fetch: llm.fetch,
+        organization: llm.config?.organization,
+        project: llm.config?.project,
+        headers: llm.config?.headers,
+      }).languageModel(llm.model);
     } else if (llm.provider == "anthropic") {
       return createAnthropic({
         apiKey: apiKey,

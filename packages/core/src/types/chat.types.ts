@@ -96,6 +96,11 @@ export type OpenBrowserMessageAssistantPart =
       text: string;
     }
   | {
+      type: "reasoning";
+      text: string;
+      providerOptions?: SharedV2ProviderOptions;
+    }
+  | {
       type: "tool-call";
       toolCallId: string;
       toolName: string;

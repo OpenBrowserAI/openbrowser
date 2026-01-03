@@ -40,6 +40,7 @@ export type {
   ReActRequest,
   StreamResult,
   GenerateResult,
+  AssistantParts,
   ReActToolSchema,
   ReActLoopControl,
   LLMErrorHandler,
@@ -81,6 +82,7 @@ export type {
   LanguageModelV2StreamPart,
   LanguageModelV2ToolCallPart,
   LanguageModelV2FunctionTool,
+  LanguageModelV2ReasoningPart,
   LanguageModelV2ToolResultPart,
   LanguageModelV2ToolResultOutput,
 } from "@ai-sdk/provider";

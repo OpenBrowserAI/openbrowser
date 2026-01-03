@@ -295,6 +295,12 @@ export class OpenBrowserMemory {
                 type: "text",
                 text: part.text,
               };
+            } else if (part.type == "reasoning") {
+              return {
+                type: "reasoning",
+                text: part.text,
+                providerOptions: part.providerOptions,
+              };
             } else if (part.type == "tool-call") {
               return {
                 type: "tool-call",

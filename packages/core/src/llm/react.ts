@@ -1,5 +1,6 @@
 import {
   LLMRequest,
+  AssistantParts,
   LLMErrorHandler,
   LLMStreamMessage,
   LLMFinishHandler,
@@ -21,7 +22,10 @@ import config from "../config";
 import Log from "../common/log";
 import { RetryLanguageModel } from "./rlm";
 import { sleep, uuidv4 } from "../common/utils";
-import { LanguageModelV2StreamPart } from "@ai-sdk/provider";
+import {
+  LanguageModelV2StreamPart,
+  LanguageModelV2ReasoningPart,
+} from "@ai-sdk/provider";
 
 export async function callWithReAct(
   rlm: RetryLanguageModel,
@@ -31,7 +35,7 @@ export async function callWithReAct(
   errorHandler?: LLMErrorHandler,
   finishHandler?: LLMFinishHandler,
   loopControl?: ReActLoopControl
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>>;
+): Promise<AssistantParts>;
 
 export async function callWithReAct(
   rlm: RetryLanguageModel,
@@ -41,7 +45,7 @@ export async function callWithReAct(
   errorHandler?: LLMErrorHandler,
   finishHandler?: LLMFinishHandler,
   loopControl?: ReActLoopControl
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>>;
+): Promise<AssistantParts>;
 
 export async function callWithReAct(
   rlm: RetryLanguageModel,
@@ -51,7 +55,7 @@ export async function callWithReAct(
   errorHandler?: LLMErrorHandler,
   finishHandler?: LLMFinishHandler,
   loopControl?: ReActLoopControl
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>>;
+): Promise<AssistantParts>;
 
 export async function callWithReAct(
   rlm: RetryLanguageModel,
@@ -61,7 +65,7 @@ export async function callWithReAct(
   errorHandler?: LLMErrorHandler,
   finishHandler?: LLMFinishHandler,
   loopControl?: ReActLoopControl
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>> {
+): Promise<AssistantParts> {
   if (!loopControl) {
     loopControl = async (request, assistantParts, loopNum) => {
       if (loopNum >= 15) {
@@ -83,9 +87,7 @@ export async function callWithReAct(
     }));
   }
   let loopNum = 0;
-  let assistantParts: Array<
-    LanguageModelV2TextPart | LanguageModelV2ToolCallPart
-  > | null = null;
+  let assistantParts: AssistantParts = [];
   while (true) {
     await streamCallback?.({
       type: "loop_start",
@@ -191,7 +193,7 @@ export async function callLLM(
   errorHandler?: LLMErrorHandler,
   finishHandler?: LLMFinishHandler,
   retryNum: number = 0
-): Promise<Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>> {
+): Promise<AssistantParts> {
   let streamText = "";
   let thinkText = "";
   let toolArgsText = "";
@@ -199,6 +201,7 @@ export async function callLLM(
   let thinkStreamId = uuidv4();
   let textStreamDone = false;
   const toolParts: LanguageModelV2ToolCallPart[] = [];
+  let reasoningPart: LanguageModelV2ReasoningPart | null = null;
   let reader: ReadableStreamDefaultReader<LanguageModelV2StreamPart> | null =
     null;
   try {
@@ -270,6 +273,11 @@ export async function callLLM(
           break;
         }
         case "reasoning-end": {
+          reasoningPart = {
+            type: "reasoning",
+            text: thinkText || "",
+            providerOptions: chunk.providerMetadata
+          };
           if (thinkText) {
             await streamCallback?.({
               type: "thinking",
@@ -460,34 +468,55 @@ export async function callLLM(
   } finally {
     reader && reader.releaseLock();
   }
-  return streamText
-    ? [
-        { type: "text", text: streamText } as LanguageModelV2TextPart,
-        ...toolParts,
-      ]
-    : toolParts;
+  const parts: AssistantParts = [];
+
+  // Include reasoning part first if present (required for OpenAI reasoning models)
+  if (reasoningPart) {
+    parts.push(reasoningPart);
+  }
+
+  if (streamText) {
+    parts.push({ type: "text", text: streamText } as LanguageModelV2TextPart);
+  }
+
+  parts.push(...toolParts);
+
+  return parts;
 }
 
 export function convertAssistantContent(
-  assistantParts: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>
-): Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart> {
+  assistantParts: AssistantParts
+): AssistantParts {
   return assistantParts
-    .filter((part) => part.type == "text" || part.type == "tool-call")
-    .map((part) =>
-      part.type === "text"
-        ? {
-            type: "text",
-            text: part.text,
-          }
-        : {
-            type: "tool-call",
-            toolCallId: part.toolCallId,
-            toolName: part.toolName,
-            input:
-              typeof part.input == "string"
-                ? JSON.parse(part.input || "{}")
-                : part.input || {},
-            providerOptions: part.providerOptions,
-          }
-    );
+    .filter(
+      (part) =>
+        part.type == "text" ||
+        part.type == "tool-call" ||
+        part.type == "reasoning"
+    )
+    .map((part) => {
+      if (part.type === "text") {
+        return {
+          type: "text" as const,
+          text: part.text,
+        };
+      } else if (part.type === "reasoning") {
+        return {
+          type: "reasoning",
+          text: part.text,
+          providerOptions: part.providerOptions,
+        };
+      } else {
+        return {
+          type: "tool-call" as const,
+          toolCallId: part.toolCallId,
+          toolName: part.toolName,
+          input:
+            typeof part.input == "string"
+              ? JSON.parse(part.input || "{}")
+              : part.input || {},
+          providerOptions: part.providerOptions,
+        };
+      }
+    });
 }
