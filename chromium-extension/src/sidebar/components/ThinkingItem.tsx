@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { LoadingOutlined } from "@ant-design/icons";
+import { LoadingOutlined, BulbOutlined } from "@ant-design/icons";
 import { MarkdownRenderer } from "../MarkdownRenderer";
 import { Collapse, Typography, Spin } from "antd";
 
@@ -36,11 +36,13 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
           key: "thinking",
           label: (
             <div className="flex items-center gap-2">
-              {!streamDone && (
+              {!streamDone ? (
                 <LoadingOutlined className="text-gray-400" spin />
+              ) : (
+                <BulbOutlined className="text-gray-400" />
               )}
               <Text type="secondary" className="text-sm">
-                💭 Thinking
+                Thinking
               </Text>
             </div>
           ),

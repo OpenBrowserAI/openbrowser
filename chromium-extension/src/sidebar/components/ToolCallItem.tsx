@@ -9,6 +9,7 @@ import { isJsonStr } from "../utils";
 import type { ChatContentItem } from "../types";
 import { MarkdownRenderer } from "../MarkdownRenderer";
 import { Typography, Tag, Collapse, Image, Spin } from "antd";
+import { getToolDisplayName } from "../utils/toolNameMapper";
 
 const { Text, Paragraph } = Typography;
 
@@ -43,7 +44,9 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
           label: (
             <div className="flex items-center gap-2">
               <ToolOutlined className="text-gray-500" />
-              <Text className="text-sm text-gray-700">{item.toolName}</Text>
+              <Text className="text-sm text-gray-700">
+                {getToolDisplayName(item.toolName)}
+              </Text>
               {getStatusIcon()}
             </div>
           ),

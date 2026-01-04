@@ -115,21 +115,31 @@ body {
   margin-right: 2px;
 }
 
-/* Minimal collapse styles for tools and thinking */
+/* Minimal collapse styles for tools, thinking, and agents */
 .tool-call-collapse .ant-collapse-header,
-.thinking-collapse .ant-collapse-header {
+.thinking-collapse .ant-collapse-header,
+.agent-collapse .ant-collapse-header {
   padding: 6px 12px !important;
   background: transparent !important;
   border: none !important;
+  overflow: hidden !important;
+}
+
+.agent-collapse .ant-collapse-header .ant-collapse-header-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .tool-call-collapse .ant-collapse-content-box,
-.thinking-collapse .ant-collapse-content-box {
+.thinking-collapse .ant-collapse-content-box,
+.agent-collapse .ant-collapse-content-box {
   padding: 8px 12px !important;
 }
 
 .tool-call-collapse,
-.thinking-collapse {
+.thinking-collapse,
+.agent-collapse {
   background: transparent !important;
   border: 1px solid #e5e7eb !important;
   border-radius: 6px !important;

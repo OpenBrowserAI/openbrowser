@@ -7,7 +7,7 @@ const config: Config = {
   maxReactNum: 500,
   maxOutputTokens: 16000,
   maxRetryNum: 3,
-  agentParallel: false,
+  agentParallel: true,
   workflowConfirm: false,
   compressThreshold: 80,
   compressTokensThreshold: 80000,

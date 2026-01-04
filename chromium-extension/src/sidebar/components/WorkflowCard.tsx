@@ -1,11 +1,11 @@
 import React from "react";
 import type { TaskData } from "../types";
-import { RobotOutlined } from "@ant-design/icons";
-import { Card, Space, Typography, Spin, Button } from "antd";
+import { Button, Typography } from "antd";
 import { AgentExecutionCard } from "./AgentExecutionCard";
+import { ThinkingItem } from "./ThinkingItem";
 import { buildAgentTree, WorkflowAgent } from "@openbrowser-ai/core";
 
-const { Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 interface WorkflowCardProps {
   task: TaskData;
@@ -55,50 +55,22 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({
   const agentGroups = buildAgentGroups();
 
   return (
-    <div className="mt-4">
-      <Card
-        size="small"
-        title={
-          <Space>
-            <RobotOutlined />
-            <Text strong>Multi-Agent Workflow</Text>
-            {!task.workflowStreamDone && <Spin size="small" />}
-          </Space>
-        }
-        className="bg-blue-50"
-      >
-        {workflow.thought && (
-          <Paragraph type="secondary" className="mb-4">
-            {workflow.thought}
-          </Paragraph>
-        )}
-        {agentGroups.map((group, groupIndex) => (
-          <div key={groupIndex} className="mb-4">
-            {group.length === 1 ? (
-              // Single agent
-              <div>
-                <AgentExecutionCard agentNode={group[0]} task={task} />
-              </div>
-            ) : (
-              // Parallel agents
-              <div>
-                <Text strong className="text-blue-500">
-                  [{group.map((a) => a.name).join(", ")}]
-                </Text>
-                <div className="ml-4 mt-2">
-                  {group.map((agent) => (
-                    <div key={agent.id} className="mb-2">
-                      <AgentExecutionCard agentNode={agent} task={task} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-        {task.workflowConfirm === "pending" && (
-          <div className="mt-4 flex justify-end gap-3">
+    <div>
+      {workflow.thought && (
+        <div className="mb-2">
+          <ThinkingItem
+            streamId={`workflow-${task.taskId}`}
+            text={workflow.thought}
+            streamDone={task.workflowStreamDone ?? true}
+          />
+        </div>
+      )}
+      {task.workflowConfirm === "pending" && (
+        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded flex justify-between items-center">
+          <Text className="text-sm text-gray-700">Execute this workflow?</Text>
+          <div className="flex gap-2">
             <Button
+              size="small"
               onClick={() => {
                 task.workflowConfirm = "cancel";
                 sendWorkflowConfirmCallback(task.taskId, "cancel");
@@ -109,6 +81,7 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({
             </Button>
             <Button
               type="primary"
+              size="small"
               onClick={() => {
                 task.workflowConfirm = "confirm";
                 sendWorkflowConfirmCallback(task.taskId, "confirm");
@@ -118,8 +91,26 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({
               Confirm
             </Button>
           </div>
-        )}
-      </Card>
+        </div>
+      )}
+      {agentGroups.map((group, groupIndex) => (
+        <div key={groupIndex} className="mb-2">
+          {group.length === 1 ? (
+            <AgentExecutionCard agentNode={group[0]} task={task} />
+          ) : (
+            <div>
+              <div className="mb-1 text-xs text-gray-500 italic">
+                Running in parallel: {group.map((a) => a.name).join(", ")}
+              </div>
+              {group.map((agent) => (
+                <div key={agent.id} className="mb-2">
+                  <AgentExecutionCard agentNode={agent} task={task} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 };
