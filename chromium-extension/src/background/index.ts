@@ -5,14 +5,14 @@ import {
   uuidv4,
   ChatAgent,
   AgentContext,
-  AgentStreamMessage,
+  AgentStreamMessage
 } from "@openbrowser-ai/core";
 import {
   HumanCallback,
   MessageTextPart,
   MessageFilePart,
   ChatStreamMessage,
-  AgentStreamCallback,
+  AgentStreamCallback
 } from "@openbrowser-ai/core/types";
 import { initAgentServices } from "./agent";
 import WriteFileAgent from "./agent/file-agent";
@@ -28,10 +28,10 @@ const chatCallback = {
   onMessage: async (message: ChatStreamMessage) => {
     chrome.runtime.sendMessage({
       type: "chat_callback",
-      data: message,
+      data: message
     });
     console.log("chat message: ", JSON.stringify(message, null, 2));
-  },
+  }
 };
 
 // Task agent callback
@@ -39,7 +39,7 @@ const taskCallback: AgentStreamCallback & HumanCallback = {
   onMessage: async (message: AgentStreamMessage) => {
     chrome.runtime.sendMessage({
       type: "task_callback",
-      data: { ...message, messageId: message.taskId },
+      data: { ...message, messageId: message.taskId }
     });
     if (message.type === "workflow_confirm") {
       callbackIdMap.set(message.taskId, (value: "confirm" | "cancel") => {
@@ -62,8 +62,8 @@ const taskCallback: AgentStreamCallback & HumanCallback = {
         messageId: context.context.taskId,
         type: "human_confirm",
         callbackId: callbackId,
-        prompt: prompt,
-      },
+        prompt: prompt
+      }
     });
     console.log("human_confirm: ", prompt);
     return new Promise((resolve) => {
@@ -86,8 +86,8 @@ const taskCallback: AgentStreamCallback & HumanCallback = {
         messageId: context.context.taskId,
         type: "human_input",
         callbackId: callbackId,
-        prompt: prompt,
-      },
+        prompt: prompt
+      }
     });
     console.log("human_input: ", prompt);
     return new Promise((resolve) => {
@@ -117,8 +117,8 @@ const taskCallback: AgentStreamCallback & HumanCallback = {
         callbackId: callbackId,
         prompt: prompt,
         options: options,
-        multiple: multiple,
-      },
+        multiple: multiple
+      }
     });
     console.log("human_select: ", prompt);
     return new Promise((resolve) => {
@@ -146,8 +146,8 @@ const taskCallback: AgentStreamCallback & HumanCallback = {
         type: "human_help",
         callbackId: callbackId,
         helpType: helpType,
-        prompt: prompt,
-      },
+        prompt: prompt
+      }
     });
     console.log("human_help: ", prompt);
     return new Promise((resolve) => {
@@ -156,7 +156,7 @@ const taskCallback: AgentStreamCallback & HumanCallback = {
         resolve(value);
       });
     });
-  },
+  }
 };
 
 async function loadLLMs(): Promise<LLMs> {
@@ -178,9 +178,9 @@ async function loadLLMs(): Promise<LLMs> {
       model: llmConfig.modelName,
       apiKey: llmConfig.apiKey,
       config: {
-        baseURL: llmConfig.options.baseURL,
-      },
-    },
+        baseURL: llmConfig.options.baseURL
+      }
+    }
   };
 
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
@@ -230,7 +230,7 @@ async function handleChat(requestId: string, data: any): Promise<void> {
     chrome.runtime.sendMessage({
       requestId,
       type: "chat_result",
-      data: { messageId, error: "ChatAgent not initialized" },
+      data: { messageId, error: "ChatAgent not initialized" }
     });
     return;
   }
@@ -246,23 +246,23 @@ async function handleChat(requestId: string, data: any): Promise<void> {
       messageId,
       callback: {
         chatCallback,
-        taskCallback,
+        taskCallback
       },
       extra: {
-        windowId: windowId,
+        windowId: windowId
       },
-      signal: abortController.signal,
+      signal: abortController.signal
     });
     chrome.runtime.sendMessage({
       requestId,
       type: "chat_result",
-      data: { messageId, result },
+      data: { messageId, result }
     });
   } catch (error) {
     chrome.runtime.sendMessage({
       requestId,
       type: "chat_result",
-      data: { messageId, error: String(error) },
+      data: { messageId, error: String(error) }
     });
   }
 }
@@ -278,7 +278,7 @@ async function handleCallback(requestId: string, data: any): Promise<void> {
   chrome.runtime.sendMessage({
     requestId,
     type: "callback_result",
-    data: { callbackId, success: callback != null },
+    data: { callbackId, success: callback != null }
   });
 }
 
@@ -288,7 +288,7 @@ async function handleUploadFile(requestId: string, data: any): Promise<void> {
     chrome.runtime.sendMessage({
       requestId,
       type: "uploadFile_result",
-      data: { error: "ChatAgent not initialized" },
+      data: { error: "ChatAgent not initialized" }
     });
     return;
   }
@@ -305,13 +305,13 @@ async function handleUploadFile(requestId: string, data: any): Promise<void> {
     chrome.runtime.sendMessage({
       requestId,
       type: "uploadFile_result",
-      data: { fileId, url },
+      data: { fileId, url }
     });
   } catch (error) {
     chrome.runtime.sendMessage({
       requestId,
       type: "uploadFile_result",
-      data: { error: error + "" },
+      data: { error: error + "" }
     });
   }
 }
@@ -330,7 +330,6 @@ async function handleStop(requestId: string, data: any): Promise<void> {
     abortControllers.delete(data.messageId);
   }
 }
-
 
 // Handle get tabs request
 async function handleGetTabs(requestId: string, data: any): Promise<void> {
@@ -354,7 +353,7 @@ async function handleGetTabs(requestId: string, data: any): Promise<void> {
           favicon: tab.favIconUrl,
           lastAccessed: lastAccessed
             ? new Date(lastAccessed).toLocaleString()
-            : "",
+            : ""
         };
       })
       .slice(0, 15);
@@ -362,13 +361,13 @@ async function handleGetTabs(requestId: string, data: any): Promise<void> {
     chrome.runtime.sendMessage({
       requestId,
       type: "getTabs_result",
-      data: { tabs: sortedTabs },
+      data: { tabs: sortedTabs }
     });
   } catch (error) {
     chrome.runtime.sendMessage({
       requestId,
       type: "getTabs_result",
-      data: { error: String(error) },
+      data: { error: String(error) }
     });
   }
 }
@@ -382,38 +381,36 @@ const eventHandlers: Record<
   callback: handleCallback,
   uploadFile: handleUploadFile,
   stop: handleStop,
-  getTabs: handleGetTabs,
+  getTabs: handleGetTabs
 };
 
 // Message listener
-chrome.runtime.onMessage.addListener(async function (
-  request,
-  sender,
-  sendResponse
-) {
-  const requestId = request.requestId;
-  const type = request.type;
-  const data = request.data;
+chrome.runtime.onMessage.addListener(
+  async function (request, sender, sendResponse) {
+    const requestId = request.requestId;
+    const type = request.type;
+    const data = request.data;
 
-  if (!chatAgent) {
-    await init();
-  }
+    if (!chatAgent) {
+      await init();
+    }
 
-  const handler = eventHandlers[type];
-  if (handler) {
-    handler(requestId, data).catch((error) => {
-      printLog(`Error handling ${type}: ${error}`, "error");
-    });
+    const handler = eventHandlers[type];
+    if (handler) {
+      handler(requestId, data).catch((error) => {
+        printLog(`Error handling ${type}: ${error}`, "error");
+      });
+    }
   }
-});
+);
 
 function printLog(message: string, level?: "info" | "success" | "error") {
   chrome.runtime.sendMessage({
     type: "log",
     data: {
       level: level || "info",
-      message: message + "",
-    },
+      message: message + ""
+    }
   });
 }
 

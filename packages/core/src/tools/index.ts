@@ -36,5 +36,5 @@ export {
   HumanInteractTool,
   TaskNodeStatusTool,
   VariableStorageTool,
-  WatchTriggerTool,
-}
+  WatchTriggerTool
+};

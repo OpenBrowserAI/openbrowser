@@ -1,11 +1,15 @@
 import {
   JSONSchema7,
   SharedV2ProviderOptions,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "@ai-sdk/provider";
 import { ToolResult } from "./tools.types";
 import { LLMStreamMessage } from "./llm.types";
-import { OpenBrowserConfig, HumanCallback, AgentStreamCallback } from "./agent.types";
+import {
+  OpenBrowserConfig,
+  HumanCallback,
+  AgentStreamCallback
+} from "./agent.types";
 
 export type MessageTextPart = {
   type: "text";

@@ -270,7 +270,7 @@ export async function getPlanSystemPrompt(
   return PromptTemplate.render(planSysPrompt, {
     name: config.name,
     agents: agents_prompt.trim(),
-    examples: planExamplePrompt.trim(),
+    examples: planExamplePrompt.trim()
   }).trim();
 }
 
@@ -288,7 +288,7 @@ export function getPlanUserPrompt(
     attachments: context.variables.get("attachments"),
     dependentVariables: context.variables.get("dependentVariables"),
     datetime: context.variables.get("datetime") || new Date().toLocaleString(),
-    extPrompt: context.variables.get("planExtPrompt"),
+    extPrompt: context.variables.get("planExtPrompt")
   }).trim();
 }
 

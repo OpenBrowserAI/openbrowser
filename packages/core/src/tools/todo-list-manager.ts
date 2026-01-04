@@ -7,7 +7,7 @@ import { AgentContext } from "../agent/agent-context";
 import { Tool, ToolResult } from "../types/tools.types";
 import {
   LanguageModelV2FunctionTool,
-  LanguageModelV2Prompt,
+  LanguageModelV2Prompt
 } from "@ai-sdk/provider";
 import Log from "../common/log";
 
@@ -29,25 +29,25 @@ export default class TodoListManagerTool implements Tool {
           description:
             "Current completed task list items. Please update the completed list items based on the current task completion status.",
           items: {
-            type: "string",
-          },
+            type: "string"
+          }
         },
         todoList: {
           type: "array",
           description:
             "Current pending task list items. Please update the pending list items based on the current task pending status.",
           items: {
-            type: "string",
-          },
+            type: "string"
+          }
         },
         loopDetection: {
           type: "string",
           description:
             "Check if the current step is being repeatedly executed by comparing with previous steps.",
-          enum: ["loop", "no_loop"],
-        },
+          enum: ["loop", "no_loop"]
+        }
       },
-      required: ["completedList", "todoList", "loopDetection"],
+      required: ["completedList", "todoList", "loopDetection"]
     };
   }
 
@@ -59,9 +59,9 @@ export default class TodoListManagerTool implements Tool {
       content: [
         {
           type: "text",
-          text: "success",
-        },
-      ],
+          text: "success"
+        }
+      ]
     };
   }
 }
@@ -81,8 +81,8 @@ async function doTodoListManager(
         type: "function",
         name: todoListManager.name,
         description: todoListManager.description,
-        inputSchema: todoListManager.parameters,
-      },
+        inputSchema: todoListManager.parameters
+      }
     ]);
     // handle messages
     const newMessages: LanguageModelV2Prompt = [...messages];
@@ -91,9 +91,9 @@ async function doTodoListManager(
       content: [
         {
           type: "text",
-          text: `Task:\n${agentContext.agentChain.agent.xml}\n\nPlease check the completion status of the current task.`,
-        },
-      ],
+          text: `Task:\n${agentContext.agentChain.agent.xml}\n\nPlease check the completion status of the current task.`
+        }
+      ]
     });
     const result = await callAgentLLM(
       agentContext,
@@ -103,7 +103,7 @@ async function doTodoListManager(
       true,
       {
         type: "tool",
-        toolName: todoListManager.name,
+        toolName: todoListManager.name
       }
     );
     const toolCall = result.filter((s) => s.type == "tool-call")[0];
@@ -125,7 +125,7 @@ async function doTodoListManager(
           toolCallId: toolCall.toolCallId,
           toolName: toolCall.toolName,
           params: args,
-          toolResult: toolResult,
+          toolResult: toolResult
         },
         agentContext
       );
@@ -154,9 +154,9 @@ async function doTodoListManager(
       content: [
         {
           type: "text",
-          text: userPrompt.trim(),
-        },
-      ],
+          text: userPrompt.trim()
+        }
+      ]
     });
   } catch (e) {
     Log.error("TodoListManagerTool error", e);

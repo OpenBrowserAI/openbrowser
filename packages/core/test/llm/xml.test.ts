@@ -1,7 +1,7 @@
 import {
   parseWorkflow,
   buildAgentRootXml,
-  buildSimpleAgentWorkflow,
+  buildSimpleAgentWorkflow
 } from "../../src/common/xml";
 
 test.only("workflowXml", () => {
@@ -60,7 +60,7 @@ test.only("buildWorkflow", () => {
     taskId: "test",
     name: "Test workflow",
     agentName: "Browser",
-    task: "Open google",
+    task: "Open google"
   });
   console.log("workflow: \n", JSON.stringify(workflow, null, 2));
 });

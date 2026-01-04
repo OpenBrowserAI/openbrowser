@@ -4,7 +4,7 @@ import {
   DialogueTool,
   DialogueParams,
   GlobalPromptKey,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "../../types";
 import config from "../../config";
 import Log from "../../common/log";
@@ -45,28 +45,28 @@ export default class DeepActionTool implements DialogueTool {
       properties: {
         language: {
           type: "string",
-          description: "User language used, eg: English",
+          description: "User language used, eg: English"
         },
         taskDescription: {
           type: "string",
-          description: paramTaskDescription.trim(),
+          description: paramTaskDescription.trim()
         },
         tabIds: {
           type: "array",
           description:
             "Browser Tab IDs associated with this task, When user says 'left side' or 'current', it means current active tab",
-          items: { type: "integer" },
+          items: { type: "integer" }
         },
         dependentVariables: {
           type: "array",
           description:
             "The current task relies on variable data from prerequisite execution outputs. Provide the name of the dependent variable.",
           items: {
-            type: "string",
-          },
-        },
+            type: "string"
+          }
+        }
       },
-      required: ["language", "taskDescription"],
+      required: ["language", "taskDescription"]
     };
     this.params = params;
   }
@@ -86,7 +86,7 @@ export default class DeepActionTool implements DialogueTool {
     const openbrowser = new OpenBrowser(
       {
         ...chatConfig,
-        callback: this.params.callback?.taskCallback,
+        callback: this.params.callback?.taskCallback
       },
       chatId
     );
@@ -108,7 +108,7 @@ export default class DeepActionTool implements DialogueTool {
         return {
           file_name: part.filename,
           file_path: part.filePath,
-          file_url: part.data,
+          file_url: part.data
         };
       });
     const taskWebsite = await this.getTaskWebsite(tabIds);
@@ -120,7 +120,7 @@ export default class DeepActionTool implements DialogueTool {
       attachments: attachments,
       taskWebsite: taskWebsite,
       dependentVariables: dependentVariables,
-      datetime: this.params.datetime || new Date().toLocaleString(),
+      datetime: this.params.datetime || new Date().toLocaleString()
     });
     const context = openbrowser.getTask(messageId)!;
     Log.info("==> workflow", workflow);
@@ -133,7 +133,7 @@ export default class DeepActionTool implements DialogueTool {
           agentName: "",
           type: "workflow_confirm",
           workflow: workflow,
-          resolve,
+          resolve
         });
       });
       if (result === "cancel") {
@@ -141,9 +141,9 @@ export default class DeepActionTool implements DialogueTool {
           content: [
             {
               type: "text",
-              text: "User has canceled the execution.",
-            },
-          ],
+              text: "User has canceled the execution."
+            }
+          ]
         };
       }
     }
@@ -175,15 +175,15 @@ export default class DeepActionTool implements DialogueTool {
               return {
                 agent: agent.agent.name,
                 subTask: agent.agent.task,
-                agentResult: sub(agent.agentResult || "", 800, true),
+                agentResult: sub(agent.agentResult || "", 800, true)
               };
             }),
             variables: variableNames,
             taskResult: result.result,
-            success: result.success,
-          }),
-        },
-      ],
+            success: result.success
+          })
+        }
+      ]
     };
   }
 
@@ -199,7 +199,7 @@ export default class DeepActionTool implements DialogueTool {
       return {
         tabId: tab.tabId,
         title: tab.title,
-        url: sub(tab.url, 300),
+        url: sub(tab.url, 300)
       };
     });
   }

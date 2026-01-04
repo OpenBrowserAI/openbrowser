@@ -18,13 +18,13 @@ const sendWorkflowConfirmCallback = (
 ) => {
   chrome.runtime.sendMessage({
     type: "callback",
-    data: { callbackId, value: value },
+    data: { callbackId, value: value }
   });
 };
 
 export const WorkflowCard: React.FC<WorkflowCardProps> = ({
   task,
-  onUpdateTask,
+  onUpdateTask
 }) => {
   if (!task.workflow) return null;
 

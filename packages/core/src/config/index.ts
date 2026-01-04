@@ -23,8 +23,8 @@ const config: Config = {
     maxInputTokens: 64000,
     enableCompression: true,
     compressionThreshold: 10,
-    compressionMaxLength: 6000,
-  },
+    compressionMaxLength: 6000
+  }
 };
 
 export default config;

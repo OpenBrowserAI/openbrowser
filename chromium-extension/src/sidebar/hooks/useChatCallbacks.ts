@@ -4,7 +4,7 @@ import type {
   ChatMessage,
   AgentExecution,
   ChatStreamMessage,
-  AgentStreamMessage,
+  AgentStreamMessage
 } from "../types";
 import { useCallback } from "react";
 import { uuidv4 } from "@openbrowser-ai/core";
@@ -35,7 +35,7 @@ export const useChatCallbacks = (
             content: "",
             status: "waiting",
             timestamp: Date.now(),
-            contentItems: [],
+            contentItems: []
           };
           newMessages.push(_aiMessage);
           aiMessage = _aiMessage;
@@ -69,7 +69,7 @@ export const useChatCallbacks = (
               type: data.type,
               streamId: data.streamId,
               text: data.text,
-              streamDone: data.streamDone,
+              streamDone: data.streamDone
             });
           }
 
@@ -80,7 +80,7 @@ export const useChatCallbacks = (
           aiMessage.contentItems.push({
             type: "file",
             mimeType: data.mimeType,
-            data: data.data,
+            data: data.data
           });
         } else if (data.type === "tool_streaming") {
           const existingIndex = aiMessage.contentItems.findIndex(
@@ -96,7 +96,7 @@ export const useChatCallbacks = (
               type: "tool",
               toolCallId: data.toolCallId,
               toolName: data.toolName,
-              paramsText: data.paramsText,
+              paramsText: data.paramsText
             });
           }
         } else if (data.type === "tool_use") {
@@ -112,7 +112,7 @@ export const useChatCallbacks = (
               type: "tool",
               toolCallId: data.toolCallId,
               toolName: data.toolName,
-              params: data.params,
+              params: data.params
             });
           }
         } else if (data.type === "tool_running") {
@@ -132,7 +132,7 @@ export const useChatCallbacks = (
               toolCallId: data.toolCallId,
               toolName: data.toolName,
               running: true,
-              runningText: data.text,
+              runningText: data.text
             });
           }
         } else if (data.type === "tool_result") {
@@ -151,7 +151,7 @@ export const useChatCallbacks = (
               toolCallId: data.toolCallId,
               toolName: data.toolName,
               params: data.params,
-              result: data.toolResult,
+              result: data.toolResult
             });
           }
 
@@ -173,8 +173,8 @@ export const useChatCallbacks = (
                 taskId: taskId,
                 task: {
                   taskId: taskId,
-                  agents: [],
-                },
+                  agents: []
+                }
               });
             }
           }
@@ -248,8 +248,8 @@ export const useChatCallbacks = (
             taskId: data.taskId,
             task: {
               taskId: data.taskId,
-              agents: [],
-            },
+              agents: []
+            }
           });
         }
 
@@ -272,7 +272,7 @@ export const useChatCallbacks = (
             const agentExecution: AgentExecution = {
               agentNode: data.agentNode,
               contentItems: [],
-              status: "running",
+              status: "running"
             };
             taskItem.task.agents.push(agentExecution);
           }
@@ -296,7 +296,7 @@ export const useChatCallbacks = (
                 type: data.type,
                 streamId: data.streamId,
                 text: data.text,
-                streamDone: data.streamDone,
+                streamDone: data.streamDone
               });
             }
           }
@@ -308,7 +308,7 @@ export const useChatCallbacks = (
             agent.contentItems.push({
               type: "file",
               mimeType: data.mimeType,
-              data: data.data,
+              data: data.data
             });
           }
         } else if (data.type === "tool_streaming") {
@@ -329,7 +329,7 @@ export const useChatCallbacks = (
                 type: "tool",
                 toolCallId: data.toolCallId,
                 toolName: data.toolName,
-                paramsText: data.paramsText,
+                paramsText: data.paramsText
               });
             }
           }
@@ -350,7 +350,7 @@ export const useChatCallbacks = (
                 type: "tool",
                 toolCallId: data.toolCallId,
                 toolName: data.toolName,
-                params: data.params,
+                params: data.params
               });
             }
           }
@@ -375,7 +375,7 @@ export const useChatCallbacks = (
                 toolCallId: data.toolCallId,
                 toolName: data.toolName,
                 running: true,
-                runningText: data.text,
+                runningText: data.text
               });
             }
           }
@@ -399,7 +399,7 @@ export const useChatCallbacks = (
                 toolCallId: data.toolCallId,
                 toolName: data.toolName,
                 params: data.params,
-                result: data.toolResult,
+                result: data.toolResult
               });
             }
           }
@@ -440,12 +440,12 @@ export const useChatCallbacks = (
             if (existingIndex >= 0) {
               agent.contentItems[existingIndex] = {
                 ...humanData,
-                responded: false,
+                responded: false
               };
             } else {
               agent.contentItems.push({
                 ...humanData,
-                responded: false,
+                responded: false
               });
             }
           }

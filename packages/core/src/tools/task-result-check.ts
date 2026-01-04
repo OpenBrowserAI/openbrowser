@@ -7,7 +7,7 @@ import { AgentContext } from "../agent/agent-context";
 import { Tool, ToolResult } from "../types/tools.types";
 import {
   LanguageModelV2Prompt,
-  LanguageModelV2FunctionTool,
+  LanguageModelV2FunctionTool
 } from "@ai-sdk/provider";
 import Log from "../common/log";
 
@@ -26,21 +26,21 @@ export default class TaskResultCheckTool implements Tool {
         thought: {
           type: "string",
           description:
-            "Please conduct thoughtful analysis of the overall execution process and results of the current task, analyzing whether the task has been completed.",
+            "Please conduct thoughtful analysis of the overall execution process and results of the current task, analyzing whether the task has been completed."
         },
         completionStatus: {
           type: "string",
           description:
             "The completion status of the current task is only considered complete when the entire current task is finished; partial completion or task failure is considered incomplete",
-          enum: ["completed", "incomplete"],
+          enum: ["completed", "incomplete"]
         },
         todoList: {
           type: "string",
           description:
-            "Pending task list for incomplete tasks, when tasks are not fully completed, please describe which tasks remain to be completed",
-        },
+            "Pending task list for incomplete tasks, when tasks are not fully completed, please describe which tasks remain to be completed"
+        }
       },
-      required: ["thought", "completionStatus"],
+      required: ["thought", "completionStatus"]
     };
   }
 
@@ -52,9 +52,9 @@ export default class TaskResultCheckTool implements Tool {
       content: [
         {
           type: "text",
-          text: "success",
-        },
-      ],
+          text: "success"
+        }
+      ]
     };
   }
 }
@@ -74,8 +74,8 @@ async function doTaskResultCheck(
         type: "function",
         name: taskResultCheck.name,
         description: taskResultCheck.description,
-        inputSchema: taskResultCheck.parameters,
-      },
+        inputSchema: taskResultCheck.parameters
+      }
     ]);
     // handle messages
     const newMessages: LanguageModelV2Prompt = [...messages];
@@ -84,9 +84,9 @@ async function doTaskResultCheck(
       content: [
         {
           type: "text",
-          text: `Task:\n${agentContext.agentChain.agent.xml}\n\nPlease check the completion status of the current task.`,
-        },
-      ],
+          text: `Task:\n${agentContext.agentChain.agent.xml}\n\nPlease check the completion status of the current task.`
+        }
+      ]
     });
     const result = await callAgentLLM(
       agentContext,
@@ -96,7 +96,7 @@ async function doTaskResultCheck(
       true,
       {
         type: "tool",
-        toolName: taskResultCheck.name,
+        toolName: taskResultCheck.name
       }
     );
     const toolCall = result.filter((s) => s.type == "tool-call")[0];
@@ -118,7 +118,7 @@ async function doTaskResultCheck(
           toolCallId: toolCall.toolCallId,
           toolName: toolCall.toolName,
           params: args,
-          toolResult: toolResult,
+          toolResult: toolResult
         },
         agentContext
       );
@@ -131,18 +131,18 @@ async function doTaskResultCheck(
             type: "text",
             text: `It seems that your task has not been fully completed. Please continue with the remaining steps:\n${
               args.todoList || ""
-            }`,
-          },
-        ],
+            }`
+          }
+        ]
       });
     }
     return {
-      completionStatus: args.completionStatus,
+      completionStatus: args.completionStatus
     };
   } catch (e) {
     Log.error("TaskResultCheckTool error", e);
     return {
-      completionStatus: "completed",
+      completionStatus: "completed"
     };
   }
 }

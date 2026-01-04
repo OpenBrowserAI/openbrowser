@@ -28,7 +28,7 @@ const AppRun = () => {
     setShowSessionHistory,
     handleNewSession: newSession,
     handleShowSessionHistory,
-    handleSelectSession: selectSession,
+    handleSelectSession: selectSession
   } = useSessionManagement();
 
   const forceUpdate = useCallback(
@@ -54,7 +54,8 @@ const AppRun = () => {
       return true;
     }
     const threshold = container.clientHeight / 3;
-    const scrollBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+    const scrollBottom =
+      container.scrollHeight - container.scrollTop - container.clientHeight;
     return scrollBottom < threshold;
   }, []);
 
@@ -66,9 +67,9 @@ const AppRun = () => {
       setAutoScroll(isNearBottom());
     };
 
-    container.addEventListener('scroll', handleScroll);
+    container.addEventListener("scroll", handleScroll);
     return () => {
-      container.removeEventListener('scroll', handleScroll);
+      container.removeEventListener("scroll", handleScroll);
     };
   }, [isNearBottom]);
 
@@ -106,8 +107,8 @@ const AppRun = () => {
           level === "error"
             ? AntdMessage.error
             : level === "success"
-            ? AntdMessage.success
-            : AntdMessage.info;
+              ? AntdMessage.success
+              : AntdMessage.info;
         showMessage(msg, 3);
       }
     };
@@ -142,7 +143,7 @@ const AppRun = () => {
           fileId,
           filename: file.filename,
           mimeType: file.mimeType,
-          data: url.startsWith("http") ? url : file.base64Data,
+          data: url.startsWith("http") ? url : file.base64Data
         });
       } catch (error) {
         console.error("Error uploading file:", error);
@@ -172,7 +173,7 @@ const AppRun = () => {
       timestamp: Date.now(),
       contentItems: [],
       uploadedFiles: [...uploadedFiles],
-      status: "waiting",
+      status: "waiting"
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -189,8 +190,8 @@ const AppRun = () => {
           user: userParts,
           messageId: messageId,
           chatId: chatId,
-          windowId: (await chrome.windows.getCurrent()).id,
-        },
+          windowId: (await chrome.windows.getCurrent()).id
+        }
       });
     } catch (error) {
       userMessage.status = "error";
@@ -204,7 +205,7 @@ const AppRun = () => {
   const stopMessage = useCallback((messageId: string) => {
     chrome.runtime.sendMessage({
       type: "stop",
-      data: { messageId },
+      data: { messageId }
     });
     setCurrentMessageId(null);
   }, []);
@@ -223,7 +224,7 @@ const AppRun = () => {
           id: uuidv4(),
           base64Data: base64Data,
           mimeType: file.type,
-          filename: file.name,
+          filename: file.name
         });
       }
       setUploadedFiles((prev) => [...prev, ...newFiles]);
@@ -246,9 +247,12 @@ const AppRun = () => {
     newSession(setMessages, setCurrentMessageId, messages.length);
   }, [newSession, messages.length]);
 
-  const handleSelectSession = useCallback((sessionId: string) => {
-    selectSession(sessionId, setMessages, setCurrentMessageId);
-  }, [selectSession]);
+  const handleSelectSession = useCallback(
+    (sessionId: string) => {
+      selectSession(sessionId, setMessages, setCurrentMessageId);
+    },
+    [selectSession]
+  );
 
   // Listen for storage changes (e.g., when LLM config is updated)
   useEffect(() => {
@@ -274,10 +278,7 @@ const AppRun = () => {
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-gray-100 relative"
       >
         {messages.length === 0 ? (
-          <Empty
-            description="Start a conversation!"
-            className="mt-[20vh]"
-          />
+          <Empty description="Start a conversation!" className="mt-[20vh]" />
         ) : (
           messages.map((message) => (
             <MessageItem

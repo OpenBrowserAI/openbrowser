@@ -69,7 +69,7 @@ export function getChatSystemPrompt(
     datetime: datetime,
     memory: memory || "",
     tabs: getTabsInfo(tabs),
-    ...toolVars,
+    ...toolVars
   }).trim();
 }
 
@@ -84,7 +84,7 @@ function getTabsInfo(tabs?: PageTab[]): string {
         title: sub(tab.title, 50),
         url: sub(tab.url, 300),
         active: tab.active,
-        lastAccessed: tab.lastAccessed,
+        lastAccessed: tab.lastAccessed
       };
     }),
     null,

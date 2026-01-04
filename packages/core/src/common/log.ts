@@ -41,7 +41,7 @@ export class Logger {
 
   constructor(options: LoggerOptions = {}) {
     this.level = options.level ?? LogLevel.INFO;
-    this.prefix = options.prefix ?? '';
+    this.prefix = options.prefix ?? "";
     this.dateFormat = options.dateFormat ?? true;
     this.transports = options.transport ?? [new ConsoleTransport()];
   }
@@ -63,21 +63,21 @@ export class Logger {
 
   protected formatMessage(level: LogLevel, message: string): string {
     const levelNames = {
-      [LogLevel.DEBUG]: 'DEBUG',
-      [LogLevel.INFO]: 'INFO',
-      [LogLevel.WARN]: 'WARN',
-      [LogLevel.ERROR]: 'ERROR',
-      [LogLevel.FATAL]: 'FATAL',
-      [LogLevel.OFF]: 'OFF'
+      [LogLevel.DEBUG]: "DEBUG",
+      [LogLevel.INFO]: "INFO",
+      [LogLevel.WARN]: "WARN",
+      [LogLevel.ERROR]: "ERROR",
+      [LogLevel.FATAL]: "FATAL",
+      [LogLevel.OFF]: "OFF"
     };
 
-    let formattedMessage = '';
+    let formattedMessage = "";
 
     if (this.dateFormat) {
       formattedMessage += `[${new Date().toLocaleString()}] `;
     }
 
-    formattedMessage += `[${levelNames[level] || 'UNKNOWN'}] `;
+    formattedMessage += `[${levelNames[level] || "UNKNOWN"}] `;
 
     if (this.prefix) {
       formattedMessage += `[${this.prefix}] `;
@@ -88,7 +88,11 @@ export class Logger {
     return formattedMessage;
   }
 
-  protected log(level: LogLevel, message: string | Error, ...args: any[]): void {
+  protected log(
+    level: LogLevel,
+    message: string | Error,
+    ...args: any[]
+  ): void {
     if (level < this.level) {
       return;
     }
@@ -102,21 +106,25 @@ export class Logger {
     }
 
     if (args.length > 0) {
-      finalMessage += ' ' + args.map(arg => {
-        if (arg == null || arg == undefined) {
-          return arg + '';
-        } else if (arg instanceof Error || (arg.stack && arg.message)) {
-          return `${arg.message}\n${arg.stack}`;
-        } else if (typeof arg === 'object') {
-          return JSON.stringify(arg);
-        }
-        return String(arg);
-      }).join(' ');
+      finalMessage +=
+        " " +
+        args
+          .map((arg) => {
+            if (arg == null || arg == undefined) {
+              return arg + "";
+            } else if (arg instanceof Error || (arg.stack && arg.message)) {
+              return `${arg.message}\n${arg.stack}`;
+            } else if (typeof arg === "object") {
+              return JSON.stringify(arg);
+            }
+            return String(arg);
+          })
+          .join(" ");
     }
 
     const formattedMessage = this.formatMessage(level, finalMessage);
 
-    this.transports.forEach(transport => {
+    this.transports.forEach((transport) => {
       transport.log(level, formattedMessage);
     });
   }
@@ -149,13 +157,17 @@ export class Logger {
     this.log(LogLevel.FATAL, message, ...args);
   }
 
-  public createChild(name: string, options: Partial<LoggerOptions> = {}): Logger {
+  public createChild(
+    name: string,
+    options: Partial<LoggerOptions> = {}
+  ): Logger {
     const childPrefix = this.prefix ? `${this.prefix}.${name}` : name;
-    
+
     return new Logger({
       level: options.level || this.level,
       prefix: childPrefix,
-      dateFormat: options.dateFormat !== undefined ? options.dateFormat : this.dateFormat,
+      dateFormat:
+        options.dateFormat !== undefined ? options.dateFormat : this.dateFormat,
       transport: options.transport || this.transports
     });
   }

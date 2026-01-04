@@ -2,7 +2,11 @@ import config from "../config";
 import { LanguageModelV2Message } from "@ai-sdk/provider";
 import { defaultMessageProviderOptions } from "../agent/agent-llm";
 import { toFile, uuidv4, getMimeType, sub } from "../common/utils";
-import { OpenBrowserMessage, LanguageModelV2Prompt, MemoryConfig } from "../types";
+import {
+  OpenBrowserMessage,
+  LanguageModelV2Prompt,
+  MemoryConfig
+} from "../types";
 
 export class OpenBrowserMemory {
   protected systemPrompt?: string;
@@ -147,7 +151,7 @@ export class OpenBrowserMemory {
                   part.text,
                   this.memoryConfig.compressionMaxLength,
                   true
-                ),
+                )
               };
             }
             return part;
@@ -165,7 +169,7 @@ export class OpenBrowserMemory {
                   part.result,
                   this.memoryConfig.compressionMaxLength,
                   true
-                ),
+                )
               };
             }
             return part;
@@ -225,9 +229,9 @@ export class OpenBrowserMemory {
                 type: "tool-result",
                 toolCallId: part.toolCallId,
                 toolName: part.toolName,
-                result: "Error: No result",
+                result: "Error: No result"
               };
-            }),
+            })
         });
       }
       lastMessage = message;
@@ -268,23 +272,23 @@ export class OpenBrowserMemory {
               ? [
                   {
                     type: "text",
-                    text: message.content,
-                  },
+                    text: message.content
+                  }
                 ]
               : message.content.map((part) => {
                   if (part.type == "text") {
                     return {
                       type: "text",
-                      text: part.text,
+                      text: part.text
                     };
                   } else {
                     return {
                       type: "file",
                       data: toFile(part.data),
-                      mediaType: part.mimeType || getMimeType(part.data),
+                      mediaType: part.mimeType || getMimeType(part.data)
                     };
                   }
-                }),
+                })
         });
       } else if (message.role == "assistant") {
         llmMessages.push({
@@ -293,13 +297,13 @@ export class OpenBrowserMemory {
             if (part.type == "text") {
               return {
                 type: "text",
-                text: part.text,
+                text: part.text
               };
             } else if (part.type == "reasoning") {
               return {
                 type: "reasoning",
                 text: part.text,
-                providerOptions: part.providerOptions,
+                providerOptions: part.providerOptions
               };
             } else if (part.type == "tool-call") {
               return {
@@ -307,12 +311,12 @@ export class OpenBrowserMemory {
                 toolCallId: part.toolCallId,
                 toolName: part.toolName,
                 input: part.args || {},
-                providerOptions: part.providerOptions,
+                providerOptions: part.providerOptions
               };
             } else {
               return part;
             }
-          }),
+          })
         });
       } else if (message.role == "tool") {
         llmMessages.push({
@@ -326,14 +330,14 @@ export class OpenBrowserMemory {
                 typeof part.result == "string"
                   ? {
                       type: "text",
-                      value: part.result,
+                      value: part.result
                     }
                   : {
                       type: "json",
-                      value: part.result as any,
-                    },
+                      value: part.result as any
+                    }
             };
-          }),
+          })
         });
       }
     }
@@ -341,9 +345,9 @@ export class OpenBrowserMemory {
       {
         role: "system",
         content: this.getSystemPrompt() || "You are a helpful assistant.",
-        providerOptions: defaultMessageProviderOptions(),
+        providerOptions: defaultMessageProviderOptions()
       },
-      ...llmMessages,
+      ...llmMessages
     ];
   }
 }

@@ -3,7 +3,7 @@ import {
   ToolOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  LoadingOutlined,
+  LoadingOutlined
 } from "@ant-design/icons";
 import { isJsonStr } from "../utils";
 import type { ChatContentItem } from "../types";
@@ -128,8 +128,8 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                 </div>
               )}
             </div>
-          ),
-        },
+          )
+        }
       ]}
     />
   );

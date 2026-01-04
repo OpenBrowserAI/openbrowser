@@ -9,7 +9,7 @@ import { getPlanSystemPrompt, getPlanUserPrompt } from "../prompt/plan";
 import {
   LanguageModelV2Prompt,
   LanguageModelV2StreamPart,
-  LanguageModelV2TextPart,
+  LanguageModelV2TextPart
 } from "@ai-sdk/provider";
 
 export class Planner {
@@ -34,7 +34,7 @@ export class Planner {
       taskPromptStr = taskPrompt;
       userPrompt = {
         type: "text",
-        text: getPlanUserPrompt(this.context, taskPrompt),
+        text: getPlanUserPrompt(this.context, taskPrompt)
       };
     } else {
       userPrompt = taskPrompt;
@@ -43,12 +43,12 @@ export class Planner {
     const messages: LanguageModelV2Prompt = [
       {
         role: "system",
-        content: await getPlanSystemPrompt(this.context),
+        content: await getPlanSystemPrompt(this.context)
       },
       {
         role: "user",
-        content: [userPrompt],
-      },
+        content: [userPrompt]
+      }
     ];
     return await this.doPlan(taskPromptStr, messages, saveHistory ?? true);
   }
@@ -64,12 +64,12 @@ export class Planner {
         ...chain.planRequest.messages,
         {
           role: "assistant",
-          content: [{ type: "text", text: chain.planResult }],
+          content: [{ type: "text", text: chain.planResult }]
         },
         {
           role: "user",
-          content: [{ type: "text", text: taskPrompt }],
-        },
+          content: [{ type: "text", text: taskPrompt }]
+        }
       ];
       return await this.doPlan(taskPrompt, messages, saveHistory);
     } else {
@@ -90,7 +90,7 @@ export class Planner {
       maxOutputTokens: 8192,
       temperature: 0.7,
       messages: messages,
-      abortSignal: this.context.controller.signal,
+      abortSignal: this.context.controller.signal
     };
     const result = await rlm.callStream(request);
     const reader = result.stream.getReader();
@@ -137,7 +137,7 @@ export class Planner {
               agentName: "Planer",
               type: "workflow",
               streamDone: false,
-              workflow: workflow as Workflow,
+              workflow: workflow as Workflow
             });
           }
         }
@@ -179,7 +179,7 @@ export class Planner {
         agentName: "Planer",
         type: "workflow",
         streamDone: true,
-        workflow: workflow,
+        workflow: workflow
       });
     }
     return workflow;

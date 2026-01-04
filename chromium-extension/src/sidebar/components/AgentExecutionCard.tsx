@@ -18,7 +18,7 @@ interface AgentExecutionCardProps {
 
 export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
   agentNode,
-  task,
+  task
 }) => {
   const agent = task.agents.find((a) => a.agentNode.id === agentNode.id);
   const status = agent?.status || agentNode.status;
@@ -52,17 +52,21 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
         status === "done"
           ? "border-l-4 border-l-green-500"
           : status === "error"
-          ? "border-l-4 border-l-red-500"
-          : status === "running"
-          ? "border-l-4 border-l-blue-500"
-          : "border-l-4 border-l-gray-300"
+            ? "border-l-4 border-l-red-500"
+            : status === "running"
+              ? "border-l-4 border-l-blue-500"
+              : "border-l-4 border-l-gray-300"
       }`}
       title={
         <Space>
           <Text strong>{agentNode.name}</Text>
           {status === "running" && <Spin size="small" />}
-          {status === "done" && <CheckCircleOutlined className="text-green-500" />}
-          {status === "error" && <CloseCircleOutlined className="text-red-500" />}
+          {status === "done" && (
+            <CheckCircleOutlined className="text-green-500" />
+          )}
+          {status === "error" && (
+            <CloseCircleOutlined className="text-red-500" />
+          )}
         </Space>
       }
     >
@@ -98,10 +102,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
               );
             } else if (item.type === "tool") {
               return (
-                <div
-                  key={`tool-${item.toolCallId}-${index}`}
-                  className="mb-2"
-                >
+                <div key={`tool-${item.toolCallId}-${index}`} className="mb-2">
                   <ToolCallItem item={item} />
                 </div>
               );

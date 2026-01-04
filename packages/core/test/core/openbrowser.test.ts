@@ -3,7 +3,7 @@ import {
   Log,
   LLMs,
   Agent,
-  StreamCallbackMessage,
+  StreamCallbackMessage
 } from "../../src/index";
 import dotenv from "dotenv";
 import { SimpleBrowserAgent, SimpleFileAgent } from "./agents";
@@ -19,9 +19,9 @@ const llms: LLMs = {
     model: "gpt-5-mini",
     apiKey: openaiApiKey || "",
     config: {
-      baseURL: openaiBaseURL,
-    },
-  },
+      baseURL: openaiBaseURL
+    }
+  }
 };
 
 async function run() {
@@ -38,12 +38,9 @@ async function run() {
         return;
       }
       console.log("message: ", JSON.stringify(message, null, 2));
-    },
+    }
   };
-  const agents: Agent[] = [
-    new SimpleBrowserAgent(),
-    new SimpleFileAgent(),
-  ];
+  const agents: Agent[] = [new SimpleBrowserAgent(), new SimpleFileAgent()];
   const openbrowser = new OpenBrowser({ llms, agents, callback });
   const result = await openbrowser.run("Read the desktop file list");
   console.log("result: ", result.result);

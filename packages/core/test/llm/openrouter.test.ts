@@ -16,7 +16,7 @@ if (!apiKey) {
 
 export async function testOpenrouter1() {
   const client: LanguageModelV2 = createOpenRouter({
-    apiKey: apiKey,
+    apiKey: apiKey
   }).languageModel("google/gemini-3-pro-preview");
 
   const request: LanguageModelV2CallOptions = {
@@ -27,14 +27,14 @@ export async function testOpenrouter1() {
         content: [
           {
             type: "text",
-            text: "Hello",
-          },
-        ],
-      },
+            text: "Hello"
+          }
+        ]
+      }
     ],
     temperature: 0.7,
     maxOutputTokens: 1024,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   };
 
   const result = await client.doGenerate(request);
@@ -50,8 +50,8 @@ export async function testOpenrouter2() {
       default: {
         provider: "openrouter",
         model: "google/gemini-3-pro-preview",
-        apiKey: apiKey,
-      },
+        apiKey: apiKey
+      }
     },
     []
   );
@@ -60,12 +60,12 @@ export async function testOpenrouter2() {
       { role: "system", content: "You are a helpful AI assistant" },
       {
         role: "user",
-        content: [{ type: "text", text: "Hello" }],
-      },
+        content: [{ type: "text", text: "Hello" }]
+      }
     ],
     temperature: 0.7,
     maxOutputTokens: 1024,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   };
 
   const result = await callLLM(rlm, request, async (message) => {
@@ -81,8 +81,8 @@ export async function testOpenrouter3() {
       default: {
         provider: "openrouter",
         model: "google/gemini-3-pro-preview",
-        apiKey: apiKey,
-      },
+        apiKey: apiKey
+      }
     },
     []
   );
@@ -91,15 +91,15 @@ export async function testOpenrouter3() {
       { role: "system", content: "You are a helpful AI assistant" },
       {
         role: "user",
-        content: [{ type: "text", text: "How is the weather today?" }],
-      },
+        content: [{ type: "text", text: "How is the weather today?" }]
+      }
     ],
     toolChoice: {
-      type: "auto",
+      type: "auto"
     },
     temperature: 0.7,
     maxOutputTokens: 1024,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   };
 
   const result = await callWithReAct(
@@ -113,16 +113,16 @@ export async function testOpenrouter3() {
         inputSchema: {
           type: "object",
           properties: {},
-          required: [],
+          required: []
         },
         execute: async (args, toolCall) => {
           return {
             type: "text",
             value:
-              "Today the weather is clear, with a temperature of 20 degrees Celsius.",
+              "Today the weather is clear, with a temperature of 20 degrees Celsius."
           };
-        },
-      },
+        }
+      }
     ],
     async (message) => {
       console.log(JSON.stringify(message, null, 2));

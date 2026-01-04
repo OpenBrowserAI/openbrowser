@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+# If available, source Husky helpers (created by `husky` during install)
+if [ -f "$(dirname -- "$0")/_/husky.sh" ]; then
+  . "$(dirname -- "$0")/_/husky.sh"
+fi
+
+set -e
+
+echo "Husky: running Prettier on staged files..."
+
+# Format only staged files for common text/code types
+git diff --name-only --cached --diff-filter=ACM | while read -r file; do
+  case "$file" in
+    *.ts|*.tsx|*.js|*.jsx|*.json|*.md|*.mdx|*.yml|*.yaml|*.css|*.scss|*.html)
+      npx --no-install prettier --write "$file"
+      git add "$file"
+      ;;
+    *) ;;
+  esac
+done
+
+echo "Husky: formatting completed."

@@ -13,5 +13,5 @@ export {
   WebSearchTool,
   WebpageQaTool,
   DeepActionTool,
-  TaskVariableStorageTool,
+  TaskVariableStorageTool
 };

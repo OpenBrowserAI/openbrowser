@@ -23,7 +23,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
   visible,
   onClose,
   onSelectSession,
-  currentSessionId,
+  currentSessionId
 }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,10 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
     }
   };
 
-  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+  const handleDeleteSession = async (
+    sessionId: string,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     try {
       await dbService.deleteSession(sessionId);
@@ -94,7 +97,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
               description="No sessions yet"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
-          ),
+          )
         }}
         renderItem={(session) => (
           <List.Item
@@ -111,7 +114,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
                 danger
                 icon={<DeleteOutlined />}
                 onClick={(e) => handleDeleteSession(session.id, e)}
-              />,
+              />
             ]}
           >
             <List.Item.Meta

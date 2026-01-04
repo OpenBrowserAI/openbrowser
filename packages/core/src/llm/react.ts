@@ -9,14 +9,14 @@ import {
   ReActToolCallCallback,
   LanguageModelV2TextPart,
   LanguageModelV2ToolCallPart,
-  LanguageModelV2ToolResultOutput,
+  LanguageModelV2ToolResultOutput
 } from "../types";
 import {
   ReActTool,
   ReActRequest,
   ToolCallsOrCallback,
   ReActStreamCallback,
-  ReActToolsAndCallback,
+  ReActToolsAndCallback
 } from "../types/llm.types";
 import config from "../config";
 import Log from "../common/log";
@@ -24,7 +24,7 @@ import { RetryLanguageModel } from "./rlm";
 import { sleep, uuidv4 } from "../common/utils";
 import {
   LanguageModelV2StreamPart,
-  LanguageModelV2ReasoningPart,
+  LanguageModelV2ReasoningPart
 } from "@ai-sdk/provider";
 
 export async function callWithReAct(
@@ -83,7 +83,7 @@ export async function callWithReAct(
       type: "function",
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.inputSchema,
+      inputSchema: tool.inputSchema
     }));
   }
   let loopNum = 0;
@@ -92,7 +92,7 @@ export async function callWithReAct(
     await streamCallback?.({
       type: "loop_start",
       request,
-      loopNum,
+      loopNum
     });
     assistantParts = await callLLM(
       rlm,
@@ -104,7 +104,7 @@ export async function callWithReAct(
     if (assistantParts.length > 0) {
       request.messages.push({
         role: "assistant",
-        content: convertAssistantContent(assistantParts),
+        content: convertAssistantContent(assistantParts)
       });
     }
     const continueLoop = await loopControl(request, assistantParts, loopNum);
@@ -113,7 +113,7 @@ export async function callWithReAct(
         type: "loop_end",
         request,
         loopNum,
-        continueLoop,
+        continueLoop
       });
       break;
     }
@@ -154,7 +154,7 @@ export async function callWithReAct(
               );
               return {
                 type: "error-text",
-                value: "Error: " + (e + "") || "Unknown error",
+                value: "Error: " + (e + "") || "Unknown error"
               };
             }
           })
@@ -169,8 +169,8 @@ export async function callWithReAct(
           type: "tool-result",
           toolCallId: toolUses[index].toolCallId,
           toolName: toolUses[index].toolName,
-          output: result,
-        })),
+          output: result
+        }))
       });
     }
 
@@ -178,7 +178,7 @@ export async function callWithReAct(
       type: "loop_end",
       request,
       loopNum,
-      continueLoop,
+      continueLoop
     });
 
     loopNum++;
@@ -229,7 +229,7 @@ export async function callLLM(
             streamId: textStreamId,
             streamDone: false,
             text: streamText,
-            newTextLength: chunk.delta?.length || 0,
+            newTextLength: chunk.delta?.length || 0
           });
           if (toolPart) {
             await streamCallback?.({
@@ -237,7 +237,7 @@ export async function callLLM(
               toolCallId: toolPart.toolCallId,
               toolName: toolPart.toolName,
               params: toolPart.input || {},
-              providerMetadata: toolPart.providerOptions,
+              providerMetadata: toolPart.providerOptions
             });
             toolPart = null;
           }
@@ -252,7 +252,7 @@ export async function callLLM(
               streamDone: true,
               text: streamText,
               newTextLength: 0,
-              providerMetadata: chunk.providerMetadata,
+              providerMetadata: chunk.providerMetadata
             });
           }
           break;
@@ -268,7 +268,7 @@ export async function callLLM(
             streamId: thinkStreamId,
             streamDone: false,
             text: thinkText,
-            newTextLength: chunk.delta?.length || 0,
+            newTextLength: chunk.delta?.length || 0
           });
           break;
         }
@@ -284,7 +284,7 @@ export async function callLLM(
               streamId: thinkStreamId,
               streamDone: true,
               text: thinkText,
-              newTextLength: 0,
+              newTextLength: 0
             });
           }
           break;
@@ -307,7 +307,7 @@ export async function callLLM(
                 toolCallId: chunk.id,
                 toolName: chunk.toolName,
                 input: {},
-                providerOptions: chunk.providerMetadata,
+                providerOptions: chunk.providerMetadata
               };
               toolParts.push(toolPart);
             }
@@ -322,7 +322,7 @@ export async function callLLM(
               streamId: textStreamId,
               streamDone: true,
               text: streamText,
-              newTextLength: 0,
+              newTextLength: 0
             });
           }
           toolArgsText += chunk.delta || "";
@@ -331,7 +331,7 @@ export async function callLLM(
             toolCallId: chunk.id,
             toolName: toolPart?.toolName || "",
             paramsText: toolArgsText,
-            newTextLength: chunk.delta?.length || 0,
+            newTextLength: chunk.delta?.length || 0
           });
           break;
         }
@@ -343,7 +343,7 @@ export async function callLLM(
             toolCallId: chunk.toolCallId,
             toolName: chunk.toolName,
             params: args,
-            providerMetadata: chunk.providerMetadata,
+            providerMetadata: chunk.providerMetadata
           };
           await streamCallback?.(message);
           if (toolPart == null) {
@@ -359,7 +359,7 @@ export async function callLLM(
                 toolCallId: chunk.toolCallId,
                 toolName: chunk.toolName,
                 input: message.params || args,
-                providerOptions: chunk.providerMetadata,
+                providerOptions: chunk.providerMetadata
               });
             }
           } else {
@@ -373,14 +373,14 @@ export async function callLLM(
           await streamCallback?.({
             type: "file",
             mimeType: chunk.mediaType,
-            data: chunk.data as string,
+            data: chunk.data as string
           });
           break;
         }
         case "raw": {
           await streamCallback?.({
             type: "raw",
-            rawValue: chunk.rawValue,
+            rawValue: chunk.rawValue
           });
           break;
         }
@@ -388,7 +388,7 @@ export async function callLLM(
           Log.error(`chatLLM error: `, chunk);
           await streamCallback?.({
             type: "error",
-            error: chunk.error,
+            error: chunk.error
           });
           throw new Error("LLM Error: " + chunk.error);
         }
@@ -400,7 +400,7 @@ export async function callLLM(
               streamId: textStreamId,
               streamDone: true,
               text: streamText,
-              newTextLength: 0,
+              newTextLength: 0
             });
           }
           if (toolPart) {
@@ -409,7 +409,7 @@ export async function callLLM(
               toolCallId: toolPart.toolCallId,
               toolName: toolPart.toolName,
               params: toolPart.input || {},
-              providerMetadata: toolPart.providerOptions,
+              providerMetadata: toolPart.providerOptions
             });
             toolPart = null;
           }
@@ -440,10 +440,9 @@ export async function callLLM(
               completionTokens: chunk.usage.outputTokens || 0,
               totalTokens:
                 chunk.usage.totalTokens ||
-                (chunk.usage.inputTokens || 0) +
-                  (chunk.usage.outputTokens || 0),
+                (chunk.usage.inputTokens || 0) + (chunk.usage.outputTokens || 0)
             },
-            providerMetadata: chunk.providerMetadata,
+            providerMetadata: chunk.providerMetadata
           });
           break;
         }
@@ -498,13 +497,13 @@ export function convertAssistantContent(
       if (part.type === "text") {
         return {
           type: "text" as const,
-          text: part.text,
+          text: part.text
         };
       } else if (part.type === "reasoning") {
         return {
           type: "reasoning",
           text: part.text,
-          providerOptions: part.providerOptions,
+          providerOptions: part.providerOptions
         };
       } else {
         return {
@@ -515,7 +514,7 @@ export function convertAssistantContent(
             typeof part.input == "string"
               ? JSON.parse(part.input || "{}")
               : part.input || {},
-          providerOptions: part.providerOptions,
+          providerOptions: part.providerOptions
         };
       }
     });

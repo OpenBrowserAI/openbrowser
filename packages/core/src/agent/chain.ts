@@ -53,14 +53,14 @@ export class AgentChain {
       this.onUpdate &&
         this.onUpdate({
           type: "update",
-          target: tool,
+          target: tool
         });
     };
     this.tools.push(tool);
     this.onUpdate &&
       this.onUpdate({
         type: "update",
-        target: this,
+        target: this
       });
   }
 }
@@ -83,7 +83,7 @@ export default class Chain {
     this.agents.push(agent);
     this.pub({
       type: "update",
-      target: agent,
+      target: agent
     });
   }
 

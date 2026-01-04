@@ -9,11 +9,11 @@ module.exports = {
     sidebar: path.join(srcDir, "sidebar/index.tsx"),
     options: path.join(srcDir, "options/index.tsx"),
     background: path.join(srcDir, "background/index.ts"),
-    content_script: path.join(srcDir, "content/index.ts"),
+    content_script: path.join(srcDir, "content/index.ts")
   },
   output: {
     path: path.join(__dirname, "dist/js"),
-    filename: "[name].js",
+    filename: "[name].js"
   },
   optimization: {
     minimize: false,
@@ -21,15 +21,15 @@ module.exports = {
       name: "vendor",
       chunks(chunk) {
         return chunk.name !== "background";
-      },
-    },
+      }
+    }
   },
   module: {
     rules: [
       {
         test: /\.tsx?$/,
         use: "ts-loader",
-        exclude: /node_modules/,
+        exclude: /node_modules/
       },
       {
         test: /\.css$/,
@@ -40,28 +40,28 @@ module.exports = {
             loader: "postcss-loader",
             options: {
               postcssOptions: {
-                config: path.resolve(__dirname, "postcss.config.mjs"),
-              },
-            },
-          },
-        ],
+                config: path.resolve(__dirname, "postcss.config.mjs")
+              }
+            }
+          }
+        ]
       },
       {
         test: /\.(woff2?|ttf|eot|otf|svg)$/,
         type: "asset/resource",
         generator: {
-          filename: "assets/[name][ext]",
-        },
-      },
-    ],
+          filename: "assets/[name][ext]"
+        }
+      }
+    ]
   },
   resolve: {
-    extensions: [".ts", ".tsx", ".js"],
+    extensions: [".ts", ".tsx", ".js"]
   },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [{ from: "public", to: "../" }],
-      options: {},
-    }),
-  ],
+      options: {}
+    })
+  ]
 };

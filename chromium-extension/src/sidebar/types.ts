@@ -3,7 +3,7 @@ import type {
   ToolResult,
   WorkflowAgent,
   ChatStreamMessage,
-  AgentStreamMessage,
+  AgentStreamMessage
 } from "@openbrowser-ai/core/types";
 
 export type MessageRole = "user" | "assistant";

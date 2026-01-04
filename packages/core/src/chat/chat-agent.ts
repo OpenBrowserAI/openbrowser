@@ -8,12 +8,12 @@ import {
   OpenBrowserMessage,
   OpenBrowserDialogueConfig,
   OpenBrowserMessageUserPart,
-  LanguageModelV2ToolResultPart,
+  LanguageModelV2ToolResultPart
 } from "../types";
 import {
   callChatLLM,
   convertToolResults,
-  convertAssistantToolResults,
+  convertAssistantToolResults
 } from "./chat-llm";
 import Log from "../common/log";
 import global from "../config/global";
@@ -56,7 +56,7 @@ export class ChatAgent {
           streamType: "chat",
           chatId: this.chatContext.getChatId(),
           messageId: params.messageId,
-          type: "chat_start",
+          type: "chat_start"
         });
       }
       const chatTools = mergeTools(this.buildInnerTools(params), this.tools);
@@ -110,7 +110,7 @@ export class ChatAgent {
           type: "chat_end",
           error: errorInfo,
           duration: Date.now() - runStartTime,
-          reactLoopNum: reactLoopNum + 1,
+          reactLoopNum: reactLoopNum + 1
         });
       }
     }
@@ -180,7 +180,7 @@ export class ChatAgent {
       id: messageId,
       role: "user",
       timestamp: Date.now(),
-      content: user,
+      content: user
     };
     await this.addMessages([message]);
     return message;
@@ -263,10 +263,10 @@ export class ChatAgent {
           content: [
             {
               type: "text",
-              text: e + "",
-            },
+              text: e + ""
+            }
           ],
-          isError: true,
+          isError: true
         };
       }
       const callback = chatStreamCallback?.chatCallback;
@@ -279,7 +279,7 @@ export class ChatAgent {
           toolCallId: result.toolCallId,
           toolName: result.toolName,
           params: result.input || {},
-          toolResult: toolResult,
+          toolResult: toolResult
         });
       }
       const llmToolResult = convertToolResult(result, toolResult);
@@ -290,8 +290,8 @@ export class ChatAgent {
         id: this.memory.genMessageId(),
         role: "assistant",
         timestamp: Date.now(),
-        content: convertAssistantToolResults(results),
-      },
+        content: convertAssistantToolResults(results)
+      }
     ]);
     if (toolResults.length > 0) {
       await this.addMessages([
@@ -299,8 +299,8 @@ export class ChatAgent {
           id: this.memory.genMessageId(),
           role: "tool",
           timestamp: Date.now(),
-          content: convertToolResults(toolResults),
-        },
+          content: convertToolResults(toolResults)
+        }
       ]);
       return null;
     } else {

@@ -3,13 +3,13 @@ import Log from "../../common/log";
 import {
   LanguageModelV2Prompt,
   LanguageModelV2FilePart,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "@ai-sdk/provider";
 import {
   sleep,
   toImage,
   mergeTools,
-  compressImageData,
+  compressImageData
 } from "../../common/utils";
 import { AgentContext } from "../agent-context";
 import { run_build_dom_tree } from "./build-dom-tree";
@@ -61,7 +61,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
       llms: llms,
       mcpClient: mcpClient,
       planDescription:
-        "Browser operation agent, interact with the browser using the mouse and keyboard.",
+        "Browser operation agent, interact with the browser using the mouse and keyboard."
     });
     let init_tools = this.buildInitTools();
     if (ext_tools && ext_tools.length > 0) {
@@ -89,7 +89,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
     button: "left" | "right" | "middle"
   ): Promise<any> {
     await this.execute_script(agentContext, do_click, [
-      { index, num_clicks, button },
+      { index, num_clicks, button }
     ]);
   }
 
@@ -142,7 +142,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           page_result.page_url +
           "\n" +
           "page_content: " +
-          page_result.page_content,
+          page_result.page_content
       };
     }
   }
@@ -159,7 +159,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
     index: number
   ): Promise<any> {
     return await this.execute_script(agentContext, get_select_options, [
-      { index },
+      { index }
     ]);
   }
 
@@ -169,7 +169,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
     option: string
   ): Promise<any> {
     return await this.execute_script(agentContext, select_option, [
-      { index, option },
+      { index, option }
     ]);
   }
 
@@ -230,17 +230,13 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
         imageBase64: screenshot?.imageBase64,
         imageType: screenshot?.imageType,
         pseudoHtml: pseudoHtml,
-        client_rect: element_result.client_rect,
+        client_rect: element_result.client_rect
       };
     } finally {
       try {
-        await this.execute_script(
-          agentContext,
-          () => {
-            return (window as any).remove_highlight();
-          },
-          []
-        );
+        await this.execute_script(agentContext, () => {
+          return (window as any).remove_highlight();
+        }, []);
       } catch (e) {}
     }
   }
@@ -261,12 +257,12 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
       screenshot.imageType,
       {
         resizeWidth: client_rect.width,
-        resizeHeight: client_rect.height,
+        resizeHeight: client_rect.height
       }
     );
     return {
       imageBase64: compressedImage.imageBase64,
-      imageType: compressedImage.imageType,
+      imageType: compressedImage.imageType
     };
   }
 
@@ -304,10 +300,10 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             url: {
               type: "string",
-              description: "The complete URL to navigate to",
-            },
+              description: "The complete URL to navigate to"
+            }
           },
-          required: ["url"],
+          required: ["url"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -316,7 +312,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.navigate_to(agentContext, args.url as string)
           );
-        },
+        }
       },
       {
         name: "current_page",
@@ -324,7 +320,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           "Get the currently active webpage information, return tabId, URL and title",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
@@ -333,21 +329,21 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.get_current_page(agentContext)
           );
-        },
+        }
       },
       {
         name: "go_back",
         description: "Go back to the previous page in browser history",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
           agentContext: AgentContext
         ): Promise<ToolResult> => {
           return await this.callInnerTool(() => this.go_back(agentContext));
-        },
+        }
       },
       {
         name: "input_text",
@@ -358,20 +354,20 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             index: {
               type: "number",
-              description: "The index of the element to input text into",
+              description: "The index of the element to input text into"
             },
             text: {
               type: "string",
-              description: "The text to input",
+              description: "The text to input"
             },
             enter: {
               type: "boolean",
               description:
                 "When text input is completed, press Enter (applicable to search boxes)",
-              default: false,
-            },
+              default: false
+            }
           },
-          required: ["index", "text"],
+          required: ["index", "text"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -385,7 +381,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
               args.enter as boolean
             )
           );
-        },
+        }
       },
       {
         name: "click_element",
@@ -395,19 +391,19 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             index: {
               type: "number",
-              description: "The index of the element to click",
+              description: "The index of the element to click"
             },
             num_clicks: {
               type: "number",
-              description: "number of times to click the element, default 1",
+              description: "number of times to click the element, default 1"
             },
             button: {
               type: "string",
               description: "Mouse button type, default left",
-              enum: ["left", "right", "middle"],
-            },
+              enum: ["left", "right", "middle"]
+            }
           },
-          required: ["index"],
+          required: ["index"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -421,7 +417,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
               (args.button || "left") as any
             )
           );
-        },
+        }
       },
       {
         name: "scroll_mouse_wheel",
@@ -434,20 +430,20 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
               type: "number",
               description: "Scroll amount (up / down)",
               minimum: 1,
-              maximum: 10,
+              maximum: 10
             },
             direction: {
               type: "string",
-              enum: ["up", "down"],
+              enum: ["up", "down"]
             },
             extract_page_content: {
               type: "boolean",
               default: false,
               description:
-                "After scrolling is completed, whether to extract the current latest page content",
-            },
+                "After scrolling is completed, whether to extract the current latest page content"
+            }
           },
-          required: ["amount", "direction", "extract_page_content"],
+          required: ["amount", "direction", "extract_page_content"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -461,7 +457,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
               args.extract_page_content == true
             );
           });
-        },
+        }
       },
       {
         name: "hover_to_element",
@@ -472,10 +468,10 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             index: {
               type: "number",
-              description: "The index of the element to input text into",
-            },
+              description: "The index of the element to input text into"
+            }
           },
-          required: ["index"],
+          required: ["index"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -484,7 +480,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.hover_to_element(agentContext, args.index as number)
           );
-        },
+        }
       },
       {
         name: "extract_page_content",
@@ -492,7 +488,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           "Extracts all content from the current webpage, including text and image links. Please use this tool when you need to retrieve webpage content.",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
@@ -501,7 +497,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.extract_page_content(agentContext)
           );
-        },
+        }
       },
       {
         name: "get_select_options",
@@ -512,10 +508,10 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             index: {
               type: "number",
-              description: "The index of the element to select",
-            },
+              description: "The index of the element to select"
+            }
           },
-          required: ["index"],
+          required: ["index"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -524,7 +520,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.get_select_options(agentContext, args.index as number)
           );
-        },
+        }
       },
       {
         name: "select_option",
@@ -535,14 +531,14 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             index: {
               type: "number",
-              description: "The index of the element to select",
+              description: "The index of the element to select"
             },
             option: {
               type: "string",
-              description: "Text option",
-            },
+              description: "Text option"
+            }
           },
-          required: ["index", "option"],
+          required: ["index", "option"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -555,7 +551,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
               args.option as string
             )
           );
-        },
+        }
       },
       {
         name: "get_all_tabs",
@@ -563,7 +559,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           "Get all tabs of the current browser, returns the tabId, URL, and title of all tab pages",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
@@ -572,7 +568,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.get_all_tabs(agentContext)
           );
-        },
+        }
       },
       {
         name: "switch_tab",
@@ -582,10 +578,10 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           properties: {
             tabId: {
               type: "number",
-              description: "Tab ID, obtained through get_all_tabs",
-            },
+              description: "Tab ID, obtained through get_all_tabs"
+            }
           },
-          required: ["tabId"],
+          required: ["tabId"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -594,7 +590,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.switch_tab(agentContext, args.tabId as number)
           );
-        },
+        }
       },
       {
         name: "wait",
@@ -609,10 +605,10 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
               description: "Wait duration in milliseconds",
               default: 500,
               minimum: 200,
-              maximum: 10000,
-            },
+              maximum: 10000
+            }
           },
-          required: ["duration"],
+          required: ["duration"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -621,8 +617,8 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             sleep((args.duration || 200) as number)
           );
-        },
-      },
+        }
+      }
     ];
   }
 
@@ -663,7 +659,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           image_contents.push({
             type: "file",
             data: image,
-            mediaType: imageResult.imageType,
+            mediaType: imageResult.imageType
           });
         }
         if (result.imageBase64) {
@@ -671,7 +667,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           image_contents.push({
             type: "file",
             data: image,
-            mediaType: result.imageType || "image/png",
+            mediaType: result.imageType || "image/png"
           });
         }
         messages.push({
@@ -684,9 +680,9 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
                 pseudoHtmlDescription +
                 "```html\n" +
                 result.pseudoHtml +
-                "\n```",
-            },
-          ],
+                "\n```"
+            }
+          ]
         });
       }
       super.handleMessages(agentContext, messages, tools);
@@ -716,7 +712,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
             _content.text = this.removePseudoHtmlAttr(_content.text, [
               "class",
               "src",
-              "href",
+              "href"
             ]);
           }
         }
@@ -799,7 +795,7 @@ function typing(params: {
         code: "Enter",
         keyCode: 13,
         bubbles: true,
-        cancelable: true,
+        cancelable: true
       });
       input.dispatchEvent(event);
     });
@@ -825,7 +821,7 @@ function typing(params: {
         code: "Enter",
         keyCode: 13,
         bubbles: true,
-        cancelable: true,
+        cancelable: true
       });
       input.dispatchEvent(event);
     });
@@ -855,7 +851,7 @@ function do_click(params: {
           view: window,
           bubbles: true,
           cancelable: true,
-          button, // 0 left; 1 middle; 2 right
+          button // 0 left; 1 middle; 2 right
         });
 
         if (eventType === "click" && element.click) {
@@ -887,7 +883,7 @@ function hover_to(params: { index: number }): boolean {
   const event = new MouseEvent("mouseenter", {
     bubbles: true,
     cancelable: true,
-    view: window,
+    view: window
   });
   element.dispatchEvent(event);
   return true;
@@ -902,9 +898,9 @@ function get_select_options(params: { index: number }) {
     options: Array.from(element.options).map((opt: any) => ({
       index: opt.index,
       text: opt.text.trim(),
-      value: opt.value,
+      value: opt.value
     })),
-    name: element.name,
+    name: element.name
   };
 }
 
@@ -928,7 +924,7 @@ function select_option(params: { index: number; option: string }) {
       error: "Select Option not found",
       availableOptions: Array.from(element.options).map((o: any) =>
         o.text.trim()
-      ),
+      )
     };
   }
   element.value = option.value;
@@ -936,7 +932,7 @@ function select_option(params: { index: number; option: string }) {
   return {
     success: true,
     selectedValue: option.value,
-    selectedText: option.text.trim(),
+    selectedText: option.text.trim()
   };
 }
 

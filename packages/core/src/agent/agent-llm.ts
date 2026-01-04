@@ -10,7 +10,7 @@ import {
   DialogueTool,
   HumanCallback,
   AssistantParts,
-  AgentStreamCallback,
+  AgentStreamCallback
 } from "../types";
 import {
   LanguageModelV2Prompt,
@@ -20,7 +20,7 @@ import {
   LanguageModelV2ToolCallPart,
   LanguageModelV2FunctionTool,
   LanguageModelV2ToolResultPart,
-  LanguageModelV2ToolResultOutput,
+  LanguageModelV2ToolResultOutput
 } from "@ai-sdk/provider";
 import { AnthropicProviderOptions } from "@ai-sdk/anthropic";
 
@@ -45,14 +45,14 @@ export function defaultLLMProviderOptions(): SharedV2ProviderOptions {
 export function defaultMessageProviderOptions(): SharedV2ProviderOptions {
   return {
     anthropic: {
-      cacheControl: { type: "ephemeral", ttl: "1h" },
+      cacheControl: { type: "ephemeral", ttl: "1h" }
     } as AnthropicProviderOptions,
     bedrock: {
-      cachePoint: { type: "default" },
+      cachePoint: { type: "default" }
     },
     openrouter: {
-      cacheControl: { type: "ephemeral" },
-    },
+      cacheControl: { type: "ephemeral" }
+    }
   };
 }
 
@@ -64,7 +64,7 @@ export function convertTools(
     name: tool.name,
     description: tool.description,
     inputSchema: tool.parameters,
-    providerOptions: index < 3 ? defaultMessageProviderOptions() : undefined,
+    providerOptions: index < 3 ? defaultMessageProviderOptions() : undefined
   }));
 }
 
@@ -89,7 +89,7 @@ export function convertToolResult(
   if (!toolResult || !toolResult.content) {
     result = {
       type: "error-text",
-      value: "Error",
+      value: "Error"
     };
   } else if (
     toolResult.content.length == 1 &&
@@ -98,20 +98,20 @@ export function convertToolResult(
     let text = toolResult.content[0].text;
     result = {
       type: "text",
-      value: text,
+      value: text
     };
     let isError = toolResult.isError == true;
     if (isError && !text.startsWith("Error")) {
       text = "Error: " + text;
       result = {
         type: "error-text",
-        value: text,
+        value: text
       };
     } else if (!isError && text.length == 0) {
       text = "Successful";
       result = {
         type: "text",
-        value: text,
+        value: text
       };
     }
     if (
@@ -123,21 +123,21 @@ export function convertToolResult(
         result = JSON.parse(text);
         result = {
           type: "json",
-          value: result,
+          value: result
         };
       } catch (e) {}
     }
   } else {
     result = {
       type: "content",
-      value: [],
+      value: []
     };
     for (let i = 0; i < toolResult.content.length; i++) {
       let content = toolResult.content[i];
       if (content.type == "text") {
         result.value.push({
           type: "text",
-          text: content.text,
+          text: content.text
         });
       } else {
         if (config.toolResultMultimodal) {
@@ -149,7 +149,7 @@ export function convertToolResult(
           result.value.push({
             type: "media",
             data: mediaData,
-            mediaType: content.mimeType || "image/png",
+            mediaType: content.mimeType || "image/png"
           });
         } else {
           // Only the claude model supports returning images from tool results, while openai only supports text,
@@ -161,18 +161,18 @@ export function convertToolResult(
                 {
                   type: "file",
                   data: toFile(content.data),
-                  mediaType: content.mimeType || getMimeType(content.data),
+                  mediaType: content.mimeType || getMimeType(content.data)
                 },
                 {
                   type: "text",
-                  text: `call \`${toolUse.toolName}\` tool result`,
-                },
-              ],
+                  text: `call \`${toolUse.toolName}\` tool result`
+                }
+              ]
             });
           } else {
             result.value.push({
               type: "text",
-              text: "[image]",
+              text: "[image]"
             });
           }
         }
@@ -183,7 +183,7 @@ export function convertToolResult(
     type: "tool-result",
     toolCallId: toolUse.toolCallId,
     toolName: toolUse.toolName,
-    output: result,
+    output: result
   };
 }
 
@@ -217,18 +217,18 @@ export async function callAgentLLM(
   const agentNode = agentChain.agent;
   const streamCallback = callback ||
     context.config.callback || {
-      onMessage: async () => {},
+      onMessage: async () => {}
     };
   const stepController = new AbortController();
   const signal = AbortSignal.any([
     context.controller.signal,
-    stepController.signal,
+    stepController.signal
   ]);
   const request: LLMRequest = {
     tools: tools,
     toolChoice,
     messages: messages,
-    abortSignal: signal,
+    abortSignal: signal
   };
   requestHandler && requestHandler(request);
   try {
@@ -245,7 +245,7 @@ export async function callAgentLLM(
           taskId: context.taskId,
           agentName: agentNode.name,
           nodeId: agentNode.id,
-          ...message,
+          ...message
         });
       },
       async (request, error) => {
@@ -394,7 +394,7 @@ function appendUserConversation(
       userPrompts.map((s) => `- ${s.trim()}`).join("\n");
     messages.push({
       role: "user",
-      content: [{ type: "text", text: prompt }],
+      content: [{ type: "text", text: prompt }]
     });
   }
 }

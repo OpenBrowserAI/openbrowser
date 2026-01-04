@@ -43,23 +43,23 @@ export default class WatchTriggerTool implements Tool {
       properties: {
         nodeId: {
           type: "number",
-          description: "watch node ID.",
+          description: "watch node ID."
         },
         watch_area: {
           type: "array",
           description:
             "Element changes in monitoring area, eg: [x, y, width, height].",
           items: {
-            type: "number",
-          },
+            type: "number"
+          }
         },
         watch_index: {
           type: "array",
           description:
             "The index of elements to be monitoring multiple elements simultaneously.",
           items: {
-            type: "number",
-          },
+            type: "number"
+          }
         },
         frequency: {
           type: "number",
@@ -67,17 +67,17 @@ export default class WatchTriggerTool implements Tool {
             "Check frequency, how many seconds between each check, default 1 seconds.",
           default: 1,
           minimum: 0.5,
-          maximum: 30,
+          maximum: 30
         },
         timeout: {
           type: "number",
           description: "Timeout in minute, default 5 minutes.",
           default: 5,
           minimum: 1,
-          maximum: 30,
-        },
+          maximum: 30
+        }
       },
-      required: ["nodeId"],
+      required: ["nodeId"]
     };
   }
 
@@ -101,16 +101,16 @@ export default class WatchTriggerTool implements Tool {
         content: [
           {
             type: "text",
-            text: "The watch node does not have a description, skip.",
-          },
-        ],
+            text: "The watch node does not have a description, skip."
+          }
+        ]
       };
     }
     await this.init_openbrowser_observer(agentContext);
     const image1 = await this.get_screenshot(agentContext);
     const start = new Date().getTime();
     const timeout = ((args.timeout as number) || 5) * 60000;
-    const frequency = Math.max(500, (args.frequency as number || 1) * 1000);
+    const frequency = Math.max(500, ((args.frequency as number) || 1) * 1000);
     const rlm = new RetryLanguageModel(
       agentContext.context.config.llms,
       agentContext.agent.Llms
@@ -137,9 +137,9 @@ export default class WatchTriggerTool implements Tool {
           content: [
             {
               type: "text",
-              text: changeResult.changeInfo || "DOM change detected.",
-            },
-          ],
+              text: changeResult.changeInfo || "DOM change detected."
+            }
+          ]
         };
       }
     }
@@ -147,9 +147,9 @@ export default class WatchTriggerTool implements Tool {
       content: [
         {
           type: "text",
-          text: "Timeout reached, no DOM changes detected.",
-        },
-      ],
+          text: "Timeout reached, no DOM changes detected."
+        }
+      ]
     };
   }
 
@@ -167,11 +167,13 @@ export default class WatchTriggerTool implements Tool {
     const image = toImage(imageResult.imageBase64);
     return {
       image: image,
-      imageType: imageResult.imageType,
+      imageType: imageResult.imageType
     };
   }
 
-  private async init_openbrowser_observer(agentContext: AgentContext): Promise<void> {
+  private async init_openbrowser_observer(
+    agentContext: AgentContext
+  ): Promise<void> {
     try {
       const screenshot = (agentContext.agent as any)["execute_script"];
       await screenshot.call(
@@ -180,7 +182,8 @@ export default class WatchTriggerTool implements Tool {
         () => {
           let _window = window as any;
           _window.has_openbrowser_changed = false;
-          _window.openbrowser_observer && _window.openbrowser_observer.disconnect();
+          _window.openbrowser_observer &&
+            _window.openbrowser_observer.disconnect();
           let openbrowser_observer = new MutationObserver(function (mutations) {
             _window.has_openbrowser_changed = true;
           });
@@ -190,7 +193,7 @@ export default class WatchTriggerTool implements Tool {
             attributes: true,
             attributeOldValue: true,
             characterData: true,
-            characterDataOldValue: true,
+            characterDataOldValue: true
           });
           _window.openbrowser_observer = openbrowser_observer;
         },
@@ -236,7 +239,7 @@ export default class WatchTriggerTool implements Tool {
         messages: [
           {
             role: "system",
-            content: watch_system_prompt,
+            content: watch_system_prompt
           },
           {
             role: "user",
@@ -244,21 +247,21 @@ export default class WatchTriggerTool implements Tool {
               {
                 type: "file",
                 data: image1.image,
-                mediaType: image1.imageType,
+                mediaType: image1.imageType
               },
               {
                 type: "file",
                 data: image2.image,
-                mediaType: image2.imageType,
+                mediaType: image2.imageType
               },
               {
                 type: "text",
-                text: task_description,
-              },
-            ],
-          },
+                text: task_description
+              }
+            ]
+          }
         ],
-        abortSignal: agentContext.context.controller.signal,
+        abortSignal: agentContext.context.controller.signal
       };
       const result = await rlm.call(request);
       let resultText = result.text || "{}";
@@ -271,7 +274,7 @@ export default class WatchTriggerTool implements Tool {
       Log.error("Error in is_dom_change:", error);
     }
     return {
-      changed: false,
+      changed: false
     };
   }
 }

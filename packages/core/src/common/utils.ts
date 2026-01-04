@@ -45,28 +45,28 @@ export function convertToolSchema(
       type: "function",
       name: tool.function.name,
       description: tool.function.description,
-      inputSchema: tool.function.parameters,
+      inputSchema: tool.function.parameters
     };
   } else if ("input_schema" in tool) {
     return {
       type: "function",
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.input_schema,
+      inputSchema: tool.input_schema
     };
   } else if ("inputSchema" in tool) {
     return {
       type: "function",
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.inputSchema,
+      inputSchema: tool.inputSchema
     };
   } else {
     return {
       type: "function",
       name: tool.name,
       description: tool.description,
-      inputSchema: tool.parameters,
+      inputSchema: tool.parameters
     };
   }
 }
@@ -184,7 +184,7 @@ export async function compressImageData(
       : (compress as any).resizeWidth,
     height: (compress as any).scale
       ? bitmapHeight * (compress as any).scale
-      : (compress as any).resizeHeight,
+      : (compress as any).resizeHeight
   });
 
   const hasOffscreen = typeof OffscreenCanvas !== "undefined";
@@ -242,7 +242,7 @@ export async function compressImageData(
               rej(new Error("Failed to convert blob to base64"));
             reader.readAsDataURL(blob);
           });
-        },
+        }
       };
     }
     if (hasDOM) {
@@ -254,7 +254,7 @@ export async function compressImageData(
         exportBase64: async (mime: string, q?: number) => {
           const dataUrl = canvas.toDataURL(mime, q);
           return dataUrl.substring(dataUrl.indexOf("base64,") + 7);
-        },
+        }
       };
     }
     if (isNode) {
@@ -269,7 +269,7 @@ export async function compressImageData(
             // @ts-ignore
             typeof Buffer !== "undefined" ? Buffer.from(buffer) : buffer;
           return _Buffer.toString("base64");
-        },
+        }
       };
     }
     throw new Error("No canvas environment available");
@@ -280,21 +280,21 @@ export async function compressImageData(
   if (loaded.width == width && loaded.height == height && quality == 1) {
     return {
       imageBase64: imageBase64,
-      imageType: imageType,
+      imageType: imageType
     };
   }
   const { ctx, exportBase64 } = await createCanvasAny(width, height);
   if (!ctx) {
     return {
       imageBase64: imageBase64,
-      imageType: imageType,
+      imageType: imageType
     };
   }
   ctx.drawImage(loaded.img, 0, 0, width, height);
   const outBase64 = await exportBase64("image/jpeg", quality);
   return {
     imageBase64: outBase64,
-    imageType: "image/jpeg",
+    imageType: "image/jpeg"
   };
 }
 
@@ -302,10 +302,13 @@ export function mergeTools<
   T extends Tool | DialogueTool | LanguageModelV2FunctionTool
 >(tools1: T[], tools2: T[]): T[] {
   let tools: T[] = [];
-  let toolMap2 = tools2.reduce((map, tool) => {
-    map[tool.name] = tool;
-    return map;
-  }, {} as Record<string, T>);
+  let toolMap2 = tools2.reduce(
+    (map, tool) => {
+      map[tool.name] = tool;
+      return map;
+    },
+    {} as Record<string, T>
+  );
   let names = [];
   for (let i = 0; i < tools1.length; i++) {
     let tool1 = tools1[i];
@@ -329,10 +332,13 @@ export function mergeTools<
 
 export function mergeAgents(agents1: Agent[], agents2: Agent[]): Agent[] {
   let agents: Agent[] = [];
-  let agentMap2 = agents2.reduce((map, agent) => {
-    map[agent.Name] = agent;
-    return map;
-  }, {} as Record<string, Agent>);
+  let agentMap2 = agents2.reduce(
+    (map, agent) => {
+      map[agent.Name] = agent;
+      return map;
+    },
+    {} as Record<string, Agent>
+  );
   for (let i = 0; i < agents1.length; i++) {
     let agent1 = agents1[i];
     let agent2 = agentMap2[agent1.Name];

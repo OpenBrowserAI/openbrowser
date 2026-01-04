@@ -1,6 +1,6 @@
 import {
   LanguageModelV2Prompt,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "@ai-sdk/provider";
 import { Agent } from "../base";
 import * as utils from "./utils";
@@ -43,13 +43,9 @@ export default abstract class BaseBrowserAgent extends Agent {
 
   protected async go_back(agentContext: AgentContext): Promise<void> {
     try {
-      await this.execute_script(
-        agentContext,
-        () => {
-          (window as any).navigation.back();
-        },
-        []
-      );
+      await this.execute_script(agentContext, () => {
+        (window as any).navigation.back();
+      }, []);
       await sleep(100);
     } catch (e) {}
   }
@@ -75,7 +71,7 @@ export default abstract class BaseBrowserAgent extends Agent {
     return {
       title: pageInfo.title || "",
       page_url: pageInfo.url,
-      page_content: content,
+      page_content: content
     };
   }
 
@@ -95,15 +91,15 @@ export default abstract class BaseBrowserAgent extends Agent {
         mcpTools: loopNum == 0 || url != lastUrl,
         mcpParams: {
           environment: "browser",
-          browser_url: url,
-        },
+          browser_url: url
+        }
       };
     } else {
       return {
         mcpTools: true,
         mcpParams: {
-          environment: "browser",
-        },
+          environment: "browser"
+        }
       };
     }
   }
@@ -120,8 +116,8 @@ export default abstract class BaseBrowserAgent extends Agent {
               nodeId: agentContext.agentChain.agent.id,
               environment: "browser",
               agent_name: agentContext.agent.Name,
-              browser_url: agentContext.variables.get("lastUrl"),
-            },
+              browser_url: agentContext.variables.get("lastUrl")
+            }
           },
           agentContext.context.controller.signal
         );
@@ -152,13 +148,13 @@ export default abstract class BaseBrowserAgent extends Agent {
             content: [
               {
                 type: "text",
-                text: resultText,
-              },
-            ],
+                text: resultText
+              }
+            ]
           };
         }
         return result;
-      },
+      }
     };
   }
 
@@ -167,16 +163,12 @@ export default abstract class BaseBrowserAgent extends Agent {
     title?: string;
     tabId?: number;
   }> {
-    return await this.execute_script(
-      agentContext,
-      () => {
-        return {
-          url: (window as any).location.href,
-          title: (window as any).document.title,
-        };
-      },
-      []
-    );
+    return await this.execute_script(agentContext, () => {
+      return {
+        url: (window as any).location.href,
+        title: (window as any).document.title
+      };
+    }, []);
   }
 
   protected lastToolResult(messages: LanguageModelV2Prompt): {
@@ -216,7 +208,7 @@ export default abstract class BaseBrowserAgent extends Agent {
           id: toolResult.toolCallId,
           toolName: toolUse.toolName,
           args: toolUse.input,
-          result,
+          result
         };
       }
     }

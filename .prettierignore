@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+coverage
+.next
+.turbo
+.cache
+.tmp
+tmp
+.DS_Store
+*.log
+*.lock
+.env
+.env.*

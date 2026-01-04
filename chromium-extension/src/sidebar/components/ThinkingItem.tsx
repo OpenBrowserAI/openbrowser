@@ -13,7 +13,7 @@ interface ThinkingItemProps {
 
 export const ThinkingItem: React.FC<ThinkingItemProps> = ({
   text,
-  streamDone,
+  streamDone
 }) => {
   const [activeKey, setActiveKey] = useState<string[]>(
     streamDone ? [] : ["thinking"]
@@ -36,7 +36,9 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
           key: "thinking",
           label: (
             <div className="flex items-center gap-2">
-              {!streamDone && <LoadingOutlined className="text-gray-400" spin />}
+              {!streamDone && (
+                <LoadingOutlined className="text-gray-400" spin />
+              )}
               <Text type="secondary" className="text-sm">
                 💭 Thinking
               </Text>
@@ -49,8 +51,8 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
               </div>
               {!streamDone && <Spin size="small" className="mt-2" />}
             </div>
-          ),
-        },
+          )
+        }
       ]}
     />
   );

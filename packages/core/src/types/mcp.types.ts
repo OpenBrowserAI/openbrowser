@@ -32,7 +32,10 @@ export type McpListToolResult = Array<{
 export interface IMcpClient {
   connect(signal?: AbortSignal): Promise<void>;
 
-  listTools(param: McpListToolParam, signal?: AbortSignal): Promise<McpListToolResult>;
+  listTools(
+    param: McpListToolParam,
+    signal?: AbortSignal
+  ): Promise<McpListToolResult>;
 
   callTool(param: McpCallToolParam, signal?: AbortSignal): Promise<ToolResult>;
 

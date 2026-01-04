@@ -4,7 +4,7 @@ import {
   WorkflowAgent,
   WorkflowTextNode,
   WorkflowWatchNode,
-  WorkflowForEachNode,
+  WorkflowForEachNode
 } from "../types/agent.types";
 import { fixXmlTag } from "./utils";
 import { buildAgentTree } from "./tree";
@@ -24,7 +24,7 @@ export function parseWorkflow(
         name: "",
         thought: thinking,
         agents: [],
-        xml: xml,
+        xml: xml
       };
     }
     let sIdx = xml.indexOf("<root>");
@@ -52,7 +52,7 @@ export function parseWorkflow(
       name: root.getElementsByTagName("name")[0]?.textContent || "",
       thought: thinking ? thinking + "\n" + thought : thought,
       agents: agents,
-      xml: xml,
+      xml: xml
     };
     const agentsNode = root.getElementsByTagName("agents");
     const agentsNodes =
@@ -77,7 +77,7 @@ export function parseWorkflow(
         nodes: nodes,
         status: "init",
         parallel: undefined,
-        xml: "    " + agentNode.toString(),
+        xml: "    " + agentNode.toString()
       };
       let xmlNodes = agentNode.getElementsByTagName("nodes");
       if (xmlNodes.length > 0) {
@@ -132,7 +132,7 @@ function parseWorkflowNodes(
           type: "normal",
           text: xmlNode.textContent || "",
           input: xmlNode.getAttribute("input"),
-          output: xmlNode.getAttribute("output"),
+          output: xmlNode.getAttribute("output")
         };
         nodes.push(node);
         break;
@@ -142,7 +142,7 @@ function parseWorkflowNodes(
         let node: WorkflowForEachNode = {
           type: "forEach",
           items: (xmlNode.getAttribute("items") || "list") as any,
-          nodes: _nodes,
+          nodes: _nodes
         };
         let _xmlNodes = xmlNode.getElementsByTagName("node");
         if (_xmlNodes.length > 0) {
@@ -159,7 +159,7 @@ function parseWorkflowNodes(
           loop: xmlNode.getAttribute("loop") == "true",
           description:
             xmlNode.getElementsByTagName("description")[0]?.textContent || "",
-          triggerNodes: _nodes,
+          triggerNodes: _nodes
         };
         let triggerNode = xmlNode.getElementsByTagName("trigger");
         if (triggerNode.length > 0) {
@@ -255,7 +255,7 @@ export function buildSimpleAgentWorkflow({
   name,
   agentName,
   task,
-  taskNodes,
+  taskNodes
 }: {
   taskId: string;
   name: string;
@@ -279,15 +279,15 @@ export function buildSimpleAgentWorkflow({
         nodes: taskNodes.map((node) => {
           return {
             type: "normal",
-            text: node,
+            text: node
           };
         }),
         status: "init",
         parallel: false,
-        xml: "",
-      },
+        xml: ""
+      }
     ],
-    xml: "",
+    xml: ""
   };
   workflow.taskPrompt = task;
   resetWorkflowXml(workflow);
