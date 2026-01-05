@@ -1,4 +1,4 @@
-import { ChatService, uuidv4 } from "@openbrowser-ai/core";
+import { ChatService, uuidv4, ExaSearchService } from "@openbrowser-ai/core";
 import {
   OpenBrowserMessage,
   WebSearchResult
@@ -6,6 +6,26 @@ import {
 import { dbService } from "../../db/db-service";
 
 export class SimpleChatService implements ChatService {
+  websearch?: (
+    chatId: string,
+    options: {
+      query: string;
+      numResults?: number;
+      livecrawl?: "fallback" | "preferred";
+      type?: "auto" | "fast" | "deep";
+      contextMaxCharacters?: number;
+    }
+  ) => Promise<WebSearchResult[]>;
+
+  constructor() {
+    chrome.storage.sync.get(["webSearchConfig"], (result) => {
+      if (result.webSearchConfig?.enabled) {
+        this.websearch = (chatId, options) =>
+          this.websearchImpl(chatId, result.webSearchConfig.apiKey, options);
+      }
+    });
+  }
+
   async loadMessages(chatId: string): Promise<OpenBrowserMessage[]> {
     return await dbService.loadMessages(chatId);
   }
@@ -37,13 +57,40 @@ export class SimpleChatService implements ChatService {
     });
   }
 
-  websearch(
+  private async websearchImpl(
     chatId: string,
-    query: string,
-    site?: string,
-    language?: string,
-    maxResults?: number
+    apiKey: string | undefined,
+    options: {
+      query: string;
+      numResults?: number;
+      livecrawl?: "fallback" | "preferred";
+      type?: "auto" | "fast" | "deep";
+      contextMaxCharacters?: number;
+    }
   ): Promise<WebSearchResult[]> {
-    return Promise.resolve([]);
+    try {
+      const content = await ExaSearchService.search(
+        {
+          query: options.query,
+          numResults: options.numResults || 8,
+          type: options.type || "auto",
+          livecrawl: options.livecrawl || "fallback",
+          contextMaxCharacters: options.contextMaxCharacters || 10000
+        },
+        apiKey
+      );
+
+      return [
+        {
+          title: `Web search: ${options.query}`,
+          url: "",
+          snippet: "",
+          content: content
+        }
+      ];
+    } catch (error) {
+      console.error("Web search failed:", error);
+      return [];
+    }
   }
 }

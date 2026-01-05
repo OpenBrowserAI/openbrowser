@@ -16,12 +16,15 @@ export default interface ChatService {
     url: string;
   }>;
 
-  websearch(
+  websearch?(
     chatId: string,
-    query: string,
-    site?: string,
-    language?: string,
-    maxResults?: number
+    options: {
+      query: string;
+      numResults?: number;
+      livecrawl?: "fallback" | "preferred";
+      type?: "auto" | "fast" | "deep";
+      contextMaxCharacters?: number;
+    }
   ): Promise<WebSearchResult[]>;
 }
 

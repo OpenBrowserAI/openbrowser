@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Form, Input, Button, message, Select, AutoComplete } from "antd";
-import { SettingOutlined, SaveOutlined } from "@ant-design/icons";
+import {
+  Form,
+  Input,
+  Button,
+  message,
+  Select,
+  AutoComplete,
+  Checkbox
+} from "antd";
+import { SaveOutlined } from "@ant-design/icons";
 import "../sidebar/index.css";
 
 const { Option } = Select;
@@ -18,41 +26,66 @@ const OptionsPage = () => {
     }
   });
 
+  const [webSearchConfig, setWebSearchConfig] = useState({
+    enabled: false,
+    apiKey: ""
+  });
+
   const [historyLLMConfig, setHistoryLLMConfig] = useState<Record<string, any>>(
     {}
   );
 
   useEffect(() => {
-    chrome.storage.sync.get(["llmConfig", "historyLLMConfig"], (result) => {
-      if (result.llmConfig) {
-        if (result.llmConfig.llm === "") {
-          result.llmConfig.llm = "anthropic";
+    chrome.storage.sync.get(
+      ["llmConfig", "historyLLMConfig", "webSearchConfig"],
+      (result) => {
+        if (result.llmConfig) {
+          if (result.llmConfig.llm === "") {
+            result.llmConfig.llm = "anthropic";
+          }
+          setConfig(result.llmConfig);
+          form.setFieldsValue(result.llmConfig);
         }
-        setConfig(result.llmConfig);
-        form.setFieldsValue(result.llmConfig);
+        if (result.historyLLMConfig) {
+          setHistoryLLMConfig(result.historyLLMConfig);
+        }
+        if (result.webSearchConfig) {
+          setWebSearchConfig(result.webSearchConfig);
+          form.setFieldsValue({
+            webSearchEnabled: result.webSearchConfig.enabled,
+            exaApiKey: result.webSearchConfig.apiKey
+          });
+        }
       }
-      if (result.historyLLMConfig) {
-        setHistoryLLMConfig(result.historyLLMConfig);
-      }
-    });
+    );
   }, []);
 
   const handleSave = () => {
     form
       .validateFields()
       .then((value) => {
-        setConfig(value);
+        const { webSearchEnabled, exaApiKey, ...llmConfigValue } = value;
+
+        setConfig(llmConfigValue);
         setHistoryLLMConfig({
           ...historyLLMConfig,
-          [value.llm]: value
+          [llmConfigValue.llm]: llmConfigValue
         });
+
+        const newWebSearchConfig = {
+          enabled: webSearchEnabled || false,
+          apiKey: exaApiKey || ""
+        };
+        setWebSearchConfig(newWebSearchConfig);
+
         chrome.storage.sync.set(
           {
-            llmConfig: value,
+            llmConfig: llmConfigValue,
             historyLLMConfig: {
               ...historyLLMConfig,
-              [value.llm]: value
-            }
+              [llmConfigValue.llm]: llmConfigValue
+            },
+            webSearchConfig: newWebSearchConfig
           },
           () => {
             message.success("Save Success!");
@@ -228,8 +261,8 @@ const OptionsPage = () => {
               rules={[
                 {
                   required: true,
-                  message: "Please select a LLM provider",
-                },
+                  message: "Please select a LLM provider"
+                }
               ]}
             >
               <Select
@@ -256,8 +289,8 @@ const OptionsPage = () => {
               rules={[
                 {
                   required: true,
-                  message: "Please select a model",
-                },
+                  message: "Please select a model"
+                }
               ]}
             >
               <AutoComplete
@@ -283,8 +316,8 @@ const OptionsPage = () => {
               rules={[
                 {
                   required: true,
-                  message: "Please enter your API key",
-                },
+                  message: "Please enter your API key"
+                }
               ]}
             >
               <Input.Password
@@ -309,6 +342,49 @@ const OptionsPage = () => {
               />
             </Form.Item>
 
+            <div className="border-t border-gray-200 pt-6 mt-6">
+              <Form.Item
+                name="webSearchEnabled"
+                valuePropName="checked"
+                className="mb-4"
+              >
+                <Checkbox>
+                  <span className="text-sm font-medium text-gray-900">
+                    Enable web search (Exa AI)
+                  </span>
+                </Checkbox>
+              </Form.Item>
+
+              <Form.Item
+                noStyle
+                shouldUpdate={(prevValues, currentValues) =>
+                  prevValues.webSearchEnabled !== currentValues.webSearchEnabled
+                }
+              >
+                {({ getFieldValue }) =>
+                  getFieldValue("webSearchEnabled") ? (
+                    <Form.Item
+                      name="exaApiKey"
+                      label={
+                        <span className="text-sm font-medium text-gray-900">
+                          Exa API Key{" "}
+                          <span className="text-gray-400">(Optional)</span>
+                        </span>
+                      }
+                      tooltip="Uses free tier if not provided"
+                    >
+                      <Input.Password
+                        placeholder="sk-..."
+                        size="large"
+                        className="w-full"
+                        allowClear
+                      />
+                    </Form.Item>
+                  ) : null
+                }
+              </Form.Item>
+            </div>
+
             <Form.Item className="mb-0 mt-6">
               <Button
                 onClick={handleSave}
@@ -317,15 +393,15 @@ const OptionsPage = () => {
                 className="w-full bg-black hover:bg-gray-800 border-black text-white"
                 block
                 style={{
-                  backgroundColor: '#000000',
-                  borderColor: '#000000',
-                  color: '#ffffff'
+                  backgroundColor: "#000000",
+                  borderColor: "#000000",
+                  color: "#ffffff"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#1f2937';
+                  e.currentTarget.style.backgroundColor = "#1f2937";
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#000000';
+                  e.currentTarget.style.backgroundColor = "#000000";
                 }}
               >
                 Save Settings
