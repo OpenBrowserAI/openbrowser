@@ -57,6 +57,7 @@ export {
 } from "./tools";
 
 export type { ChatService, BrowserService } from "./service";
+export { ExaSearchService } from "./service";
 
 export {
   sub,

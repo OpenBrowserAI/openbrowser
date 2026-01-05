@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Form, Input, Button, message, Card, Select, AutoComplete } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  message,
+  Card,
+  Select,
+  AutoComplete,
+  Checkbox
+} from "antd";
 
 const { Option } = Select;
 
@@ -16,41 +25,66 @@ const OptionsPage = () => {
     }
   });
 
+  const [webSearchConfig, setWebSearchConfig] = useState({
+    enabled: false,
+    apiKey: ""
+  });
+
   const [historyLLMConfig, setHistoryLLMConfig] = useState<Record<string, any>>(
     {}
   );
 
   useEffect(() => {
-    chrome.storage.sync.get(["llmConfig", "historyLLMConfig"], (result) => {
-      if (result.llmConfig) {
-        if (result.llmConfig.llm === "") {
-          result.llmConfig.llm = "anthropic";
+    chrome.storage.sync.get(
+      ["llmConfig", "historyLLMConfig", "webSearchConfig"],
+      (result) => {
+        if (result.llmConfig) {
+          if (result.llmConfig.llm === "") {
+            result.llmConfig.llm = "anthropic";
+          }
+          setConfig(result.llmConfig);
+          form.setFieldsValue(result.llmConfig);
         }
-        setConfig(result.llmConfig);
-        form.setFieldsValue(result.llmConfig);
+        if (result.historyLLMConfig) {
+          setHistoryLLMConfig(result.historyLLMConfig);
+        }
+        if (result.webSearchConfig) {
+          setWebSearchConfig(result.webSearchConfig);
+          form.setFieldsValue({
+            webSearchEnabled: result.webSearchConfig.enabled,
+            exaApiKey: result.webSearchConfig.apiKey
+          });
+        }
       }
-      if (result.historyLLMConfig) {
-        setHistoryLLMConfig(result.historyLLMConfig);
-      }
-    });
+    );
   }, []);
 
   const handleSave = () => {
     form
       .validateFields()
       .then((value) => {
-        setConfig(value);
+        const { webSearchEnabled, exaApiKey, ...llmConfigValue } = value;
+
+        setConfig(llmConfigValue);
         setHistoryLLMConfig({
           ...historyLLMConfig,
-          [value.llm]: value
+          [llmConfigValue.llm]: llmConfigValue
         });
+
+        const newWebSearchConfig = {
+          enabled: webSearchEnabled || false,
+          apiKey: exaApiKey || ""
+        };
+        setWebSearchConfig(newWebSearchConfig);
+
         chrome.storage.sync.set(
           {
-            llmConfig: value,
+            llmConfig: llmConfigValue,
             historyLLMConfig: {
               ...historyLLMConfig,
-              [value.llm]: value
-            }
+              [llmConfigValue.llm]: llmConfigValue
+            },
+            webSearchConfig: newWebSearchConfig
           },
           () => {
             message.success("Save Success!");
@@ -250,6 +284,36 @@ const OptionsPage = () => {
 
           <Form.Item name={["options", "baseURL"]} label="Base URL">
             <Input placeholder="Please enter the base URL (Optional)" />
+          </Form.Item>
+
+          <Form.Item
+            name="webSearchEnabled"
+            valuePropName="checked"
+            label="Enable Web Search"
+          >
+            <Checkbox>Enable Exa AI web search tool</Checkbox>
+          </Form.Item>
+
+          <Form.Item
+            noStyle
+            shouldUpdate={(prevValues, currentValues) =>
+              prevValues.webSearchEnabled !== currentValues.webSearchEnabled
+            }
+          >
+            {({ getFieldValue }) =>
+              getFieldValue("webSearchEnabled") ? (
+                <Form.Item
+                  name="exaApiKey"
+                  label="Exa API Key (Optional)"
+                  tooltip="If not provided, web search will use the free tier without authentication"
+                >
+                  <Input.Password
+                    placeholder="Enter your Exa API Key (optional)"
+                    allowClear
+                  />
+                </Form.Item>
+              ) : null
+            }
           </Form.Item>
 
           <Form.Item>

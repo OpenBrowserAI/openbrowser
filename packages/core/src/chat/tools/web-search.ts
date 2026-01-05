@@ -1,6 +1,5 @@
 import { JSONSchema7 } from "json-schema";
 import global from "../../config/global";
-import { sub } from "../../common/utils";
 import { ChatContext } from "../chat-context";
 import { DialogueParams, DialogueTool, ToolResult } from "../../types";
 
@@ -16,7 +15,7 @@ export default class WebSearchTool implements DialogueTool {
   constructor(chatContext: ChatContext, params: DialogueParams) {
     this.params = params;
     this.chatContext = chatContext;
-    this.description = `Search the web for information using search engine API. This tool can perform web searches to find current information, news, articles, and other web content related to the query. It returns search results with titles, descriptions, URLs, and other relevant metadata, use this tool when users need the latest data/information and have NOT specified a particular platform or website, use the search tool.`;
+    this.description = `Search the web using Exa AI - performs real-time web searches and can scrape content from specific URLs. Provides up-to-date information for current events and recent data. Supports configurable result counts and returns the content from the most relevant websites. Use this tool for accessing information beyond knowledge cutoff.`;
     this.parameters = {
       type: "object",
       properties: {
@@ -25,21 +24,35 @@ export default class WebSearchTool implements DialogueTool {
           description:
             "The search query to execute. Use specific keywords and phrases for better results."
         },
-        language: {
-          type: "string",
-          description:
-            "Language code for search results (e.g., 'en', 'zh', 'ja'). If not specified, will be auto-detected from query."
-        },
-        count: {
+        numResults: {
           type: "integer",
-          description:
-            "Number of search results to return (default: 10, max: 50)",
-          default: 10,
+          description: "Number of search results to return (default: 8)",
+          default: 8,
           minimum: 1,
           maximum: 50
+        },
+        livecrawl: {
+          type: "string",
+          enum: ["fallback", "preferred"],
+          description:
+            "Live crawl mode - 'fallback': use live crawling as backup if cached content unavailable, 'preferred': prioritize live crawling (default: 'fallback')",
+          default: "fallback"
+        },
+        type: {
+          type: "string",
+          enum: ["auto", "fast", "deep"],
+          description:
+            "Search type - 'auto': balanced search (default), 'fast': quick results, 'deep': comprehensive search",
+          default: "auto"
+        },
+        contextMaxCharacters: {
+          type: "integer",
+          description:
+            "Maximum characters for context string optimized for LLMs (default: 10000)",
+          default: 10000
         }
       },
-      required: ["query", "language"]
+      required: ["query"]
     };
   }
 
@@ -54,29 +67,33 @@ export default class WebSearchTool implements DialogueTool {
         ]
       };
     }
-    const query = args.query as string;
-    const language = args.language as string;
-    const count = (args.count as number) || 10;
-    const results = await global.chatService.websearch(
+    const results = await global.chatService?.websearch?.(
       this.chatContext.getChatId(),
-      query,
-      undefined,
-      language,
-      count
+      {
+        query: args.query as string,
+        numResults: (args.numResults as number) || 8,
+        livecrawl: (args.livecrawl as "fallback" | "preferred") || "fallback",
+        type: (args.type as "auto" | "fast" | "deep") || "auto",
+        contextMaxCharacters: (args.contextMaxCharacters as number) || 10000
+      }
     );
+
+    if (!results || results.length === 0 || !results[0].content) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "No search results found. Please try a different query."
+          }
+        ]
+      };
+    }
+
     return Promise.resolve({
       content: [
         {
           type: "text",
-          text: JSON.stringify(
-            results.map((result) => {
-              return {
-                title: result.title,
-                url: result.url,
-                content: sub(result.content || result.snippet || "", 6000)
-              };
-            })
-          )
+          text: results[0].content
         }
       ]
     });
