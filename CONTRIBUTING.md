@@ -35,25 +35,17 @@ This project uses pnpm as its package manager. Please ensure you have it install
    pnpm install
    ```
 
-4. Start the TypeScript compiler in watch mode:
-
-   ```bash
-   pnpm run dev
-   ```
-
-5. Run tests:
+4. Run tests:
    ```bash
    pnpm test
    ```
 
 ### Development Commands
 
-- `pnpm run dev`: Start TypeScript compiler in watch mode
 - `pnpm test`: Run tests
-- `pnpm run test:watch`: Run tests in watch mode
 - `pnpm run build`: Build the project
-- `pnpm run lint`: Run linting
 - `pnpm run format`: Format code using Prettier
+- `pnpm run format:check`: Check if files are properly formatted
 
 ## Branching Strategy
 
@@ -94,6 +86,7 @@ This project uses pnpm as its package manager. Please ensure you have it install
 Must be one of:
 
 - `build`: Changes affecting build system or external dependencies
+- `chore`: Maintenance tasks, tooling, or housekeeping
 - `ci`: CI configuration changes
 - `docs`: Documentation only changes
 - `feat`: A new feature
@@ -172,16 +165,16 @@ Now it detects and reports them as validation errors.
 
 ## Code Style
 
-We use ESLint and Prettier to enforce consistent code style. The project comes with pre-configured ESLint and Prettier settings.
+We use Prettier to enforce consistent code formatting. The project comes with pre-configured Prettier settings.
 
 ### Style Guidelines
 
 - Use 2 spaces for indentation
-- Maximum line length of 100 characters
-- Single quotes for strings
+- Maximum line length of 80 characters
+- Double quotes for strings
 - Semicolons are required
-- Trailing commas in multiline objects
-- Explicit function return types
+- No trailing commas
+- Explicit function return types (enforced by TypeScript)
 - Explicit accessibility modifiers in classes
 
 ### Examples
@@ -226,28 +219,20 @@ export class parser {
 
 ### Editor Setup
 
-1. Install required VS Code extensions:
+1. Install the Prettier VS Code extension
 
-   - ESLint
-   - Prettier
-
-2. VS Code will automatically use project's ESLint and Prettier configurations.
+2. VS Code will automatically use the project's Prettier configuration
 
 3. Enable format on save in VS Code settings:
    ```json
    {
      "editor.formatOnSave": true,
-     "editor.defaultFormatter": "esbenp.prettier-vscode",
-     "editor.codeActionsOnSave": {
-       "source.fixAll.eslint": true
-     }
+     "editor.defaultFormatter": "esbenp.prettier-vscode"
    }
    ```
 
 ### Available Scripts
 
-- `pnpm run lint`: Check code style
-- `pnpm run lint:fix`: Fix auto-fixable style issues
 - `pnpm run format`: Format code using Prettier
 - `pnpm run format:check`: Check if files are properly formatted
 

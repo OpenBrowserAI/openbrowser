@@ -10,7 +10,6 @@
   "scripts": {
     "build": "pnpm -r --sequential build",
     "test": "pnpm -r --sequential test",
-    "lint": "eslint .",
     "clean": "rm -rf node_modules && pnpm -r exec -- rm -rf node_modules dist",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
