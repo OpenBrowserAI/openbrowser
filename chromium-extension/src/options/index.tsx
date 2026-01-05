@@ -5,11 +5,12 @@ import {
   Input,
   Button,
   message,
-  Card,
   Select,
   AutoComplete,
   Checkbox
 } from "antd";
+import { SaveOutlined } from "@ant-design/icons";
+import "../sidebar/index.css";
 
 const { Option } = Select;
 
@@ -226,103 +227,189 @@ const OptionsPage = () => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <Card title="Model Config" className="shadow-md">
-        <Form form={form} layout="vertical" initialValues={config}>
-          <Form.Item
-            name="llm"
-            label="LLM"
-            rules={[
-              {
-                required: true,
-                message: "Please select a LLM"
-              }
-            ]}
-          >
-            <Select placeholder="Choose a LLM" onChange={handleLLMChange}>
-              {modelLLMs.map((llm) => (
-                <Option key={llm.value} value={llm.value}>
-                  {llm.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="modelName"
-            label="Model Name"
-            rules={[
-              {
-                required: true,
-                message: "Please select a model"
-              }
-            ]}
-          >
-            <AutoComplete
-              placeholder="Model name"
-              options={modelOptions[config.llm]}
-              filterOption={(inputValue, option) =>
-                (option.value as string)
-                  .toUpperCase()
-                  .indexOf(inputValue.toUpperCase()) !== -1
-              }
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-3xl mx-auto px-6 py-6">
+          <div className="flex items-center gap-4">
+            <img
+              src="/icon.png"
+              alt="OpenBrowser Logo"
+              className="w-12 h-12 rounded-lg"
             />
-          </Form.Item>
+            <div>
+              <h1 className="text-2xl font-semibold text-black">Settings</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Configure your AI model preferences
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <Form.Item
-            name="apiKey"
-            label="API Key"
-            rules={[
-              {
-                required: true,
-                message: "Please enter the API Key"
+      {/* Content */}
+      <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <Form form={form} layout="vertical" initialValues={config}>
+            <Form.Item
+              name="llm"
+              label={
+                <span className="text-sm font-medium text-gray-900">
+                  LLM Provider
+                </span>
               }
-            ]}
-          >
-            <Input.Password placeholder="Please enter the API Key" allowClear />
-          </Form.Item>
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a LLM provider"
+                }
+              ]}
+            >
+              <Select
+                placeholder="Choose a LLM provider"
+                onChange={handleLLMChange}
+                size="large"
+                className="w-full"
+              >
+                {modelLLMs.map((llm) => (
+                  <Option key={llm.value} value={llm.value}>
+                    {llm.label}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-          <Form.Item name={["options", "baseURL"]} label="Base URL">
-            <Input placeholder="Please enter the base URL (Optional)" />
-          </Form.Item>
+            <Form.Item
+              name="modelName"
+              label={
+                <span className="text-sm font-medium text-gray-900">
+                  Model Name
+                </span>
+              }
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a model"
+                }
+              ]}
+            >
+              <AutoComplete
+                placeholder="Select or enter model name"
+                options={modelOptions[config.llm]}
+                size="large"
+                className="w-full"
+                filterOption={(inputValue, option) =>
+                  (option.value as string)
+                    .toUpperCase()
+                    .indexOf(inputValue.toUpperCase()) !== -1
+                }
+              />
+            </Form.Item>
 
-          <Form.Item
-            name="webSearchEnabled"
-            valuePropName="checked"
-            label="Enable Web Search"
-          >
-            <Checkbox>Enable Exa AI web search tool</Checkbox>
-          </Form.Item>
+            <Form.Item
+              name="apiKey"
+              label={
+                <span className="text-sm font-medium text-gray-900">
+                  API Key
+                </span>
+              }
+              rules={[
+                {
+                  required: true,
+                  message: "Please enter your API key"
+                }
+              ]}
+            >
+              <Input.Password
+                placeholder="Enter your API key"
+                size="large"
+                className="w-full"
+              />
+            </Form.Item>
 
-          <Form.Item
-            noStyle
-            shouldUpdate={(prevValues, currentValues) =>
-              prevValues.webSearchEnabled !== currentValues.webSearchEnabled
-            }
-          >
-            {({ getFieldValue }) =>
-              getFieldValue("webSearchEnabled") ? (
-                <Form.Item
-                  name="exaApiKey"
-                  label="Exa API Key (Optional)"
-                  tooltip="If not provided, web search will use the free tier without authentication"
-                >
-                  <Input.Password
-                    placeholder="Enter your Exa API Key (optional)"
-                    allowClear
-                  />
-                </Form.Item>
-              ) : null
-            }
-          </Form.Item>
+            <Form.Item
+              name={["options", "baseURL"]}
+              label={
+                <span className="text-sm font-medium text-gray-900">
+                  Base URL <span className="text-gray-400">(Optional)</span>
+                </span>
+              }
+            >
+              <Input
+                placeholder="Enter custom base URL"
+                size="large"
+                className="w-full"
+              />
+            </Form.Item>
 
-          <Form.Item>
-            <Button type="primary" onClick={handleSave} block>
-              Save
-            </Button>
-          </Form.Item>
-        </Form>
-      </Card>
+            <div className="border-t border-gray-200 pt-6 mt-6">
+              <Form.Item
+                name="webSearchEnabled"
+                valuePropName="checked"
+                className="mb-4"
+              >
+                <Checkbox>
+                  <span className="text-sm font-medium text-gray-900">
+                    Enable web search (Exa AI)
+                  </span>
+                </Checkbox>
+              </Form.Item>
+
+              <Form.Item
+                noStyle
+                shouldUpdate={(prevValues, currentValues) =>
+                  prevValues.webSearchEnabled !== currentValues.webSearchEnabled
+                }
+              >
+                {({ getFieldValue }) =>
+                  getFieldValue("webSearchEnabled") ? (
+                    <Form.Item
+                      name="exaApiKey"
+                      label={
+                        <span className="text-sm font-medium text-gray-900">
+                          Exa API Key{" "}
+                          <span className="text-gray-400">(Optional)</span>
+                        </span>
+                      }
+                      tooltip="Uses free tier if not provided"
+                    >
+                      <Input.Password
+                        placeholder="sk-..."
+                        size="large"
+                        className="w-full"
+                        allowClear
+                      />
+                    </Form.Item>
+                  ) : null
+                }
+              </Form.Item>
+            </div>
+
+            <Form.Item className="mb-0 mt-6">
+              <Button
+                onClick={handleSave}
+                size="large"
+                icon={<SaveOutlined />}
+                className="w-full bg-black hover:bg-gray-800 border-black text-white"
+                block
+                style={{
+                  backgroundColor: "#000000",
+                  borderColor: "#000000",
+                  color: "#ffffff"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "#1f2937";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "#000000";
+                }}
+              >
+                Save Settings
+              </Button>
+            </Form.Item>
+          </Form>
+        </div>
+      </div>
     </div>
   );
 };
