@@ -1,20 +1,19 @@
 import {
   PageTab,
-  OpenBrowserMessage,
   ToolResult,
   DialogueTool,
+  AssistantParts,
   DialogueParams,
+  ChatStreamCallback,
+  OpenBrowserMessage,
   OpenBrowserDialogueConfig,
   OpenBrowserMessageUserPart,
-  ChatStreamCallback,
-  LanguageModelV2TextPart,
-  LanguageModelV2ToolCallPart,
-  LanguageModelV2ToolResultPart,
+  LanguageModelV2ToolResultPart
 } from "../types";
 import {
   callChatLLM,
   convertToolResults,
-  convertAssistantToolResults,
+  convertAssistantToolResults
 } from "./chat-llm";
 import Log from "../common/log";
 import global from "../config/global";
@@ -57,7 +56,7 @@ export class ChatAgent {
           streamType: "chat",
           chatId: this.chatContext.getChatId(),
           messageId: params.messageId,
-          type: "chat_start",
+          type: "chat_start"
         });
       }
       const chatTools = mergeTools(this.buildInnerTools(params), this.tools);
@@ -111,7 +110,7 @@ export class ChatAgent {
           type: "chat_end",
           error: errorInfo,
           duration: Date.now() - runStartTime,
-          reactLoopNum: reactLoopNum + 1,
+          reactLoopNum: reactLoopNum + 1
         });
       }
     }
@@ -181,7 +180,7 @@ export class ChatAgent {
       id: messageId,
       role: "user",
       timestamp: Date.now(),
-      content: user,
+      content: user
     };
     await this.addMessages([message]);
     return message;
@@ -229,7 +228,7 @@ export class ChatAgent {
   protected async handleCallResult(
     messageId: string,
     chatTools: DialogueTool[],
-    results: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>,
+    results: AssistantParts,
     chatStreamCallback?: ChatStreamCallback
   ): Promise<string | null> {
     let text: string | null = null;
@@ -241,6 +240,10 @@ export class ChatAgent {
       const result = results[i];
       if (result.type == "text") {
         text = result.text;
+        continue;
+      }
+      // Skip reasoning parts - they're only needed for conversation history
+      if (result.type == "reasoning") {
         continue;
       }
       let toolResult: ToolResult;
@@ -260,10 +263,10 @@ export class ChatAgent {
           content: [
             {
               type: "text",
-              text: e + "",
-            },
+              text: e + ""
+            }
           ],
-          isError: true,
+          isError: true
         };
       }
       const callback = chatStreamCallback?.chatCallback;
@@ -276,7 +279,7 @@ export class ChatAgent {
           toolCallId: result.toolCallId,
           toolName: result.toolName,
           params: result.input || {},
-          toolResult: toolResult,
+          toolResult: toolResult
         });
       }
       const llmToolResult = convertToolResult(result, toolResult);
@@ -287,8 +290,8 @@ export class ChatAgent {
         id: this.memory.genMessageId(),
         role: "assistant",
         timestamp: Date.now(),
-        content: convertAssistantToolResults(results),
-      },
+        content: convertAssistantToolResults(results)
+      }
     ]);
     if (toolResults.length > 0) {
       await this.addMessages([
@@ -296,8 +299,8 @@ export class ChatAgent {
           id: this.memory.genMessageId(),
           role: "tool",
           timestamp: Date.now(),
-          content: convertToolResults(toolResults),
-        },
+          content: convertToolResults(toolResults)
+        }
       ]);
       return null;
     } else {

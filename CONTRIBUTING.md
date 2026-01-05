@@ -204,7 +204,7 @@ export class Parser {
     const result = this.processInput(input);
     return {
       name: this.config.name,
-      result,
+      result
     };
   }
 }

@@ -28,17 +28,25 @@ export function run_build_dom_tree() {
    * @param {*} includeAttributes [attr_names...]
    * @returns { element_str, client_rect, selector_map, area_map }
    */
-  function get_clickable_elements(markHighlightElements = true, includeAttributes) {
+  function get_clickable_elements(
+    markHighlightElements = true,
+    includeAttributes
+  ) {
     window.clickable_elements = {};
     computedStyleCache = new WeakMap();
-    document.querySelectorAll("[openbrowser-user-highlight-id]").forEach(ele => ele.removeAttribute("openbrowser-user-highlight-id"));
+    document
+      .querySelectorAll("[openbrowser-user-highlight-id]")
+      .forEach((ele) => ele.removeAttribute("openbrowser-user-highlight-id"));
     let page_tree = build_dom_tree(markHighlightElements);
     let element_tree = parse_node(page_tree);
-    let element_str = clickable_elements_to_string(element_tree, includeAttributes);
+    let element_str = clickable_elements_to_string(
+      element_tree,
+      includeAttributes
+    );
     let client_rect = {
       width: window.innerWidth || document.documentElement.clientWidth,
-      height: window.innerHeight || document.documentElement.clientHeight,
-    }
+      height: window.innerHeight || document.documentElement.clientHeight
+    };
     if (markHighlightElements) {
       let selector_map = {};
       // selector_map = create_selector_map(element_tree);
@@ -50,12 +58,14 @@ export function run_build_dom_tree() {
   }
 
   function get_highlight_element(highlightIndex) {
-    let element = document.querySelector(`[openbrowser-user-highlight-id="openbrowser-highlight-${highlightIndex}"]`);
+    let element = document.querySelector(
+      `[openbrowser-user-highlight-id="openbrowser-highlight-${highlightIndex}"]`
+    );
     return element || window.clickable_elements[highlightIndex];
   }
 
   function remove_highlight() {
-    let highlight = document.getElementById('openbrowser-highlight-container');
+    let highlight = document.getElementById("openbrowser-highlight-container");
     if (highlight) {
       highlight.remove();
     }
@@ -65,26 +75,30 @@ export function run_build_dom_tree() {
   function clickable_elements_to_string(element_tree, includeAttributes) {
     if (!includeAttributes) {
       includeAttributes = [
-        'id',
-        'title',
-        'type',
-        'name',
-        'role',
-        'class',
-        'src',
-        'href',
-        'aria-label',
-        'placeholder',
-        'value',
-        'alt',
-        'aria-expanded',
+        "id",
+        "title",
+        "type",
+        "name",
+        "role",
+        "class",
+        "src",
+        "href",
+        "aria-label",
+        "placeholder",
+        "value",
+        "alt",
+        "aria-expanded"
       ];
     }
 
     function get_all_text_till_next_clickable_element(element_node) {
       let text_parts = [];
       function collect_text(node) {
-        if (node.tagName && node != element_node && node.highlightIndex != null) {
+        if (
+          node.tagName &&
+          node != element_node &&
+          node.highlightIndex != null
+        ) {
           return;
         }
         if (!node.tagName && node.text) {
@@ -96,7 +110,7 @@ export function run_build_dom_tree() {
         }
       }
       collect_text(element_node);
-      return text_parts.join('\n').trim().replace(/\n+/g, ' ');
+      return text_parts.join("\n").trim().replace(/\n+/g, " ");
     }
 
     function has_parent_with_highlight_index(node) {
@@ -114,7 +128,7 @@ export function run_build_dom_tree() {
     function process_node(node, depth) {
       if (node.text == null) {
         if (node.highlightIndex != null) {
-          let attributes_str = '';
+          let attributes_str = "";
           if (includeAttributes) {
             for (let i = 0; i < includeAttributes.length; i++) {
               let key = includeAttributes[i];
@@ -122,16 +136,24 @@ export function run_build_dom_tree() {
               if (key == "class" && value && value.length > 30) {
                 let classList = value.split(" ").slice(0, 3);
                 value = classList.join(" ");
-              } else if ((key == "src" || key == "href") && value && value.length > 200) {
+              } else if (
+                (key == "src" || key == "href") &&
+                value &&
+                value.length > 200
+              ) {
                 continue;
-              } else if ((key == "src" || key == "href") && value && value.startsWith("/")) {
+              } else if (
+                (key == "src" || key == "href") &&
+                value &&
+                value.startsWith("/")
+              ) {
                 value = window.location.origin + value;
               }
               if (key && value) {
                 attributes_str += ` ${key}="${value}"`;
               }
             }
-            attributes_str = attributes_str.replace(/\n+/g, ' ');
+            attributes_str = attributes_str.replace(/\n+/g, " ");
           }
           let text = get_all_text_till_next_clickable_element(node);
           formatted_text.push(
@@ -147,7 +169,7 @@ export function run_build_dom_tree() {
       }
     }
     process_node(element_tree, 0);
-    return formatted_text.join('\n');
+    return formatted_text.join("\n");
   }
 
   function create_selector_map(element_tree) {
@@ -171,8 +193,9 @@ export function run_build_dom_tree() {
     function process_node(node) {
       if (node.tagName) {
         if (node.highlightIndex != null) {
-          const element = window.clickable_elements[node.highlightIndex]
-          area_map[node.highlightIndex] = get_element_real_bounding_rect(element);
+          const element = window.clickable_elements[node.highlightIndex];
+          area_map[node.highlightIndex] =
+            get_element_real_bounding_rect(element);
         }
         for (let i = 0; i < node.children.length; i++) {
           process_node(node.children[i]);
@@ -224,11 +247,11 @@ export function run_build_dom_tree() {
     if (!node_data) {
       return;
     }
-    if (node_data.type == 'TEXT_NODE') {
+    if (node_data.type == "TEXT_NODE") {
       return {
-        text: node_data.text || '',
+        text: node_data.text || "",
         isVisible: node_data.isVisible || false,
-        parent: parent,
+        parent: parent
       };
     }
     let element_node = {
@@ -241,7 +264,7 @@ export function run_build_dom_tree() {
       isTopElement: node_data.isTopElement || false,
       shadowRoot: node_data.shadowRoot || false,
       children: [],
-      parent: parent,
+      parent: parent
     };
     if (node_data.children) {
       let children = [];
@@ -265,52 +288,57 @@ export function run_build_dom_tree() {
 
     function highlightElement(element, index, parentIframe = null) {
       // Create or get highlight container
-      let container = document.getElementById('openbrowser-highlight-container');
+      let container = document.getElementById(
+        "openbrowser-highlight-container"
+      );
       if (!container) {
-        container = document.createElement('div');
-        container.id = 'openbrowser-highlight-container';
-        container.style.position = 'fixed';
-        container.style.pointerEvents = 'none';
-        container.style.top = '0';
-        container.style.left = '0';
-        container.style.width = '100%';
-        container.style.height = '100%';
-        container.style.zIndex = '2147483647'; // Maximum z-index value
+        container = document.createElement("div");
+        container.id = "openbrowser-highlight-container";
+        container.style.position = "fixed";
+        container.style.pointerEvents = "none";
+        container.style.top = "0";
+        container.style.left = "0";
+        container.style.width = "100%";
+        container.style.height = "100%";
+        container.style.zIndex = "2147483647"; // Maximum z-index value
         document.documentElement.appendChild(container);
       }
 
       // Generate a color based on the index
       const colors = [
-        '#FF0000',
-        '#00FF00',
-        '#0000FF',
-        '#FFA500',
-        '#800080',
-        '#008080',
-        '#FF69B4',
-        '#4B0082',
-        '#FF4500',
-        '#2E8B57',
-        '#DC143C',
-        '#4682B4',
+        "#FF0000",
+        "#00FF00",
+        "#0000FF",
+        "#FFA500",
+        "#800080",
+        "#008080",
+        "#FF69B4",
+        "#4B0082",
+        "#FF4500",
+        "#2E8B57",
+        "#DC143C",
+        "#4682B4"
       ];
       const colorIndex = index % colors.length;
       const baseColor = colors[colorIndex];
       const backgroundColor = `${baseColor}1A`; // 10% opacity version of the color
 
       // Create highlight overlay
-      const overlay = document.createElement('div');
-      overlay.style.position = 'absolute';
+      const overlay = document.createElement("div");
+      overlay.style.position = "absolute";
       overlay.style.border = `2px solid ${baseColor}`;
-      overlay.style.pointerEvents = 'none';
-      overlay.style.boxSizing = 'border-box';
+      overlay.style.pointerEvents = "none";
+      overlay.style.boxSizing = "border-box";
 
       // Position overlay based on element
       const rect = element.getBoundingClientRect();
       let top = rect.top;
       let left = rect.left;
 
-      if (rect.width < window.innerWidth / 2 || rect.height < window.innerHeight / 2) {
+      if (
+        rect.width < window.innerWidth / 2 ||
+        rect.height < window.innerHeight / 2
+      ) {
         overlay.style.backgroundColor = backgroundColor;
       }
 
@@ -327,13 +355,13 @@ export function run_build_dom_tree() {
       overlay.style.height = `${rect.height}px`;
 
       // Create label
-      const label = document.createElement('div');
-      label.className = 'openbrowser-highlight-label';
-      label.style.position = 'absolute';
+      const label = document.createElement("div");
+      label.className = "openbrowser-highlight-label";
+      label.style.position = "absolute";
       label.style.background = baseColor;
-      label.style.color = 'white';
-      label.style.padding = '1px 4px';
-      label.style.borderRadius = '4px';
+      label.style.color = "white";
+      label.style.padding = "1px 4px";
+      label.style.borderRadius = "4px";
       label.style.fontSize = `${Math.min(12, Math.max(8, rect.height / 2))}px`; // Responsive font size
       label.textContent = index;
 
@@ -367,7 +395,10 @@ export function run_build_dom_tree() {
       container.appendChild(label);
 
       // Store reference for cleanup
-      element.setAttribute('openbrowser-user-highlight-id', `openbrowser-highlight-${index}`);
+      element.setAttribute(
+        "openbrowser-user-highlight-id",
+        `openbrowser-highlight-${index}`
+      );
 
       return index + 1;
     }
@@ -400,18 +431,26 @@ export function run_build_dom_tree() {
         }
 
         const tagName = currentElement.nodeName.toLowerCase();
-        const xpathIndex = index > 0 ? `[${index + 1}]` : '';
+        const xpathIndex = index > 0 ? `[${index + 1}]` : "";
         segments.unshift(`${tagName}${xpathIndex}`);
 
         currentElement = currentElement.parentNode;
       }
 
-      return segments.join('/');
+      return segments.join("/");
     }
 
     // Helper function to check if element is accepted
     function isElementAccepted(element) {
-      const leafElementDenyList = new Set(['svg', 'script', 'style', 'link', 'meta', 'noscript', 'template']);
+      const leafElementDenyList = new Set([
+        "svg",
+        "script",
+        "style",
+        "link",
+        "meta",
+        "noscript",
+        "template"
+      ]);
       return !leafElementDenyList.has(element.tagName.toLowerCase());
     }
 
@@ -422,76 +461,76 @@ export function run_build_dom_tree() {
       }
       // Base interactive elements and roles
       const interactiveElements = new Set([
-        'a',
-        'button',
-        'details',
-        'embed',
-        'input',
-        'label',
-        'menu',
-        'menuitem',
-        'object',
-        'select',
-        'textarea',
-        'summary',
-        'option',
-        'optgroup',
-        'fieldset',
-        'legend',
+        "a",
+        "button",
+        "details",
+        "embed",
+        "input",
+        "label",
+        "menu",
+        "menuitem",
+        "object",
+        "select",
+        "textarea",
+        "summary",
+        "option",
+        "optgroup",
+        "fieldset",
+        "legend"
       ]);
 
       const interactiveRoles = new Set([
-        'button',
-        'menu',
-        'menuitem',
-        'menubar',
-        'link',
-        'checkbox',
-        'radio',
-        'slider',
-        'tab',
-        'tabpanel',
-        'textbox',
-        'combobox',
-        'grid',
-        'listbox',
-        'option',
-        'progressbar',
-        'scrollbar',
-        'searchbox',
-        'switch',
-        'tree',
-        'treeitem',
-        'spinbutton',
-        'tooltip',
-        'a-button-inner',
-        'a-dropdown-button',
-        'click',
-        'menuitemcheckbox',
-        'menuitemradio',
-        'a-button-text',
-        'button-text',
-        'button-icon',
-        'button-icon-only',
-        'button-text-icon-only',
-        'dropdown',
-        'combobox',
+        "button",
+        "menu",
+        "menuitem",
+        "menubar",
+        "link",
+        "checkbox",
+        "radio",
+        "slider",
+        "tab",
+        "tabpanel",
+        "textbox",
+        "combobox",
+        "grid",
+        "listbox",
+        "option",
+        "progressbar",
+        "scrollbar",
+        "searchbox",
+        "switch",
+        "tree",
+        "treeitem",
+        "spinbutton",
+        "tooltip",
+        "a-button-inner",
+        "a-dropdown-button",
+        "click",
+        "menuitemcheckbox",
+        "menuitemradio",
+        "a-button-text",
+        "button-text",
+        "button-icon",
+        "button-icon-only",
+        "button-text-icon-only",
+        "dropdown",
+        "combobox"
       ]);
 
       const tagName = element.tagName.toLowerCase();
-      const role = element.getAttribute('role');
-      const ariaRole = element.getAttribute('aria-role');
-      const tabIndex = element.getAttribute('tabindex');
+      const role = element.getAttribute("role");
+      const ariaRole = element.getAttribute("aria-role");
+      const tabIndex = element.getAttribute("tabindex");
 
       // Basic role/attribute checks
       const hasInteractiveRole =
         interactiveElements.has(tagName) ||
         interactiveRoles.has(role) ||
         interactiveRoles.has(ariaRole) ||
-        (tabIndex !== null && tabIndex !== '-1') ||
-        element.getAttribute('data-action') === 'a-dropdown-select' ||
-        element.getAttribute('data-action') === 'a-dropdown-button' ||
-        element.getAttribute('contenteditable') === 'true';
+        (tabIndex !== null && tabIndex !== "-1") ||
+        element.getAttribute("data-action") === "a-dropdown-select" ||
+        element.getAttribute("data-action") === "a-dropdown-button" ||
+        element.getAttribute("contenteditable") === "true";
 
       if (hasInteractiveRole) return true;
 
@@ -508,17 +547,19 @@ export function run_build_dom_tree() {
       // ];
 
       const clickEventTypes = [
-        'click',
-        'mousedown',
-        'mouseup',
-        'touchstart',
-        'touchend',
+        "click",
+        "mousedown",
+        "mouseup",
+        "touchstart",
+        "touchend"
       ];
 
       // Filter elements that have no real event listeners at all
       if (window.getEventListeners) {
         const listeners = window.getEventListeners(element);
-        const hasRealClickListeners = clickEventTypes.some((type) => listeners[type]?.length > 0);
+        const hasRealClickListeners = clickEventTypes.some(
+          (type) => listeners[type]?.length > 0
+        );
         if (!hasRealClickListeners) {
           return false;
         }
@@ -527,10 +568,10 @@ export function run_build_dom_tree() {
       // Check for event listeners
       const hasClickHandler =
         element.onclick !== null ||
-        element.getAttribute('onclick') !== null ||
-        element.hasAttribute('ng-click') ||
-        element.hasAttribute('@click') ||
-        element.hasAttribute('v-on:click');
+        element.getAttribute("onclick") !== null ||
+        element.hasAttribute("ng-click") ||
+        element.hasAttribute("@click") ||
+        element.hasAttribute("v-on:click");
 
       // Helper function to safely get event listeners
       function getElementEventListeners(el) {
@@ -543,8 +584,8 @@ export function run_build_dom_tree() {
             listeners[type] = [
               {
                 listener: handler,
-                useCapture: false,
-              },
+                useCapture: false
+              }
             ];
           }
         }
@@ -554,29 +595,36 @@ export function run_build_dom_tree() {
 
       // Check for click-related events on the element itself
       const listeners = getElementEventListeners(element);
-      const hasClickListeners = clickEventTypes.some((type) => listeners[type]?.length > 0);
+      const hasClickListeners = clickEventTypes.some(
+        (type) => listeners[type]?.length > 0
+      );
 
       // Check for ARIA properties that suggest interactivity
       const hasAriaProps =
-        element.hasAttribute('aria-expanded') ||
-        element.hasAttribute('aria-pressed') ||
-        element.hasAttribute('aria-selected') ||
-        element.hasAttribute('aria-checked');
+        element.hasAttribute("aria-expanded") ||
+        element.hasAttribute("aria-pressed") ||
+        element.hasAttribute("aria-selected") ||
+        element.hasAttribute("aria-checked");
 
       // Check if element is draggable
-      const isDraggable = element.draggable || element.getAttribute('draggable') === 'true';
+      const isDraggable =
+        element.draggable || element.getAttribute("draggable") === "true";
 
       if (hasAriaProps || hasClickHandler || hasClickListeners || isDraggable) {
         return true;
       }
 
       // Check if element has click-like styling
-      let hasClickStyling = element.style.cursor === 'pointer' || getCachedComputedStyle(element).cursor === 'pointer';
+      let hasClickStyling =
+        element.style.cursor === "pointer" ||
+        getCachedComputedStyle(element).cursor === "pointer";
       if (hasClickStyling) {
         let count = 0;
         let current = element.parentElement;
         while (current && current !== document.documentElement) {
-          hasClickStyling = current.style.cursor === 'pointer' || getCachedComputedStyle(current).cursor === 'pointer';
+          hasClickStyling =
+            current.style.cursor === "pointer" ||
+            getCachedComputedStyle(current).cursor === "pointer";
           if (hasClickStyling) return false;
           current = current.parentElement;
           if (++count > 10) break;
@@ -594,10 +642,7 @@ export function run_build_dom_tree() {
       }
 
       const style = getCachedComputedStyle(element);
-      return (
-        style?.visibility !== 'hidden' &&
-        style?.display !== 'none'
-      );
+      return style?.visibility !== "hidden" && style?.display !== "none";
     }
 
     // Helper function to check if element is the top element at its position
@@ -614,7 +659,10 @@ export function run_build_dom_tree() {
       const shadowRoot = element.getRootNode();
       if (shadowRoot instanceof ShadowRoot) {
         const rect = element.getBoundingClientRect();
-        const point = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+        const point = {
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2
+        };
 
         try {
           // Use shadow root's elementFromPoint to check within shadow DOM context
@@ -637,7 +685,10 @@ export function run_build_dom_tree() {
 
       // Regular DOM elements
       const rect = element.getBoundingClientRect();
-      const point = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+      const point = {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2
+      };
 
       try {
         const topEl = document.elementFromPoint(point.x, point.y);
@@ -669,7 +720,7 @@ export function run_build_dom_tree() {
         rect.top <= window.innerHeight &&
         textNode.parentElement?.checkVisibility({
           checkOpacity: true,
-          checkVisibilityCSS: true,
+          checkVisibilityCSS: true
         })
       );
     }
@@ -686,9 +737,9 @@ export function run_build_dom_tree() {
         const textContent = node.textContent.trim();
         if (textContent && isTextNodeVisible(node)) {
           return {
-            type: 'TEXT_NODE',
+            type: "TEXT_NODE",
             text: textContent,
-            isVisible: true,
+            isVisible: true
           };
         }
         return null;
@@ -702,8 +753,9 @@ export function run_build_dom_tree() {
       const nodeData = {
         tagName: node.tagName ? node.tagName.toLowerCase() : null,
         attributes: {},
-        xpath: node.nodeType === Node.ELEMENT_NODE ? getXPathTree(node, true) : null,
-        children: [],
+        xpath:
+          node.nodeType === Node.ELEMENT_NODE ? getXPathTree(node, true) : null,
+        children: []
       };
 
       // Copy all attributes if the node is an element
@@ -726,7 +778,8 @@ export function run_build_dom_tree() {
 
         // For Shadow DOM elements, use more lenient criteria
         const isInShadowDOM = node.getRootNode() instanceof ShadowRoot;
-        const shouldHighlight = isInteractive && isVisible && (isTop || isInShadowDOM);
+        const shouldHighlight =
+          isInteractive && isVisible && (isTop || isInShadowDOM);
 
         // Highlight if element meets all criteria and highlighting is enabled
         if (shouldHighlight) {
@@ -750,31 +803,31 @@ export function run_build_dom_tree() {
 
       // Handle shadow DOM
       if (node.shadowRoot) {
-        const shadowChildren = Array.from(node.shadowRoot.children).map((child) =>
-          buildDomTree(child, parentIframe)
-        ).filter(child => child !== null);
+        const shadowChildren = Array.from(node.shadowRoot.children)
+          .map((child) => buildDomTree(child, parentIframe))
+          .filter((child) => child !== null);
         nodeData.children.push(...shadowChildren);
       }
 
       // Handle iframes
-      if (node.tagName === 'IFRAME') {
+      if (node.tagName === "IFRAME") {
         try {
           const iframeDoc = node.contentDocument || node.contentWindow.document;
           if (iframeDoc) {
-            const iframeChildren = Array.from(iframeDoc.body.children).map((child) =>
-              buildDomTree(child, node)
-            ).filter(child => child !== null);
+            const iframeChildren = Array.from(iframeDoc.body.children)
+              .map((child) => buildDomTree(child, node))
+              .filter((child) => child !== null);
             nodeData.children.push(...iframeChildren);
           }
         } catch (e) {
-          console.warn('Unable to access iframe:', node);
+          console.warn("Unable to access iframe:", node);
         }
       } else {
         const style = getCachedComputedStyle(node);
-        if (style && style.display !== 'none') {
-          const children = Array.from(node.children).map((child) =>
-            buildDomTree(child, parentIframe)
-          ).filter(child => child !== null);
+        if (style && style.display !== "none") {
+          const children = Array.from(node.children)
+            .map((child) => buildDomTree(child, parentIframe))
+            .filter((child) => child !== null);
           nodeData.children.push(...children);
         }
       }

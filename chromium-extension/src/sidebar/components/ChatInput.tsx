@@ -40,7 +40,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   sending,
   currentMessageId,
   onNewSession,
-  onShowSessionHistory,
+  onShowSessionHistory
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEmpty = !inputValue.trim() && uploadedFiles.length === 0;

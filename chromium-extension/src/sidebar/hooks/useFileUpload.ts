@@ -51,8 +51,8 @@ export const useFileUpload = () => {
           data: {
             base64Data: file.base64Data,
             mimeType: file.mimeType,
-            filename: file.filename,
-          },
+            filename: file.filename
+          }
         });
       });
     },

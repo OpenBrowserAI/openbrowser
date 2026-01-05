@@ -20,16 +20,16 @@ export default class TaskSnapshotTool implements Tool {
           description:
             "Update task node completion status, list of completed node IDs.",
           items: {
-            type: "number",
-          },
+            type: "number"
+          }
         },
         taskSnapshot: {
           type: "string",
           description:
-            "Current task important information, as detailed as possible, ensure that the task progress can be restored through this information later, output records of completed task information, contextual information, variables used, pending tasks information, etc.",
-        },
+            "Current task important information, as detailed as possible, ensure that the task progress can be restored through this information later, output records of completed task information, contextual information, variables used, pending tasks information, etc."
+        }
       },
-      required: ["doneIds", "taskSnapshot"],
+      required: ["doneIds", "taskSnapshot"]
     };
   }
 
@@ -49,7 +49,8 @@ export default class TaskSnapshotTool implements Tool {
         node.setAttribute("status", done ? "done" : "todo");
       }
     );
-    let text = "The current task has been interrupted. Below is a snapshot of the task execution history.\n" +
+    let text =
+      "The current task has been interrupted. Below is a snapshot of the task execution history.\n" +
       "# Task Snapshot\n" +
       taskSnapshot.trim() +
       "\n\n# Task\n" +
@@ -58,9 +59,9 @@ export default class TaskSnapshotTool implements Tool {
       content: [
         {
           type: "text",
-          text: text,
-        },
-      ],
+          text: text
+        }
+      ]
     };
   }
 }

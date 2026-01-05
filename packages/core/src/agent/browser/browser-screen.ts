@@ -25,7 +25,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
       llms: llms,
       mcpClient: mcpClient,
       planDescription:
-        "Browser operation agent, interact with the browser using the mouse and keyboard.",
+        "Browser operation agent, interact with the browser using the mouse and keyboard."
     });
     let init_tools = this.buildInitTools();
     if (ext_tools && ext_tools.length > 0) {
@@ -81,10 +81,10 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           properties: {
             url: {
               type: "string",
-              description: "The url to navigate to",
-            },
+              description: "The url to navigate to"
+            }
           },
-          required: ["url"],
+          required: ["url"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -93,14 +93,14 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.navigate_to(agentContext, args.url as string)
           );
-        },
+        }
       },
       {
         name: "current_page",
         description: "Get the information of the current webpage (url, title)",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
@@ -109,21 +109,21 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.get_current_page(agentContext)
           );
-        },
+        }
       },
       {
         name: "go_back",
         description: "Navigate back in browser history",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
           agentContext: AgentContext
         ): Promise<ToolResult> => {
           return await this.callInnerTool(() => this.go_back(agentContext));
-        },
+        }
       },
       {
         name: "typing",
@@ -133,10 +133,10 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           properties: {
             text: {
               type: "string",
-              description: "Text to type",
-            },
+              description: "Text to type"
+            }
           },
-          required: ["text"],
+          required: ["text"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -145,7 +145,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.typing(agentContext, args.text as string)
           );
-        },
+        }
       },
       {
         name: "click",
@@ -155,26 +155,26 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           properties: {
             x: {
               type: "number",
-              description: "X coordinate",
+              description: "X coordinate"
             },
             y: {
               type: "number",
-              description: "Y coordinate",
+              description: "Y coordinate"
             },
             num_clicks: {
               type: "number",
               description: "Number of clicks",
               enum: [1, 2, 3],
-              default: 1,
+              default: 1
             },
             button: {
               type: "string",
               description: "Mouse button to click",
               enum: ["left", "right", "middle"],
-              default: "left",
-            },
+              default: "left"
+            }
           },
-          required: ["x", "y"],
+          required: ["x", "y"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -189,7 +189,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
               (args.button || "left") as any
             )
           );
-        },
+        }
       },
       {
         name: "move_to",
@@ -199,14 +199,14 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           properties: {
             x: {
               type: "number",
-              description: "X coordinate",
+              description: "X coordinate"
             },
             y: {
               type: "number",
-              description: "Y coordinate",
-            },
+              description: "Y coordinate"
+            }
           },
-          required: ["x", "y"],
+          required: ["x", "y"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -215,7 +215,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.move_to(agentContext, args.x as number, args.y as number)
           );
-        },
+        }
       },
       {
         name: "scroll",
@@ -227,14 +227,14 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
               type: "number",
               description: "Scroll amount (up / down)",
               minimum: 1,
-              maximum: 10,
+              maximum: 10
             },
             direction: {
               type: "string",
-              enum: ["up", "down"],
-            },
+              enum: ["up", "down"]
+            }
           },
-          required: ["amount", "direction"],
+          required: ["amount", "direction"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -247,7 +247,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
               args.direction == "up" ? -amount : amount
             );
           });
-        },
+        }
       },
       {
         name: "extract_page_content",
@@ -255,7 +255,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           "Extract the text content and image links of the current webpage, please use this tool to obtain webpage data.",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
@@ -264,7 +264,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.extract_page_content(agentContext)
           );
-        },
+        }
       },
       {
         name: "press",
@@ -276,10 +276,10 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
             key: {
               type: "string",
               description: "Key to press",
-              enum: ["enter", "tab", "space", "backspace", "delete"],
-            },
+              enum: ["enter", "tab", "space", "backspace", "delete"]
+            }
           },
-          required: ["key"],
+          required: ["key"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -288,7 +288,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.press(agentContext, args.key as any)
           );
-        },
+        }
       },
       {
         name: "drag_and_drop",
@@ -298,22 +298,22 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           properties: {
             x1: {
               type: "number",
-              description: "From X coordinate",
+              description: "From X coordinate"
             },
             y1: {
               type: "number",
-              description: "From Y coordinate",
+              description: "From Y coordinate"
             },
             x2: {
               type: "number",
-              description: "Target X coordinate",
+              description: "Target X coordinate"
             },
             y2: {
               type: "number",
-              description: "Target Y coordinate",
-            },
+              description: "Target Y coordinate"
+            }
           },
-          required: ["x1", "y1", "x2", "y2"],
+          required: ["x1", "y1", "x2", "y2"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -328,14 +328,14 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
               args.y2 as number
             )
           );
-        },
+        }
       },
       {
         name: "get_all_tabs",
         description: "Get all tabs of the current browser",
         parameters: {
           type: "object",
-          properties: {},
+          properties: {}
         },
         execute: async (
           args: Record<string, unknown>,
@@ -344,7 +344,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.get_all_tabs(agentContext)
           );
-        },
+        }
       },
       {
         name: "switch_tab",
@@ -354,10 +354,10 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           properties: {
             tabId: {
               type: "number",
-              description: "Tab ID, obtained through get_all_tabs",
-            },
+              description: "Tab ID, obtained through get_all_tabs"
+            }
           },
-          required: ["tabId"],
+          required: ["tabId"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -366,7 +366,7 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             this.switch_tab(agentContext, args.tabId as number)
           );
-        },
+        }
       },
       {
         name: "wait",
@@ -380,10 +380,10 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
               description: "Duration in millisecond",
               default: 500,
               minimum: 200,
-              maximum: 10000,
-            },
+              maximum: 10000
+            }
           },
-          required: ["duration"],
+          required: ["duration"]
         },
         execute: async (
           args: Record<string, unknown>,
@@ -392,8 +392,8 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           return await this.callInnerTool(() =>
             sleep((args.duration || 200) as number)
           );
-        },
-      },
+        }
+      }
     ];
   }
 
@@ -418,13 +418,13 @@ export default abstract class BaseBrowserScreenAgent extends BaseBrowserAgent {
           {
             type: "file",
             data: image,
-            mediaType: result.imageType,
+            mediaType: result.imageType
           },
           {
             type: "text",
-            text: "This is the latest screenshot",
-          },
-        ],
+            text: "This is the latest screenshot"
+          }
+        ]
       });
     }
     super.handleMessages(agentContext, messages, tools);

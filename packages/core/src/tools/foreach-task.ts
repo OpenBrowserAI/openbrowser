@@ -17,18 +17,18 @@ export default class ForeachTaskTool implements Tool {
       properties: {
         nodeId: {
           type: "number",
-          description: "forEach node ID.",
+          description: "forEach node ID."
         },
         progress: {
           type: "string",
-          description: "Current execution progress.",
+          description: "Current execution progress."
         },
         next_step: {
           type: "string",
-          description: "Next task description.",
-        },
+          description: "Next task description."
+        }
       },
-      required: ["nodeId", "progress", "next_step"],
+      required: ["nodeId", "progress", "next_step"]
     };
   }
 
@@ -63,9 +63,9 @@ export default class ForeachTaskTool implements Tool {
       content: [
         {
           type: "text",
-          text: resultText,
-        },
-      ],
+          text: resultText
+        }
+      ]
     };
   }
 }

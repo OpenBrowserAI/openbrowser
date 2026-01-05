@@ -2,7 +2,7 @@ import { OpenBrowser } from "./openbrowser";
 import {
   BaseBrowserAgent,
   BaseBrowserLabelsAgent,
-  BaseBrowserScreenAgent,
+  BaseBrowserScreenAgent
 } from "./browser";
 import { Agent, AgentParams } from "./base";
 
@@ -13,5 +13,5 @@ export {
   type AgentParams,
   BaseBrowserAgent,
   BaseBrowserLabelsAgent,
-  BaseBrowserScreenAgent,
+  BaseBrowserScreenAgent
 };

@@ -15,8 +15,9 @@ import {
   LanguageModelV2FunctionTool,
   LanguageModelV2CallOptions,
   LanguageModelV2ToolCallPart,
+  LanguageModelV2ReasoningPart,
   LanguageModelV2ToolResultOutput,
-  LanguageModelV2ResponseMetadata,
+  LanguageModelV2ResponseMetadata
 } from "@ai-sdk/provider";
 import { ToolResult } from "./tools.types";
 import TaskContext, { AgentContext } from "../agent/agent-context";
@@ -194,9 +195,15 @@ export type ReActToolCallCallback = (
   toolUses: LanguageModelV2ToolCallPart[]
 ) => Promise<LanguageModelV2ToolResultOutput[]>;
 
+export type AssistantParts = Array<
+  | LanguageModelV2TextPart
+  | LanguageModelV2ToolCallPart
+  | LanguageModelV2ReasoningPart
+>;
+
 export type ReActLoopControl = (
   request: LLMRequest,
-  assistantParts: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>,
+  assistantParts: AssistantParts,
   loopNum: number
 ) => Promise<boolean>;
 

@@ -3,7 +3,7 @@ import React, {
   useMemo,
   useState,
   useEffect,
-  useCallback,
+  useCallback
 } from "react";
 import { Typography } from "antd";
 import { uuidv4 } from "@openbrowser-ai/core";
@@ -132,7 +132,7 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
   value,
   onChange,
   disabled,
-  onSend,
+  onSend
 }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const tabListRef = useRef<HTMLDivElement>(null);
@@ -183,7 +183,7 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
       chrome.runtime.sendMessage({
         requestId,
         type: "getTabs",
-        data: {},
+        data: {}
       });
     });
   }, []);
@@ -415,7 +415,11 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
           }
           return;
         }
-        if (event.key === "Enter" && !event.shiftKey && !isComposingRef.current) {
+        if (
+          event.key === "Enter" &&
+          !event.shiftKey &&
+          !isComposingRef.current
+        ) {
           event.preventDefault();
           if (highlightedIndex >= 0 && highlightedIndex < filteredTabs.length) {
             insertWebpageReference(filteredTabs[highlightedIndex]);
@@ -424,7 +428,12 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
         }
       }
 
-      if (event.key === "Enter" && !event.shiftKey && !showDropdown && !isComposingRef.current) {
+      if (
+        event.key === "Enter" &&
+        !event.shiftKey &&
+        !showDropdown &&
+        !isComposingRef.current
+      ) {
         event.preventDefault();
         onSend();
       } else if (event.key === "Escape" && showDropdown) {
@@ -438,7 +447,7 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
       insertWebpageReference,
       onSend,
       resetMentionState,
-      showDropdown,
+      showDropdown
     ]
   );
 
@@ -493,10 +502,7 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
               <Text type="secondary">No tabs found</Text>
             </div>
           ) : (
-            <div
-              ref={tabListRef}
-              className="max-h-[300px] overflow-y-auto"
-            >
+            <div ref={tabListRef} className="max-h-[300px] overflow-y-auto">
               {filteredTabs.map((tab, index) => {
                 const isActive = index === highlightedIndex;
                 return (

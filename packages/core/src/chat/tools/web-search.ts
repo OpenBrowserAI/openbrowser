@@ -23,12 +23,12 @@ export default class WebSearchTool implements DialogueTool {
         query: {
           type: "string",
           description:
-            "The search query to execute. Use specific keywords and phrases for better results.",
+            "The search query to execute. Use specific keywords and phrases for better results."
         },
         language: {
           type: "string",
           description:
-            "Language code for search results (e.g., 'en', 'zh', 'ja'). If not specified, will be auto-detected from query.",
+            "Language code for search results (e.g., 'en', 'zh', 'ja'). If not specified, will be auto-detected from query."
         },
         count: {
           type: "integer",
@@ -36,10 +36,10 @@ export default class WebSearchTool implements DialogueTool {
             "Number of search results to return (default: 10, max: 50)",
           default: 10,
           minimum: 1,
-          maximum: 50,
-        },
+          maximum: 50
+        }
       },
-      required: ["query", "language"],
+      required: ["query", "language"]
     };
   }
 
@@ -49,9 +49,9 @@ export default class WebSearchTool implements DialogueTool {
         content: [
           {
             type: "text",
-            text: "Error: not implemented",
-          },
-        ],
+            text: "Error: not implemented"
+          }
+        ]
       };
     }
     const query = args.query as string;
@@ -73,12 +73,12 @@ export default class WebSearchTool implements DialogueTool {
               return {
                 title: result.title,
                 url: result.url,
-                content: sub(result.content || result.snippet || "", 6000),
+                content: sub(result.content || result.snippet || "", 6000)
               };
             })
-          ),
-        },
-      ],
+          )
+        }
+      ]
     });
   }
 }

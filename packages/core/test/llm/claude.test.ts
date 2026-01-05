@@ -16,14 +16,14 @@ if (!apiKey) {
 export async function testClaudePrompt() {
   const client: LanguageModelV2 = createAnthropic({
     apiKey: apiKey,
-    baseURL: baseURL,
+    baseURL: baseURL
   }).languageModel("claude-sonnet-4-5-20250929");
 
   let result = await client.doGenerate({
     prompt: [{ role: "user", content: [{ type: "text", text: "Hello" }] }],
     maxOutputTokens: 1024,
     temperature: 0.7,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -34,14 +34,14 @@ export async function testClaudePrompt() {
 export async function testClaudeStream() {
   const client: LanguageModelV2 = createAnthropic({
     apiKey: apiKey,
-    baseURL: baseURL,
+    baseURL: baseURL
   }).languageModel("claude-sonnet-4-5-20250929");
 
   let result = await client.doStream({
     prompt: [{ role: "user", content: [{ type: "text", text: "Hello" }] }],
     maxOutputTokens: 1024,
     temperature: 0.7,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -65,7 +65,7 @@ export async function testClaudeStream() {
 export async function testToolsPrompt() {
   const client: LanguageModelV2 = createAnthropic({
     apiKey: apiKey,
-    baseURL: baseURL,
+    baseURL: baseURL
   }).languageModel("claude-sonnet-4-5-20250929");
 
   const result = await client.doStream({
@@ -79,27 +79,30 @@ export async function testToolsPrompt() {
           properties: {
             query: {
               type: "string",
-              description: "search for keywords",
+              description: "search for keywords"
             },
             maxResults: {
               type: "number",
-              description: "Maximum search results, default 5",
-            },
+              description: "Maximum search results, default 5"
+            }
           },
-          required: ["query"],
-        },
-      },
+          required: ["query"]
+        }
+      }
     ],
     toolChoice: {
-      type: "auto",
+      type: "auto"
     },
     prompt: [
       { role: "system", content: "You are a helpful AI assistant" },
-      { role: "user", content: [{ type: "text", text: "Search for recent national affairs" }] },
+      {
+        role: "user",
+        content: [{ type: "text", text: "Search for recent national affairs" }]
+      }
     ],
     maxOutputTokens: 1024,
     temperature: 0.7,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   });
 
   const reader = result.stream.getReader();

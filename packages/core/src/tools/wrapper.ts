@@ -1,7 +1,10 @@
 import { convertToolSchema } from "../common/utils";
 import { AgentContext } from "../agent/agent-context";
 import { ToolResult, ToolExecuter, ToolSchema } from "../types/tools.types";
-import { LanguageModelV2FunctionTool, LanguageModelV2ToolCallPart } from "@ai-sdk/provider";
+import {
+  LanguageModelV2FunctionTool,
+  LanguageModelV2ToolCallPart
+} from "@ai-sdk/provider";
 
 export class ToolWrapper {
   private tool: LanguageModelV2FunctionTool;

@@ -1,7 +1,7 @@
 import {
   LanguageModelV2,
   LanguageModelV2StreamPart,
-  LanguageModelV2CallOptions,
+  LanguageModelV2CallOptions
 } from "@ai-sdk/provider";
 import Log from "../common/log";
 import config from "../config";
@@ -17,7 +17,7 @@ import {
   LLMs,
   LLMRequest,
   StreamResult,
-  GenerateResult,
+  GenerateResult
 } from "../types/llm.types";
 import { defaultLLMProviderOptions } from "../agent/agent-llm";
 import TaskContext, { AgentContext } from "../agent/agent-context";
@@ -68,7 +68,7 @@ export class RetryLanguageModel {
       topK: request.topK,
       stopSequences: request.stopSequences,
       abortSignal: request.abortSignal,
-      providerOptions: request.providerOptions,
+      providerOptions: request.providerOptions
     });
   }
 
@@ -124,7 +124,7 @@ export class RetryLanguageModel {
         if (Log.isEnableInfo()) {
           Log.info(`LLM nonstream request, name: ${name} => `, {
             tools: _options.tools,
-            messages: _options.prompt,
+            messages: _options.prompt
           });
         }
         Log.error(`LLM error, name: ${name} => `, e);
@@ -146,7 +146,7 @@ export class RetryLanguageModel {
       topK: request.topK,
       stopSequences: request.stopSequences,
       abortSignal: request.abortSignal,
-      providerOptions: request.providerOptions,
+      providerOptions: request.providerOptions
     });
   }
 
@@ -229,7 +229,7 @@ export class RetryLanguageModel {
         if (Log.isEnableInfo()) {
           Log.info(`LLM stream request, name: ${name} => `, {
             tools: _options.tools,
-            messages: _options.prompt,
+            messages: _options.prompt
           });
         }
         Log.error(`LLM error, name: ${name} => `, e);
@@ -260,42 +260,27 @@ export class RetryLanguageModel {
       }
     }
     if (llm.provider == "openai") {
-      if (
-        !baseURL ||
-        baseURL.indexOf("openai.com") > -1 ||
-        llm.config?.organization ||
-        llm.config?.openai
-      ) {
-        return createOpenAI({
-          apiKey: apiKey,
-          baseURL: baseURL,
-          fetch: llm.fetch,
-          organization: llm.config?.organization,
-          project: llm.config?.project,
-          headers: llm.config?.headers,
-        }).languageModel(llm.model);
-      } else {
-        return createOpenAICompatible({
-          name: llm.model,
-          apiKey: apiKey,
-          baseURL: baseURL,
-          fetch: llm.fetch,
-          headers: llm.config?.headers,
-        }).languageModel(llm.model);
-      }
+      return createOpenAI({
+        apiKey: apiKey,
+        baseURL: baseURL,
+        fetch: llm.fetch,
+        organization: llm.config?.organization,
+        project: llm.config?.project,
+        headers: llm.config?.headers
+      }).languageModel(llm.model);
     } else if (llm.provider == "anthropic") {
       return createAnthropic({
         apiKey: apiKey,
         baseURL: baseURL,
         fetch: llm.fetch,
-        headers: llm.config?.headers,
+        headers: llm.config?.headers
       }).languageModel(llm.model);
     } else if (llm.provider == "google") {
       return createGoogleGenerativeAI({
         apiKey: apiKey,
         baseURL: baseURL,
         fetch: llm.fetch,
-        headers: llm.config?.headers,
+        headers: llm.config?.headers
       }).languageModel(llm.model);
     } else if (llm.provider == "bedrock") {
       apiKey = apiKey.trim();
@@ -304,7 +289,7 @@ export class RetryLanguageModel {
         keyInfos = JSON.parse(apiKey);
       } else {
         keyInfos = {
-          apiKey: apiKey,
+          apiKey: apiKey
         };
       }
       return createAmazonBedrock({
@@ -315,7 +300,7 @@ export class RetryLanguageModel {
         region: keyInfos.region || llm.config?.region || "us-west-1",
         sessionToken: keyInfos.sessionToken || llm.config?.sessionToken,
         fetch: llm.fetch,
-        headers: llm.config?.headers,
+        headers: llm.config?.headers
       }).languageModel(llm.model);
     } else if (llm.provider == "azure") {
       return createAzure({
@@ -325,7 +310,7 @@ export class RetryLanguageModel {
         headers: llm.config?.headers,
         resourceName: llm.config?.resourceName,
         apiVersion: llm.config?.apiVersion,
-        useDeploymentBasedUrls: llm.config?.useDeploymentBasedUrls,
+        useDeploymentBasedUrls: llm.config?.useDeploymentBasedUrls
       }).languageModel(llm.model);
     } else if (llm.provider == "openai-compatible") {
       return createOpenAICompatible({
@@ -333,7 +318,7 @@ export class RetryLanguageModel {
         apiKey: apiKey,
         baseURL: baseURL || "https://openrouter.ai/api/v1",
         fetch: llm.fetch,
-        headers: llm.config?.headers,
+        headers: llm.config?.headers
       }).languageModel(llm.model);
     } else if (llm.provider == "openrouter") {
       return createOpenRouter({
@@ -341,7 +326,7 @@ export class RetryLanguageModel {
         baseURL: baseURL || "https://openrouter.ai/api/v1",
         fetch: llm.fetch,
         headers: llm.config?.headers,
-        compatibility: llm.config?.compatibility,
+        compatibility: llm.config?.compatibility
       }).languageModel(llm.model);
     } else if (llm.provider == "modelscope") {
       return createOpenAICompatible({
@@ -349,7 +334,7 @@ export class RetryLanguageModel {
         apiKey: apiKey,
         baseURL: baseURL || "https://api-inference.modelscope.cn/v1",
         fetch: llm.fetch,
-        headers: llm.config?.headers,
+        headers: llm.config?.headers
       }).languageModel(llm.model);
     } else {
       return llm.provider.languageModel(llm.model);
@@ -386,7 +371,7 @@ export class RetryLanguageModel {
       cancel: (reason) => {
         timer && clearTimeout(timer);
         reader.cancel(reason);
-      },
+      }
     });
   }
 

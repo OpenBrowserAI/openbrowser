@@ -32,7 +32,7 @@ export class SimpleBrowserService implements BrowserService {
           favicon: tab.favIconUrl,
           lastAccessed: lastAccessed
             ? new Date(lastAccessed).toLocaleString()
-            : undefined,
+            : undefined
         };
         return pageTab;
       })
@@ -50,7 +50,7 @@ export class SimpleBrowserService implements BrowserService {
       const frameResults = await chrome.scripting.executeScript({
         target: { tabId: Number(tabId) },
         func: extractPageContent,
-        args: [],
+        args: []
       });
       let tabHtmls = frameResults[0].result as string;
       if (!tabHtmls) {
@@ -60,7 +60,7 @@ export class SimpleBrowserService implements BrowserService {
         tabId: tabId,
         url: tab.url,
         title: tab.title,
-        content: tabHtmls,
+        content: tabHtmls
       });
     }
     return Promise.resolve(contents);

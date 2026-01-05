@@ -7,7 +7,7 @@ const config: Config = {
   maxReactNum: 500,
   maxOutputTokens: 16000,
   maxRetryNum: 3,
-  agentParallel: false,
+  agentParallel: true,
   workflowConfirm: false,
   compressThreshold: 80,
   compressTokensThreshold: 80000,
@@ -23,8 +23,8 @@ const config: Config = {
     maxInputTokens: 64000,
     enableCompression: true,
     compressionThreshold: 10,
-    compressionMaxLength: 6000,
-  },
+    compressionMaxLength: 6000
+  }
 };
 
 export default config;

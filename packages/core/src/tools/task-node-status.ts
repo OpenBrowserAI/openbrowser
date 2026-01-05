@@ -17,24 +17,25 @@ export default class TaskNodeStatusTool implements Tool {
       properties: {
         thought: {
           type: "string",
-          description: "Current thinking content, which can be analysis of the problem, assumptions, insights, reflections, or a summary of the previous, suggest the next action step to be taken, which should be specific, executable, and verifiable."
+          description:
+            "Current thinking content, which can be analysis of the problem, assumptions, insights, reflections, or a summary of the previous, suggest the next action step to be taken, which should be specific, executable, and verifiable."
         },
         doneIds: {
           type: "array",
           description: "List of completed node IDs.",
           items: {
-            type: "number",
-          },
+            type: "number"
+          }
         },
         todoIds: {
           type: "array",
           description: "List of pending node IDs.",
           items: {
-            type: "number",
-          },
-        },
+            type: "number"
+          }
+        }
       },
-      required: ["thought", "doneIds", "todoIds"],
+      required: ["thought", "doneIds", "todoIds"]
     };
   }
 
@@ -46,26 +47,30 @@ export default class TaskNodeStatusTool implements Tool {
     let todoIds = args.todoIds as number[];
     let agentNode = agentContext.agentChain.agent;
     let taskPrompt = agentContext.context.chain.taskPrompt;
-    let agentXml = buildAgentRootXml(agentNode.xml, taskPrompt, (nodeId, node) => {
-      let done = doneIds.indexOf(nodeId) > -1;
-      let todo = todoIds.indexOf(nodeId) > -1;
-      if (done && todo) {
-        throw new Error(
-          "The ID cannot appear in both doneIds and todoIds simultaneously, nodeId: " +
-            nodeId
-        );
-      } else if (!done && !todo) {
-        // throw new Error("Node status update exception, nodeId: " + i);
+    let agentXml = buildAgentRootXml(
+      agentNode.xml,
+      taskPrompt,
+      (nodeId, node) => {
+        let done = doneIds.indexOf(nodeId) > -1;
+        let todo = todoIds.indexOf(nodeId) > -1;
+        if (done && todo) {
+          throw new Error(
+            "The ID cannot appear in both doneIds and todoIds simultaneously, nodeId: " +
+              nodeId
+          );
+        } else if (!done && !todo) {
+          // throw new Error("Node status update exception, nodeId: " + i);
+        }
+        node.setAttribute("status", done ? "done" : "todo");
       }
-      node.setAttribute("status", done ? "done" : "todo");
-    });
+    );
     return {
       content: [
         {
           type: "text",
-          text: agentXml,
-        },
-      ],
+          text: agentXml
+        }
+      ]
     };
   }
 }

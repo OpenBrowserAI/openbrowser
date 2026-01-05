@@ -2,7 +2,7 @@ function createReadableStream(): ReadableStream<String> {
   let array: string[] = [];
   let count = 0;
   let timer = setInterval(() => {
-    array.push('count: ' + (++count));
+    array.push("count: " + ++count);
   }, 200);
   return new ReadableStream({
     start(controller) {
@@ -11,7 +11,7 @@ function createReadableStream(): ReadableStream<String> {
     },
     async pull(controller) {
       while (array.length == 0) {
-        await (new Promise((resolve) => setTimeout(resolve, 20)));
+        await new Promise((resolve) => setTimeout(resolve, 20));
       }
       controller.enqueue(array.pop());
       if (count >= 10) {
@@ -32,11 +32,11 @@ test.only("stream", async () => {
     while (true) {
       let { done, value } = await reader.read();
       if (done) {
-        break
+        break;
       }
-      console.log('value: ', value);
+      console.log("value: ", value);
     }
   } finally {
-    reader.releaseLock()
+    reader.releaseLock();
   }
-})
+});

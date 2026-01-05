@@ -10,7 +10,11 @@
   "scripts": {
     "build": "pnpm -r --sequential build",
     "test": "pnpm -r --sequential test",
-    "clean": "rm -rf node_modules && pnpm -r exec -- rm -rf node_modules dist"
+    "lint": "eslint .",
+    "clean": "rm -rf node_modules && pnpm -r exec -- rm -rf node_modules dist",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "prepare": "husky"
   },
   "author": "OpenBrowserAI",
   "license": "MIT",
@@ -27,6 +31,7 @@
     "url": "git+https://github.com/OpenBrowserAI/openbrowser.git"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "husky": "9.1.7"
   }
 }

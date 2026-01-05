@@ -14,12 +14,12 @@ async function testSseMCP() {
     agent_name: "Browser",
     prompt: "Search for Hong Kong AI development jobs",
     browser_url: "https://www.linkedin.com/jobs/",
-    params: {},
+    params: {}
   });
   console.log("listTools: \n", JSON.stringify(tools, null, 2));
   let toolResult = await mcpClient.callTool({
     name: tools[0].name,
-    arguments: {},
+    arguments: {}
   });
   console.log(
     `callTool - ${tools[0].name}: \n`,

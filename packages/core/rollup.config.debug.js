@@ -1,25 +1,25 @@
-import typescript from '@rollup/plugin-typescript';
-import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
-import copy from 'rollup-plugin-copy';
+import typescript from "@rollup/plugin-typescript";
+import resolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
+import copy from "rollup-plugin-copy";
 
 export default [
   {
-    input: 'src/index.ts',
+    input: "src/index.ts",
     output: [
       {
-        file: 'dist/index.cjs.js',
-        format: 'cjs',
+        file: "dist/index.cjs.js",
+        format: "cjs",
         sourcemap: true,
         compact: false,
         minifyInternalExports: false
       }
     ],
-    external: ['dotenv'],
+    external: ["dotenv"],
     plugins: [
       commonjs(),
       resolve({
-        preferBuiltins: true,
+        preferBuiltins: true
       }),
       typescript({
         sourceMap: true,
@@ -28,30 +28,28 @@ export default [
         declarationMap: true
       }),
       copy({
-        targets: [
-          { src: '../../README.md', dest: './' }
-        ]
+        targets: [{ src: "../../README.md", dest: "./" }]
       })
     ],
     treeshake: false
   },
   {
-    input: 'src/index.ts',
+    input: "src/index.ts",
     output: [
       {
-        file: 'dist/index.esm.js',
-        format: 'esm',
+        file: "dist/index.esm.js",
+        format: "esm",
         sourcemap: true,
         compact: false,
         minifyInternalExports: false
       }
     ],
-    external: ['dotenv', 'buffer'],
+    external: ["dotenv", "buffer"],
     plugins: [
       commonjs(),
       resolve({
         browser: true,
-        preferBuiltins: true,
+        preferBuiltins: true
       }),
       typescript({
         sourceMap: true,
@@ -60,9 +58,7 @@ export default [
         declarationMap: true
       }),
       copy({
-        targets: [
-          { src: '../../README.md', dest: './' }
-        ]
+        targets: [{ src: "../../README.md", dest: "./" }]
       })
     ],
     treeshake: false
