@@ -18,6 +18,7 @@ const llms: LLMs = {
     provider: "openai",
     model: "gpt-5-mini",
     apiKey: openaiApiKey || "",
+    npm: "@ai-sdk/openai",
     config: {
       baseURL: openaiBaseURL
     }

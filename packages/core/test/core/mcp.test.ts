@@ -22,6 +22,7 @@ const llms: LLMs = {
     provider: "anthropic",
     model: "claude-sonnet-4-5-20250929",
     apiKey: claudeApiKey || "",
+    npm: "@ai-sdk/anthropic",
     config: {
       baseURL: claudeBaseURL
     }
@@ -30,6 +31,7 @@ const llms: LLMs = {
     provider: "openai",
     model: "gpt-5",
     apiKey: openaiApiKey || "",
+    npm: "@ai-sdk/openai",
     config: {
       baseURL: openaiBaseURL
     }

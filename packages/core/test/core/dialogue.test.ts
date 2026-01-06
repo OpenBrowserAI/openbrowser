@@ -24,6 +24,7 @@ const llms: LLMs = {
     provider: "openrouter",
     model: "anthropic/claude-sonnet-4",
     apiKey: openaiApiKey || "",
+    npm: "@openrouter/ai-sdk-provider",
     config: {
       baseURL: openaiBaseURL
     }

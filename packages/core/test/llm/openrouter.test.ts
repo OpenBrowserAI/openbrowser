@@ -50,7 +50,8 @@ export async function testOpenrouter2() {
       default: {
         provider: "openrouter",
         model: "google/gemini-3-pro-preview",
-        apiKey: apiKey
+        apiKey: apiKey,
+        npm: "@openrouter/ai-sdk-provider"
       }
     },
     []
@@ -81,7 +82,8 @@ export async function testOpenrouter3() {
       default: {
         provider: "openrouter",
         model: "google/gemini-3-pro-preview",
-        apiKey: apiKey
+        apiKey: apiKey,
+        npm: "@openrouter/ai-sdk-provider"
       }
     },
     []

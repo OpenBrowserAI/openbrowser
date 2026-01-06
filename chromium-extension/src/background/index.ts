@@ -177,6 +177,7 @@ async function loadLLMs(): Promise<LLMs> {
       provider: llmConfig.llm as any,
       model: llmConfig.modelName,
       apiKey: llmConfig.apiKey,
+      npm: llmConfig.npm,
       config: {
         baseURL: llmConfig.options.baseURL
       }
@@ -190,6 +191,7 @@ async function loadLLMs(): Promise<LLMs> {
         llms.default.provider = newConfig.llm as any;
         llms.default.model = newConfig.modelName;
         llms.default.apiKey = newConfig.apiKey;
+        llms.default.npm = newConfig.npm;
         llms.default.config.baseURL = newConfig.options.baseURL;
         console.log("LLM config updated");
       }

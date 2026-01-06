@@ -37,6 +37,7 @@ export type LLMConfig = {
   provider: LLMprovider;
   model: string;
   apiKey: string | (() => Promise<string>);
+  npm?: string;
   config?: {
     baseURL?: string | (() => Promise<string>);
     temperature?: number;
