@@ -46,7 +46,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const isEmpty = !inputValue.trim() && uploadedFiles.length === 0;
 
   return (
-    <div className="p-4 bg-gray-100">
+    <div className="p-4">
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
         <div className="mb-3">
@@ -56,7 +56,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               return (
                 <div
                   key={file.id}
-                  className="inline-flex items-center px-2 py-1 bg-gray-100 rounded border border-gray-200"
+                  className="inline-flex items-center px-2 py-1 bg-theme-input rounded border-theme-input"
                 >
                   {isImage ? (
                     <Image
@@ -70,9 +70,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                       preview={false}
                     />
                   ) : (
-                    <FileOutlined className="mr-2" />
+                    <FileOutlined className="mr-2 fill-theme-icon" />
                   )}
-                  <Text className="text-xs mr-2 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
+                  <Text className="text-xs mr-2 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-theme-primary">
                     {file.filename}
                   </Text>
                   <Button
@@ -90,7 +90,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Floating Chat Input Box */}
-      <div className="relative bg-white border border-gray-300 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+      <div className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px" style={{borderWidth: '1px', borderStyle: 'solid', overflow: 'hidden'}}>
         <input
           ref={fileInputRef}
           type="file"
@@ -142,26 +142,26 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             <Button
               type="text"
               danger
-              icon={<StopOutlined />}
+              icon={<StopOutlined className="fill-red-500" />}
               onClick={onStop}
-              className="text-red-500 hover:text-red-600"
+              className="text-red-500"
             />
           ) : isEmpty ? (
             <Button
               type="text"
-              icon={<PlusOutlined />}
+              icon={<PlusOutlined className="fill-theme-icon" />}
               onClick={onNewSession}
               disabled={sending}
-              className="text-blue-500 hover:text-blue-600 disabled:text-gray-300"
+              className="text-theme-icon"
             />
           ) : (
             <Button
               type="text"
-              icon={<SendOutlined />}
+              icon={<SendOutlined className="fill-theme-icon" />}
               onClick={onSend}
               loading={sending}
               disabled={sending}
-              className="text-blue-500 hover:text-blue-600 disabled:text-gray-300"
+              className="text-theme-icon"
             />
           )}
         </div>
