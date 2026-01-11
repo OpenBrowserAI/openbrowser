@@ -77,7 +77,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
   return (
     <Collapse
       size="small"
-      className={`agent-collapse mb-2 border-l-4 ${getBorderColor()}`}
+      className={`agent-collapse mb-2 border-l-4 ${getBorderColor()} bg-theme-input border-theme-input`}
       activeKey={activeKey}
       onChange={(keys) => {
         setIsCollapsed(!(keys as string[]).includes("agent"));
@@ -90,7 +90,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
               <div
                 className={`flex-1 min-w-0 ${isCollapsed ? "truncate" : "whitespace-normal"}`}
               >
-                <Text strong className="text-sm">
+                <Text strong className="text-sm text-theme-primary">
                   {agentNode.task || agentNode.name}
                 </Text>
               </div>
