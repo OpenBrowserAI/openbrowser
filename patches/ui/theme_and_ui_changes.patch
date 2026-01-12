@@ -1,0 +1,1250 @@
+diff --git a/chrome/browser/ui/color/chrome_color_id.h b/chrome/browser/ui/color/chrome_color_id.h
+index 59296a7cb076a..c349c59837fe9 100644
+--- a/chrome/browser/ui/color/chrome_color_id.h
++++ b/chrome/browser/ui/color/chrome_color_id.h
+@@ -657,6 +657,7 @@
+   E_CPONLY(kColorSearchboxResultsForeground) \
+   E_CPONLY(kColorSearchboxResultsForegroundDimmed) \
+   E_CPONLY(kColorSearchboxResultsIcon) \
++  E_CPONLY(kColorSearchboxResultsIconContainerBackground) \
+   E_CPONLY(kColorSearchboxResultsIconFocusedOutline) \
+   E_CPONLY(kColorSearchboxResultsIconSelected) \
+   E_CPONLY(kColorSearchboxResultsUrl) \
+diff --git a/chrome/browser/ui/color/chrome_color_mixer.cc b/chrome/browser/ui/color/chrome_color_mixer.cc
+index d6f02fceb7ee8..9446c65b4d2cf 100644
+--- a/chrome/browser/ui/color/chrome_color_mixer.cc
++++ b/chrome/browser/ui/color/chrome_color_mixer.cc
+@@ -192,9 +192,9 @@ void AddChromeColorMixer(ui::ColorProvider* provider,
+   mixer[kColorExtensionsMenuContainerBackground] = {ui::kColorSysSurface3};
+   mixer[kColorFeatureFirstRunInfoContainerBackground] = {ui::kColorSysSurface3};
+   mixer[kColorFeatureFirstRunIconColor] = {ui::kColorSysOnSurfaceSubtle};
+-  mixer[kColorFeaturePromoBubbleBackground] = {gfx::kGoogleBlue700};
++  mixer[kColorFeaturePromoBubbleBackground] = {dark_mode ? SK_ColorWHITE : SK_ColorBLACK};
+   mixer[kColorFeaturePromoBubbleButtonBorder] = {gfx::kGoogleGrey300};
+-  mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {gfx::kGoogleBlue300};
++  mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {dark_mode ? SK_ColorBLACK : SK_ColorWHITE};
+   mixer[kColorFeaturePromoBubbleDefaultButtonBackground] = {
+       kColorFeaturePromoBubbleForeground};
+   mixer[kColorFeaturePromoBubbleDefaultButtonForeground] = {
+diff --git a/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc b/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
+index b2b1a40d80524..18cf4a075b8f2 100644
+--- a/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
++++ b/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
+@@ -53,7 +53,9 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+       ui::kColorSysStateHoverOnSubtle};
+   mixer[kColorNewTabPageButtonForeground] = {ui::kColorSysOnTonalContainer};
+ 
+-  mixer[kColorComposeboxBackground] = {SK_ColorWHITE};
++  mixer[kColorComposeboxBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
+   mixer[kColorComposeboxFileChipSpinner] = {kColorSysPrimary_Light};
+   mixer[kColorComposeboxFont] = {
+       dark_mode ? SkColorSetRGB(0xE6, 0xE8, 0xF0)
+@@ -103,8 +105,9 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+                 : SkColorSetRGB(0xAD, 0xAF, 0xB8)};
+   mixer[kColorComposeboxFileChipBackground] = {kColorSysSurface3_Light};
+   mixer[kColorComposeboxFileChipFaviconBackground] = {kColorSysSurface_Light};
+-  mixer[kColorComposeboxFileChipText] = {
+-      SkColorSetRGB(0x1F, 0x1F, 0x1F)};
++  mixer[kColorComposeboxFileChipText] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                 : SkColorSetRGB(0x1F, 0x1F, 0x1F)};
+   mixer[kColorComposeboxPdfChipIcon] = {
+       dark_mode ? SkColorSetRGB(0xAD, 0xAF, 0xB8)
+                 : SkColorSetRGB(0x56, 0x59, 0x5E)};
+@@ -219,12 +222,20 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+       ui::kColorSysOnPrimary};
+   if (base::FeatureList::IsEnabled(ntp_features::kRealboxCr23Theming)) {
+     // Steady state theme colors.
+-    mixer[kColorSearchboxBackground] = {kColorToolbarBackgroundSubtleEmphasis};
++    mixer[kColorSearchboxBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                   : ui::ColorTransform(kColorToolbarBackgroundSubtleEmphasis)};
++    mixer[kColorSearchboxPlaceholder] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxTextDimmed)};
++    mixer[kColorSearchboxSearchIconBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsIcon)};
++    mixer[kColorSearchboxLensVoiceIconBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(ui::kColorSysPrimary)};
+     mixer[kColorSearchboxBackgroundHovered] = {
+         kColorToolbarBackgroundSubtleEmphasisHovered};
+-    mixer[kColorSearchboxPlaceholder] = {kColorOmniboxTextDimmed};
+-    mixer[kColorSearchboxSearchIconBackground] = {kColorOmniboxResultsIcon};
+-    mixer[kColorSearchboxLensVoiceIconBackground] = {ui::kColorSysPrimary};
+     mixer[kColorSearchboxSelectionBackground] = {
+         kColorOmniboxSelectionBackground};
+     mixer[kColorSearchboxSelectionForeground] = {
+@@ -235,42 +246,56 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+         kColorOmniboxAnswerIconGM3Background};
+     mixer[kColorSearchboxAnswerIconForeground] = {
+         kColorOmniboxAnswerIconGM3Foreground};
+-    mixer[kColorSearchboxForeground] = {kColorOmniboxText};
+     mixer[kColorSearchboxResultsActionChip] = {ui::kColorSysTonalOutline};
+     mixer[kColorSearchboxResultsActionChipIcon] = {ui::kColorSysPrimary};
+     mixer[kColorSearchboxResultsActionChipFocusOutline] = {
+         ui::kColorSysStateFocusRing};
+-    mixer[kColorSearchboxResultsBackgroundHovered] = {
+-        kColorOmniboxResultsBackgroundHovered};
+-    mixer[kColorSearchboxResultsButtonHover] = {
+-        kColorOmniboxResultsButtonInkDropRowHovered};
+-    mixer[kColorSearchboxResultsDimSelected] = {
+-        kColorOmniboxResultsTextDimmedSelected};
+     mixer[kColorSearchboxResultsFocusIndicator] = {
+         kColorOmniboxResultsFocusIndicator};
+-    mixer[kColorSearchboxResultsForeground] = {kColorOmniboxText};
+-    mixer[kColorSearchboxResultsForegroundDimmed] = {kColorOmniboxTextDimmed};
+-    mixer[kColorSearchboxResultsIcon] = {kColorOmniboxResultsIcon};
+-    mixer[kColorSearchboxResultsIconSelected] = {kColorOmniboxResultsIcon};
+     mixer[kColorSearchboxResultsIconFocusedOutline] = {
+         kColorOmniboxResultsButtonIconSelected};
+-    mixer[kColorSearchboxResultsUrl] = {kColorOmniboxResultsUrl};
+-    mixer[kColorSearchboxResultsUrlSelected] = {
+-        kColorOmniboxResultsUrlSelected};
++
++    mixer[kColorSearchboxForeground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                   : ui::ColorTransform(kColorOmniboxText)};
++    mixer[kColorSearchboxResultsBackgroundHovered] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysStateHoverOnSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsBackgroundHovered)};
++    mixer[kColorSearchboxResultsButtonHover] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysStateHoverOnSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsButtonInkDropRowHovered)};
++    mixer[kColorSearchboxResultsDimSelected] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsTextDimmedSelected)};
++    mixer[kColorSearchboxResultsForeground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                   : ui::ColorTransform(kColorOmniboxText)};
++    mixer[kColorSearchboxResultsForegroundDimmed] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxTextDimmed)};
++    mixer[kColorSearchboxResultsIcon] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsIcon)};
++    mixer[kColorSearchboxResultsIconContainerBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                   : ui::ColorTransform(SK_ColorWHITE)};
++    mixer[kColorSearchboxResultsIconSelected] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsIcon)};
++    mixer[kColorSearchboxResultsUrl] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                   : ui::ColorTransform(kColorOmniboxResultsUrl)};
++    mixer[kColorSearchboxResultsUrlSelected] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                   : ui::ColorTransform(kColorOmniboxResultsUrlSelected)};
+     mixer[kColorSearchboxShadow] =
+         ui::SetAlpha(gfx::kGoogleGrey900,
+                      (dark_mode ? /* % opacity */ 0.32 : 0.1) * SK_AlphaOPAQUE);
+ 
+-    // This determines weather the realbox expanded state background in dark
+-    // mode will match the omnibox or not.
+-    if (dark_mode &&
+-        !ntp_features::kNtpRealboxCr23ExpandedStateBgMatchesOmnibox.Get()) {
+-      mixer[kColorSearchboxResultsBackground] = {
+-          kColorToolbarBackgroundSubtleEmphasis};
+-    } else {
+-      mixer[kColorSearchboxResultsBackground] = {
+-          kColorOmniboxResultsBackground};
+-    }
++    // Use base container color for searchbox results background in dark mode, omnibox color in light mode
++    mixer[kColorSearchboxResultsBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                   : ui::ColorTransform(kColorOmniboxResultsBackground)};
+   }
+ 
+   /* NewTabFooter */
+diff --git a/chrome/browser/ui/color/material_tab_strip_color_mixer.cc b/chrome/browser/ui/color/material_tab_strip_color_mixer.cc
+index 8d99d0d5e526e..0a06f2f6d7a0d 100644
+--- a/chrome/browser/ui/color/material_tab_strip_color_mixer.cc
++++ b/chrome/browser/ui/color/material_tab_strip_color_mixer.cc
+@@ -27,8 +27,9 @@ void AddMaterialTabStripColorMixer(ui::ColorProvider* provider,
+ 
+   // TODO(crbug.com/40883407): Validate final mappings for ChromeRefresh23
+   // color.
++  const bool dark_mode = key.color_mode == ui::ColorProviderKey::ColorMode::kDark;
+   ui::ColorMixer& mixer = provider->AddMixer();
+-  mixer[kColorTabBackgroundActiveFrameActive] = {ui::kColorSysBase};
++  mixer[kColorTabBackgroundActiveFrameActive] = {dark_mode ? ui::kColorSysBaseContainer : ui::kColorSysSurface};
+   mixer[kColorTabBackgroundActiveFrameInactive] = {
+       kColorTabBackgroundActiveFrameActive};
+ 
+diff --git a/chrome/browser/ui/color/new_tab_page_color_mixer.cc b/chrome/browser/ui/color/new_tab_page_color_mixer.cc
+index 558cc275c8847..350f052b92aef 100644
+--- a/chrome/browser/ui/color/new_tab_page_color_mixer.cc
++++ b/chrome/browser/ui/color/new_tab_page_color_mixer.cc
+@@ -314,7 +314,7 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       ui::SelectBasedOnDarkInput(kColorNewTabPageAddShortcutBackground,
+                                  SK_ColorWHITE, gfx::kGoogleGrey900);
+ 
+-  mixer[kColorComposeboxBackground] = {SK_ColorWHITE};
++  mixer[kColorComposeboxBackground] = {dark_mode ? ui::kColorSysBaseContainer : SK_ColorWHITE};
+   mixer[kColorComposeboxFileChipSpinner] = {kColorSysPrimary_Light};
+   mixer[kColorComposeboxFont] = {
+       dark_mode ? SkColorSetRGB(0xE6, 0xE8, 0xF0)
+@@ -400,15 +400,28 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       SkColorSetRGB(0xD3, 0xE3, 0xFD)};
+   mixer[kColorSearchboxAnswerIconForeground] = {
+       SkColorSetRGB(0x04, 0x1E, 0x49)};
+-  mixer[kColorSearchboxBackground] = {SK_ColorWHITE};
+-  mixer[kColorSearchboxBackgroundHovered] = {SK_ColorWHITE};
++  mixer[kColorSearchboxBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
++  mixer[kColorSearchboxBackgroundHovered] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
++  mixer[kColorSearchboxForeground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                 : ui::ColorTransform(SK_ColorBLACK)};
++  mixer[kColorSearchboxPlaceholder] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxLensVoiceIconBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
+   mixer[kColorSearchboxBorder] = {
+       key.contrast_mode == ui::ColorProviderKey::ContrastMode::kHigh
+           ? kColorLocationBarBorder
+           : gfx::kGoogleGrey300};
+-  mixer[kColorSearchboxForeground] = {SK_ColorBLACK};
+-  mixer[kColorSearchboxPlaceholder] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsBackground] = {SK_ColorWHITE};
+   mixer[kColorSearchboxResultsBackgroundHovered] =
+       ui::SetAlpha(gfx::kGoogleGrey900,
+                    /* 10% opacity */ 0.1 * SK_AlphaOPAQUE);
+@@ -420,16 +433,39 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       SkColorSetRGB(0x0B, 0x57, 0xD0)};
+   mixer[kColorSearchboxResultsActionChipFocusOutline] = {
+       SkColorSetRGB(0x0B, 0x57, 0xD0)};
+-  mixer[kColorSearchboxResultsDimSelected] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsFocusIndicator] = {gfx::kGoogleBlue600};
+-  mixer[kColorSearchboxResultsForeground] = {SK_ColorBLACK};
+-  mixer[kColorSearchboxResultsForegroundDimmed] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsIconSelected] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsUrl] = {gfx::kGoogleBlue700};
+-  mixer[kColorSearchboxResultsUrlSelected] = {gfx::kGoogleBlue700};
+-  mixer[kColorSearchboxSearchIconBackground] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsIcon] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsIconFocusedOutline] = {gfx::kGoogleBlue600};
++  mixer[kColorSearchboxResultsDimSelected] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsFocusIndicator] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue600};
++  mixer[kColorSearchboxResultsForeground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                 : ui::ColorTransform(SK_ColorBLACK)};
++  mixer[kColorSearchboxResultsForegroundDimmed] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIconSelected] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIconContainerBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
++  mixer[kColorSearchboxResultsUrl] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue700};
++  mixer[kColorSearchboxResultsUrlSelected] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue700};
++  mixer[kColorSearchboxSearchIconBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIcon] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIconFocusedOutline] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue600};
+   mixer[kColorSearchboxShadow] =
+       ui::SetAlpha(gfx::kGoogleGrey900,
+                    (dark_mode ? /* % opacity */ 0.32 : 0.28) * SK_AlphaOPAQUE);
+diff --git a/chrome/browser/ui/layout_constants.cc b/chrome/browser/ui/layout_constants.cc
+index 4e5901f95885b..8617e0e7afe91 100644
+--- a/chrome/browser/ui/layout_constants.cc
++++ b/chrome/browser/ui/layout_constants.cc
+@@ -29,7 +29,7 @@ int GetLayoutConstant(LayoutConstant constant) {
+     case BOOKMARK_BAR_HEIGHT: {
+       // The fixed margin ensures the bookmark buttons appear centered relative
+       // to the white space above and below.
+-      const int bookmark_bar_attached_vertical_margin = 6;
++      const int bookmark_bar_attached_vertical_margin = 10;
+       return GetLayoutConstant(BOOKMARK_BAR_BUTTON_HEIGHT) +
+              bookmark_bar_attached_vertical_margin;
+     }
+@@ -93,12 +93,12 @@ int GetLayoutConstant(LayoutConstant constant) {
+     case TAB_CLOSE_BUTTON_SIZE:
+       return touch_ui ? 24 : 16;
+     case TAB_HEIGHT:
+-      return 34 + GetLayoutConstant(TABSTRIP_TOOLBAR_OVERLAP);
++      return 36 + GetLayoutConstant(TABSTRIP_TOOLBAR_OVERLAP);
+     case TAB_STRIP_HEIGHT:
+       return GetLayoutConstant(TAB_HEIGHT) +
+              GetLayoutConstant(TAB_STRIP_PADDING);
+     case TAB_STRIP_PADDING:
+-      return 6;
++      return 4;
+     case TAB_SEPARATOR_HEIGHT:
+       return touch_ui ? 24 : 20;
+     case TAB_PRE_TITLE_PADDING:
+diff --git a/chrome/browser/ui/tabs/tab_style.cc b/chrome/browser/ui/tabs/tab_style.cc
+index eb6789e6212b6..a3894efb96e6a 100644
+--- a/chrome/browser/ui/tabs/tab_style.cc
++++ b/chrome/browser/ui/tabs/tab_style.cc
+@@ -27,8 +27,8 @@ constexpr int kChromeRefreshSeparatorHeight = 16;
+ constexpr int kChromeRefreshTabVerticalPadding = 6;
+ constexpr int kChromeRefreshTabHorizontalPadding = 8;
+ 
+-// The standard tab width is 232 DIP, excluding separators and overlap.
+-constexpr int kTabWidth = 232;
++// The standard tab width is 200 DIP, excluding separators and overlap.
++constexpr int kTabWidth = 200;
+ 
+ }  // namespace
+ 
+diff --git a/chrome/browser/ui/toolbar/app_menu_model.cc b/chrome/browser/ui/toolbar/app_menu_model.cc
+index 2934bdcab48bb..9aa1eaf769176 100644
+--- a/chrome/browser/ui/toolbar/app_menu_model.cc
++++ b/chrome/browser/ui/toolbar/app_menu_model.cc
+@@ -2241,7 +2241,7 @@ bool AppMenuModel::AddDefaultBrowserMenuItems() {
+         IDC_SET_BROWSER_AS_DEFAULT,
+         l10n_util::GetStringUTF16(IDS_SET_BROWSER_AS_DEFAULT_MENU_ITEM),
+         ui::ImageModel::FromVectorIcon(omnibox::kProductChromeRefreshIcon,
+-                                       ui::kColorMenuIcon, kDefaultIconSize));
++                                       ui::kColorMenuIconOnEmphasizedBackground, kDefaultIconSize));
+     SetElementIdentifierAt(GetItemCount() - 1,
+                            AppMenuModel::kSetBrowserAsDefaultMenuItem);
+     return true;
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+index a00e5c202067f..ba59857e8378a 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+@@ -708,26 +708,7 @@ void BookmarkBarView::Layout(PassKey) {
+ 
+   const int button_height = GetLayoutConstant(BOOKMARK_BAR_BUTTON_HEIGHT);
+ 
+-  // Bookmark bar buttons should be centered between the bottom of the location
+-  // bar and the bottom of the bookmarks bar, which requires factoring in the
+-  // bottom margin of the toolbar into the button position.
+-  int toolbar_bottom_margin = 0;
+-  // Note: |browser_view_| may be null during tests.
+-  if (browser_view_ && !browser_view_->IsFullscreen()) {
+-    toolbar_bottom_margin =
+-        browser_view_->toolbar()->height() -
+-        browser_view_->GetLocationBarView()->bounds().bottom();
+-  }
+-  // Center the buttons in the total available space.
+-  const int total_height = GetContentsBounds().height() + toolbar_bottom_margin;
+-  const auto center_y = [total_height, toolbar_bottom_margin](int height) {
+-    const int top_margin = (total_height - height) / 2;
+-    // Calculate the top inset in the bookmarks bar itself (not counting the
+-    // space in the toolbar) but do not allow the buttons to leave the bookmarks
+-    // bar.
+-    return std::max(0, top_margin - toolbar_bottom_margin);
+-  };
+-  const int y = center_y(button_height);
++  const int y = 5;
+ 
+   gfx::Size all_bookmarks_pref = all_bookmarks_button_->GetVisible()
+                                      ? all_bookmarks_button_->GetPreferredSize()
+@@ -835,7 +816,7 @@ void BookmarkBarView::Layout(PassKey) {
+       gfx::Size saved_tab_groups_separator_view_pref =
+           saved_tab_groups_separator_view_->GetPreferredSize();
+       saved_tab_groups_separator_view_->SetBounds(
+-          x, center_y(saved_tab_groups_separator_view_pref.height()),
++          x, 5 + (button_height - saved_tab_groups_separator_view_pref.height()) / 2,
+           saved_tab_groups_separator_view_pref.width(),
+           saved_tab_groups_separator_view_pref.height());
+ 
+@@ -905,7 +886,7 @@ void BookmarkBarView::Layout(PassKey) {
+   // Bookmarks Separator.
+   if (bookmarks_separator_view_->GetVisible()) {
+     bookmarks_separator_view_->SetBounds(
+-        x, center_y(bookmarks_separator_pref.height()),
++        x, 5 + (button_height - bookmarks_separator_pref.height()) / 2,
+         bookmarks_separator_pref.width(), bookmarks_separator_pref.height());
+ 
+     x += bookmarks_separator_pref.width();
+@@ -1107,6 +1088,11 @@ views::View::DropCallback BookmarkBarView::GetDropCallback(
+ 
+ void BookmarkBarView::OnThemeChanged() {
+   views::AccessiblePaneView::OnThemeChanged();
++  if (GetColorProvider()) {
++    SetBorder(views::CreateSolidSidedBorder(
++        gfx::Insets::TLBR(1, 0, 0, 0),
++        GetColorProvider()->GetColor(kColorToolbarSeparator)));
++  }
+   UpdateAppearanceForTheme();
+ }
+ 
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+index da82293cba539..2dbe7d318cd7b 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+@@ -20,7 +20,6 @@
+ #include "build/build_config.h"
+ #include "chrome/app/chrome_command_ids.h"
+ #include "chrome/app/vector_icons/vector_icons.h"
+-#include "chrome/browser/autocomplete/aim_eligibility_service_factory.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/command_updater.h"
+ #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+@@ -41,6 +40,7 @@
+ #include "chrome/browser/ui/autofill/payments/save_card_bubble_controller_impl.h"
+ #include "chrome/browser/ui/browser.h"
+ #include "chrome/browser/ui/browser_actions.h"
++#include "chrome/browser/ui/browser_commands.h"
+ #include "chrome/browser/ui/browser_element_identifiers.h"
+ #include "chrome/browser/ui/browser_finder.h"
+ #include "chrome/browser/ui/browser_window.h"
+@@ -465,21 +465,7 @@ void LocationBarView::Init() {
+   // |browser_| may be null when LocationBarView is used for non-Browser windows
+   // such as PresentationReceiverWindowView, which do not support page actions.
+   if (browser_) {
+-    // Page action icons that participate in label animations should be added
+-    // first so that they appear on the left side of the icon container.
+-    // TODO(crbug.com/40835681): Improve the ordering heuristics for page action
+-    // icons and determine a way to handle simultaneous icon animations.
+-    if (base::FeatureList::IsEnabled(commerce::kProductSpecifications)) {
+-      params.types_enabled.push_back(
+-          PageActionIconType::kProductSpecifications);
+-    }
+-    params.types_enabled.push_back(PageActionIconType::kDiscounts);
+-    params.types_enabled.push_back(PageActionIconType::kPriceInsights);
+-    params.types_enabled.push_back(PageActionIconType::kPriceTracking);
+-
+-    if (optimization_guide::features::ShouldEnableOptimizationGuideIconView()) {
+-      params.types_enabled.push_back(PageActionIconType::kOptimizationGuide);
+-    }
++    // Keep only essential page action icons, removing Google-specific features
+     params.types_enabled.push_back(PageActionIconType::kClickToCall);
+     params.types_enabled.push_back(PageActionIconType::kAutofillAddress);
+     params.types_enabled.push_back(PageActionIconType::kManagePasswords);
+@@ -491,7 +477,6 @@ void LocationBarView::Init() {
+     params.types_enabled.push_back(PageActionIconType::kTranslate);
+     params.types_enabled.push_back(PageActionIconType::kZoom);
+     params.types_enabled.push_back(PageActionIconType::kFileSystemAccess);
+-
+     params.types_enabled.push_back(PageActionIconType::kCookieControls);
+     params.types_enabled.push_back(
+         PageActionIconType::kPaymentsOfferNotification);
+@@ -503,54 +488,6 @@ void LocationBarView::Init() {
+   params.types_enabled.push_back(PageActionIconType::kVirtualCardEnroll);
+   params.types_enabled.push_back(PageActionIconType::kMandatoryReauth);
+ 
+-  if (browser_ && lens::features::IsOmniboxEntryPointEnabled()) {
+-    // The persistent compact entrypoint should be positioned directly before
+-    // the star icon and the prominent expanding entrypoint should be
+-    // positioned in the leading position. This entrypoint will be suppressed
+-    // if the AIM page action is enabled and the user meets AIM eligibility
+-    // criteria, since we want to avoid both showing up when the user focuses
+-    // the Omnibox.
+-    if (lens::features::IsOmniboxEntrypointAlwaysVisible()) {
+-      params.types_enabled.push_back(PageActionIconType::kLensOverlay);
+-    } else {
+-      params.types_enabled.insert(params.types_enabled.begin(),
+-                                  PageActionIconType::kLensOverlay);
+-    }
+-  }
+-
+-  if (browser_ && lens::features::IsLensOverlayEduActionChipEnabled()) {
+-    // Position in the leading position, like the expanding entrypoint for
+-    // kLensOverlay above. While both chips may be enabled, they will not appear
+-    // at the same time due to different focus behavior.
+-    params.types_enabled.insert(params.types_enabled.begin(),
+-                                PageActionIconType::kLensOverlayHomework);
+-  }
+-
+-  // Because the AIM eligibility service might not be ready on startup,
+-  // the AI Mode page action type is always added. Unless the main AIM
+-  // omnibox entrypoint Feature is explicitly disabled, which can be used
+-  // as a kill switch in case of any unanticipated issues with this
+-  // approach.
+-  auto* feature_list = base::FeatureList::GetInstance();
+-  bool aim_omnibox_entrypoint_explicitly_disabled =
+-      feature_list &&
+-      feature_list->IsFeatureOverridden(
+-          omnibox::kAiModeOmniboxEntryPoint.name) &&
+-      !base::FeatureList::IsEnabled(omnibox::kAiModeOmniboxEntryPoint);
+-  if (!aim_omnibox_entrypoint_explicitly_disabled) {
+-    // Position in the leading position, like the entrypoint for
+-    // kLensOverlayHomework above. While both chips may be enabled, they will
+-    // not appear at the same time due to different focus behavior. The
+-    // visibility of this entrypoint is dependent on whether or not the user
+-    // meets AIM eligibility criteria.
+-    params.types_enabled.insert(params.types_enabled.begin(),
+-                                PageActionIconType::kAiMode);
+-  }
+-
+-  if (browser_ && tab_groups::SavedTabGroupUtils::SupportsSharedTabGroups()) {
+-    params.types_enabled.push_back(PageActionIconType::kCollaborationMessaging);
+-  }
+-
+   if (browser_ && !is_popup_mode_) {
+     params.types_enabled.push_back(PageActionIconType::kBookmarkStar);
+   }
+@@ -566,17 +503,6 @@ void LocationBarView::Init() {
+       AddChildView(std::make_unique<PageActionIconContainerView>(params));
+   page_action_icon_controller_ = page_action_icon_container_->controller();
+ 
+-  if (!page_action_icon_container_->children().empty() &&
+-      !aim_omnibox_entrypoint_explicitly_disabled &&
+-      !IsPageActionMigrated(PageActionIconType::kAiMode)) {
+-    auto* first_page_action_icon_view = static_cast<PageActionIconView*>(
+-        page_action_icon_container_->children().front());
+-    DCHECK(first_page_action_icon_view->action_id() == kActionAiMode)
+-        << "kActionAiMode must be the first child in "
+-           "PageActionIconContainerView to ensure it's the left-most page "
+-           "action.";
+-  }
+-
+   auto clear_all_button = views::CreateVectorImageButton(base::BindRepeating(
+       static_cast<void (OmniboxView::*)(const std::u16string&)>(
+           &OmniboxView::SetUserText),
+@@ -586,6 +512,22 @@ void LocationBarView::Init() {
+   clear_all_button_ = AddChildView(std::move(clear_all_button));
+   RefreshClearAllButtonIcon();
+ 
++  // Add copy URL button
++  auto copy_url_button = views::CreateVectorImageButton(base::BindRepeating(
++      [](Browser* browser) {
++        if (browser) {
++          chrome::ExecuteCommand(browser, IDC_COPY_URL);
++        }
++      },
++      base::Unretained(browser_)));
++  copy_url_button->SetTooltipText(
++      l10n_util::GetStringUTF16(IDS_COPY_URL));
++  copy_url_button->SetImageModel(
++      views::Button::STATE_NORMAL,
++      ui::ImageModel::FromVectorIcon(kLinkChromeRefreshIcon, kColorOmniboxResultsIcon,
++                                     GetLayoutConstant(LOCATION_BAR_ICON_SIZE)));
++  copy_url_button_ = AddChildView(std::move(copy_url_button));
++
+   // Initialize the location entry. We do this to avoid a black flash which is
+   // visible when the location entry has just been initialized.
+   Update(nullptr);
+@@ -963,25 +905,9 @@ void LocationBarView::Layout(PassKey) {
+     }
+   };
+ 
+-  // When the AIM page action is shown as the right-most page action in the
+-  // location bar, it should be positioned flush against the right edge of the
+-  // location bar.
+-  // If all page actions are migrated (i.e. up to bookmark star), then the extra
+-  // padding that is usually added to bridge the new and legacy containers can
+-  // be discounted.
+-  const bool all_page_actions_migrated =
+-      IsPageActionMigrated(PageActionIconType::kBookmarkStar);
+-  const int kTrailingEdgePaddingForAim =
+-      IsPageActionMigrated(PageActionIconType::kAiMode) &&
+-              !all_page_actions_migrated
+-          ? -3
+-          : 5;
+   add_trailing_decoration(page_action_icon_container_,
+                           /*intra_item_padding=*/0,
+-                          /*edge_padding=*/
+-                          IsAimLastVisiblePageAction()
+-                              ? kTrailingEdgePaddingForAim
+-                              : trailing_decorations_edge_padding);
++                          /*edge_padding=*/trailing_decorations_edge_padding);
+   add_trailing_decoration(page_action_container_,
+                           /*intra_item_padding=*/0,
+                           /*edge_padding=*/trailing_decorations_edge_padding);
+@@ -1000,6 +926,9 @@ void LocationBarView::Layout(PassKey) {
+   add_trailing_decoration(clear_all_button_, /*intra_item_padding=*/0,
+                           /*edge_padding=*/trailing_decorations_edge_padding);
+ 
++  add_trailing_decoration(copy_url_button_, /*intra_item_padding=*/0,
++                          /*edge_padding=*/trailing_decorations_edge_padding);
++
+   // Perform layout.
+   int entry_width = width();
+ 
+@@ -1272,6 +1201,11 @@ bool LocationBarView::ShouldHidePageActionIcons() const {
+ 
+ bool LocationBarView::ShouldHidePageActionIcon(
+     PageActionIconView* icon_view) const {
++  // Bookmark star should always be visible
++  if (page_action_icon_controller_->GetIconType(icon_view) == PageActionIconType::kBookmarkStar) {
++    return false;
++  }
++
+   if (ShouldHidePageActionIcons()) {
+     return true;
+   }
+@@ -1294,25 +1228,8 @@ bool LocationBarView::ShouldHidePageActionIcon(
+ 
+ bool LocationBarView::ShouldHidePageActionIconsForContext(
+     metrics::OmniboxEventProto::PageClassification page_context) const {
+-  switch (page_context) {
+-    case metrics::OmniboxEventProto::
+-        INSTANT_NTP_WITH_OMNIBOX_AS_STARTING_FOCUS: {
+-      // When the user is on the NTP and the AIM page action is eligible to be
+-      // shown, suppress all other page actions in order to minimize UI
+-      // instability when going from the steady-state to the on-focus Omnibox.
+-      const auto* aim_eligibility_service =
+-          AimEligibilityServiceFactory::GetForProfile(profile_);
+-      const bool is_aim_page_action_enabled =
+-          OmniboxFieldTrial::IsAimOmniboxEntrypointEnabled(
+-              aim_eligibility_service);
+-      const bool hide_other_page_actions_on_ntp =
+-          omnibox_feature_configs::AiModeOmniboxEntryPoint::Get()
+-              .hide_other_page_actions_on_ntp;
+-      return is_aim_page_action_enabled && hide_other_page_actions_on_ntp;
+-    }
+-    default:
+-      return false;
+-  }
++  // AI Mode removed - no special hiding logic needed
++  return false;
+ }
+ 
+ /*
+@@ -1361,42 +1278,7 @@ bool LocationBarView::ShouldHidePageActionIconsForContext(
+  * of how many migrated page actions are visible).
+  */
+ bool LocationBarView::IsAimLastVisiblePageAction() const {
+-  int visible_migrated_page_action_count = 0;
+-  bool migrated_aim_page_action_is_visible = false;
+-
+-  // Check PageActionContainerView (migrated page actions).
+-  for (views::View* view : page_action_container_->children()) {
+-    if (view->GetVisible()) {
+-      visible_migrated_page_action_count++;
+-      page_actions::PageActionView* page_action_view =
+-          static_cast<page_actions::PageActionView*>(view);
+-      if (page_action_view->GetActionId() == kActionAiMode) {
+-        migrated_aim_page_action_is_visible = true;
+-      }
+-    }
+-  }
+-
+-  int visible_page_action_count = 0;
+-  bool aim_page_action_is_visible = false;
+-
+-  // Check PageActionIconContainerView (legacy page actions).
+-  for (views::View* view : page_action_icon_container_->children()) {
+-    if (view->GetVisible()) {
+-      visible_page_action_count++;
+-      PageActionIconView* icon_view = static_cast<PageActionIconView*>(view);
+-      if (icon_view->action_id() == kActionAiMode) {
+-        aim_page_action_is_visible = true;
+-      }
+-    }
+-  }
+-
+-  if (migrated_aim_page_action_is_visible &&
+-      (visible_migrated_page_action_count + visible_page_action_count) == 1) {
+-    return true;
+-  } else if (aim_page_action_is_visible && visible_page_action_count == 1) {
+-    return true;
+-  }
+-
++  // AI Mode removed - always return false
+   return false;
+ }
+ 
+@@ -1466,9 +1348,9 @@ void LocationBarView::RefreshBackground() {
+                              ui::NativeTheme::PreferredContrast::kMore;
+ 
+   const auto* const color_provider = GetColorProvider();
+-  SkColor normal = color_provider->GetColor(kColorLocationBarBackground);
++  SkColor normal = color_provider->GetColor(kColorToolbar);
+   SkColor hovered =
+-      color_provider->GetColor(kColorLocationBarBackgroundHovered);
++      color_provider->GetColor(kColorToolbar);
+ 
+   background_color_ = gfx::Tween::ColorValueBetween(opacity, normal, hovered);
+   if (is_caret_visible) {
+@@ -1565,20 +1447,7 @@ void LocationBarView::RefreshPageActionIconViews() {
+ }
+ 
+ void LocationBarView::RefreshAiModePageActionIconView() {
+-  if (IsPageActionMigrated(PageActionIconType::kAiMode)) {
+-    auto* aim_page_action_controller =
+-        omnibox::AiModePageActionController::From(browser_);
+-    if (aim_page_action_controller) {
+-      aim_page_action_controller->UpdatePageAction();
+-    }
+-    return;
+-  }
+-
+-  PageActionIconView* aim_icon_view =
+-      page_action_icon_controller_->GetIconView(PageActionIconType::kAiMode);
+-  if (aim_icon_view) {
+-    aim_icon_view->Update();
+-  }
++  // AI Mode removed - no-op
+ }
+ 
+ void LocationBarView::RefreshPageActionContainerViewAndIconsVisibility(
+@@ -1912,13 +1781,12 @@ void LocationBarView::OnChanged() {
+       !omnibox_view_->GetText().empty() &&
+       IsVirtualKeyboardVisible(GetWidget()));
+ 
++  // Copy URL button is always visible
++  copy_url_button_->SetVisible(true);
++
+   InvalidateLayout();
+   SchedulePaint();
+   UpdateChipVisibility();
+-  // The AI mode page action icon view visibility depends on whether or not
+-  // user text has been entered into the omnibox, so refresh the icon on
+-  // changes.
+-  RefreshAiModePageActionIconView();
+ }
+ 
+ const LocationBarModel* LocationBarView::GetLocationBarModel() const {
+@@ -1934,10 +1802,6 @@ void LocationBarView::OnOmniboxFocused() {
+   // the omnibox is intentional, snapping is better than transitioning here.
+   hover_animation_.Reset();
+   RefreshBackground();
+-
+-  // The AI mode page action icon view should only be visible when the omnibox
+-  // is focused, so if there is a change in focus, refresh the icon.
+-  RefreshAiModePageActionIconView();
+ }
+ 
+ void LocationBarView::OnOmniboxBlurred() {
+@@ -1946,10 +1810,6 @@ void LocationBarView::OnOmniboxBlurred() {
+   }
+   RefreshBackground();
+ 
+-  // The AI mode page action icon view should only be visible when the omnibox
+-  // is focused, so if there is a change in focus, refresh the icon.
+-  RefreshAiModePageActionIconView();
+-
+   location_icon_view_->Update(false, false);
+ }
+ 
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.h b/chrome/browser/ui/views/location_bar/location_bar_view.h
+index 507ca6272a7b1..7993f100b5281 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.h
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.h
+@@ -570,6 +570,9 @@ class LocationBarView
+   // user to clear all text.
+   raw_ptr<views::ImageButton> clear_all_button_ = nullptr;
+ 
++  // A button to copy the current URL to clipboard.
++  raw_ptr<views::ImageButton> copy_url_button_ = nullptr;
++
+   // Animation to change whole location bar background color on hover.
+   gfx::SlideAnimation hover_animation_{this};
+ 
+diff --git a/chrome/browser/ui/views/tabs/tab.cc b/chrome/browser/ui/views/tabs/tab.cc
+index 93a656042af50..d5306a85b1e0c 100644
+--- a/chrome/browser/ui/views/tabs/tab.cc
++++ b/chrome/browser/ui/views/tabs/tab.cc
+@@ -1167,10 +1167,10 @@ void Tab::UpdateIconVisibility() {
+ #if BUILDFLAG(IS_CHROMEOS)
+     // Hide tab close button for OnTask if locked. Only applicable for non-web
+     // browser scenarios.
+-    showing_close_button_ = !controller_->IsLockedForOnTask();
++    showing_close_button_ = !controller_->IsLockedForOnTask() && mouse_hovered_;
+ #else
+-    // Close button is shown on active tabs regardless of the size.
+-    showing_close_button_ = true;
++    // Close button is shown on active tabs only when hovered.
++    showing_close_button_ = mouse_hovered_;
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+     available_width -= close_button_width;
+ 
+@@ -1196,11 +1196,12 @@ void Tab::UpdateIconVisibility() {
+       available_width -= favicon_width;
+     }
+ 
++    // Only show close button on hover for inactive tabs
+     showing_close_button_ =
+ #if BUILDFLAG(IS_CHROMEOS)
+         !controller_->IsLockedForOnTask() &&
+ #endif
+-        large_enough_for_close_button;
++        large_enough_for_close_button && mouse_hovered_;
+     if (showing_close_button_) {
+       available_width -= close_button_width;
+     }
+diff --git a/chrome/browser/ui/views/tabs/tab_style_views.cc b/chrome/browser/ui/views/tabs/tab_style_views.cc
+index fe66c423ab248..1346e9de8e2e5 100644
+--- a/chrome/browser/ui/views/tabs/tab_style_views.cc
++++ b/chrome/browser/ui/views/tabs/tab_style_views.cc
+@@ -210,8 +210,6 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
+   CHECK(tab());
+   const int stroke_thickness = GetStrokeThickness(flags.force_active);
+ 
+-  const TabStyle::TabSelectionState state = GetSelectionState();
+-
+   // We'll do the entire path calculation in aligned pixels.
+   // TODO(dfried): determine if we actually want to use `stroke_thickness` as
+   // the inset in this case.
+@@ -229,8 +227,8 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
+                                   scale;
+ 
+   // Selected, hover, and inactive tab fills are a detached squarcle tab.
+-  if ((path_type == TabStyle::PathType::kFill &&
+-       state != TabStyle::TabSelectionState::kActive) ||
++  // Active tabs also use this shape for consistent rounded rectangle appearance.
++  if ((path_type == TabStyle::PathType::kFill) ||
+       path_type == TabStyle::PathType::kHighlight ||
+       path_type == TabStyle::PathType::kInteriorClip ||
+       path_type == TabStyle::PathType::kHitTest) {
+@@ -1031,8 +1029,8 @@ void TabStyleViewsImpl::PaintBackgroundStroke(
+   }
+ 
+   SkPath outer_path =
+-      GetPath(TabStyle::PathType::kBorder, canvas->image_scale(),
+-              {.force_active = is_active, .should_paint_extension = false});
++      GetPath(TabStyle::PathType::kFill, canvas->image_scale(),
++              {.force_active = is_active});
+   gfx::ScopedCanvas scoped_canvas(canvas);
+   float scale = canvas->UndoDeviceScaleFactor();
+   cc::PaintFlags flags;
+@@ -1063,12 +1061,19 @@ void TabStyleViewsImpl::PaintSeparators(gfx::Canvas* canvas) const {
+ 
+   cc::PaintFlags flags;
+   flags.setAntiAlias(true);
++  flags.setStyle(cc::PaintFlags::kStroke_Style);
++  flags.setStrokeWidth(1.0f * scale);
++
++  // Draw simple vertical lines instead of rounded rectangles
+   flags.setColor(separator_color(separator_opacities.left));
+-  canvas->DrawRoundRect(separator_bounds.leading,
+-                        tab_style()->GetSeparatorCornerRadius() * scale, flags);
++  float left_x = separator_bounds.leading.x() + separator_bounds.leading.width() / 2;
++  canvas->DrawLine(gfx::PointF(left_x, separator_bounds.leading.y()),
++                   gfx::PointF(left_x, separator_bounds.leading.bottom()), flags);
++
+   flags.setColor(separator_color(separator_opacities.right));
+-  canvas->DrawRoundRect(separator_bounds.trailing,
+-                        tab_style()->GetSeparatorCornerRadius() * scale, flags);
++  float right_x = separator_bounds.trailing.x() + separator_bounds.trailing.width() / 2;
++  canvas->DrawLine(gfx::PointF(right_x, separator_bounds.trailing.y()),
++                   gfx::PointF(right_x, separator_bounds.trailing.bottom()), flags);
+ }
+ 
+ bool TabStyleViewsImpl::IsLeftSplitTab(const Tab* tab) const {
+diff --git a/chrome/browser/ui/views/toolbar/app_menu.cc b/chrome/browser/ui/views/toolbar/app_menu.cc
+index d10401dad12b2..da0cca83c497f 100644
+--- a/chrome/browser/ui/views/toolbar/app_menu.cc
++++ b/chrome/browser/ui/views/toolbar/app_menu.cc
+@@ -1597,6 +1597,7 @@ void AppMenu::PopulateMenu(MenuItemView* parent, MenuModel* model) {
+               views::LayoutProvider::Get()->GetDistanceMetric(
+                   views::DISTANCE_CONTROL_VERTICAL_TEXT_PADDING),
+               ui::kColorAppMenuUpgradeRowBackground);
++          item->SetForegroundColorId(ui::kColorAppMenuUpgradeRowSubstringForeground);
+         }
+         break;
+       }
+diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
+index 0a324e3999d7a..e86eec19bd872 100644
+--- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
++++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
+@@ -413,6 +413,16 @@ void ToolbarView::Init() {
+ 
+   location_bar_ = container_view_->AddChildView(std::move(location_bar));
+ 
++  // Add a divider after the location bar
++  auto location_bar_divider = std::make_unique<views::View>();
++  location_bar_divider_ = container_view_->AddChildView(std::move(location_bar_divider));
++  location_bar_divider_->SetPreferredSize(
++      gfx::Size(GetLayoutConstant(TOOLBAR_DIVIDER_WIDTH),
++                GetLayoutConstant(TOOLBAR_DIVIDER_HEIGHT)));
++  location_bar_divider_->SetBackground(views::CreateRoundedRectBackground(
++    kColorToolbarSeparator,
++      GetLayoutConstant(TOOLBAR_DIVIDER_CORNER_RADIUS)));
++
+   if (extensions_container) {
+     extensions_container_ =
+         container_view_->AddChildView(std::move(extensions_container));
+@@ -1008,6 +1018,12 @@ void ToolbarView::InitLayout() {
+         gfx::Insets::VH(0, GetLayoutConstant(TOOLBAR_DIVIDER_SPACING)));
+   }
+ 
++  if (location_bar_divider_) {
++    location_bar_divider_->SetProperty(
++        views::kMarginsKey,
++        gfx::Insets::VH(0, GetLayoutConstant(TOOLBAR_DIVIDER_SPACING)));
++  }
++
+   constexpr int kToolbarFlexOrderStart = 1;
+ 
+   // TODO(crbug.com/40929989): Ignore containers till issue addressed.
+diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
+index 415970aadb0ed..d29a28f80fb0c 100644
+--- a/chrome/browser/ui/views/toolbar/toolbar_view.h
++++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
+@@ -295,6 +295,7 @@ class ToolbarView : public views::AccessiblePaneView,
+   raw_ptr<SplitTabsToolbarButton> split_tabs_ = nullptr;
+   raw_ptr<CustomTabBarView> custom_tab_bar_ = nullptr;
+   raw_ptr<LocationBarView> location_bar_ = nullptr;
++  raw_ptr<views::View> location_bar_divider_ = nullptr;
+   raw_ptr<ExtensionsToolbarContainer> extensions_container_ = nullptr;
+   raw_ptr<views::View> toolbar_divider_ = nullptr;
+   raw_ptr<BatterySaverButton> battery_saver_button_ = nullptr;
+diff --git a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
+index 202099eee781e..832ca90c1538c 100644
+--- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
++++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
+@@ -583,7 +583,7 @@ void NewTabPageHandler::RegisterProfilePrefs(PrefRegistrySimple* registry) {
+   registry->RegisterIntegerPref(
+       prefs::kNtpCustomizeChromeSidePanelAutoOpeningsCount, 0);
+   registry->RegisterBooleanPref(prefs::kNtpCustomizeChromeExplicitlyClosed,
+-                                false);
++                                true);
+   registry->RegisterBooleanPref(prefs::kNtpCustomizeChromeIPHAutoOpened, false);
+ }
+ 
+diff --git a/components/search/ntp_features.cc b/components/search/ntp_features.cc
+index 406d9402d41e1..6d2ea1d68430b 100644
+--- a/components/search/ntp_features.cc
++++ b/components/search/ntp_features.cc
+@@ -98,7 +98,7 @@ BASE_FEATURE(kNtpDummyModules, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // If enabled, Google Drive module will be shown.
+ // This is a kill switch. Keep indefinitely.
+-BASE_FEATURE(kNtpDriveModule, base::FEATURE_ENABLED_BY_DEFAULT);
++BASE_FEATURE(kNtpDriveModule, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // If enabled, the NTP Drive module does not require sync.
+ BASE_FEATURE(kNtpDriveModuleHistorySyncRequirement,
+@@ -121,7 +121,7 @@ BASE_FEATURE(kNtpMiddleSlotPromo, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ // If enabled, middle slot promo will be dismissed from New Tab Page until new
+ // promo message is populated
+-BASE_FEATURE(kNtpMiddleSlotPromoDismissal, base::FEATURE_ENABLED_BY_DEFAULT);
++BASE_FEATURE(kNtpMiddleSlotPromoDismissal, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // Dummy feature to set param "NtpModulesLoadTimeoutMillisecondsParam".
+ // This is used for an emergency Finch param. Keep indefinitely.
+diff --git a/ui/color/core_default_color_mixer.cc b/ui/color/core_default_color_mixer.cc
+index 54cb33c7e3f91..41446d2a935c5 100644
+--- a/ui/color/core_default_color_mixer.cc
++++ b/ui/color/core_default_color_mixer.cc
+@@ -25,7 +25,7 @@ void AddCoreDefaultColorMixer(ColorProvider* provider,
+   DVLOG(2) << "Adding CoreDefaultColorMixer to ColorProvider for "
+            << (dark_mode ? "Dark" : "Light") << " window.";
+   ColorMixer& mixer = provider->AddMixer();
+-  mixer[kColorAccent] = {dark_mode ? gfx::kGoogleBlue300 : gfx::kGoogleBlue600};
++  mixer[kColorAccent] = {dark_mode ? SK_ColorWHITE : SK_ColorWHITE};
+   // 4.5 and 7.0 approximate the default light and dark theme contrasts of
+   // accent-against-primary-background.
+   mixer[kColorAccentWithGuaranteedContrastAtopPrimaryBackground] =
+diff --git a/ui/color/mac/native_color_mixers_mac.mm b/ui/color/mac/native_color_mixers_mac.mm
+index fb2d49fe27f3d..c740e3b5fa995 100644
+--- a/ui/color/mac/native_color_mixers_mac.mm
++++ b/ui/color/mac/native_color_mixers_mac.mm
+@@ -99,11 +99,11 @@ void AddNativeUiColorMixer(ColorProvider* provider,
+ 
+     mixer[kColorTableBackgroundAlternate] = {skia::NSSystemColorToSkColor(
+         NSColor.alternatingContentBackgroundColors[1])};
+-    if (!key.user_color.has_value()) {
+-      mixer[kColorSysStateFocusRing] = PickGoogleColor(
+-          skia::NSSystemColorToSkColor(NSColor.keyboardFocusIndicatorColor),
+-          kColorSysBase, color_utils::kMinimumVisibleContrastRatio);
+ 
++    // Override focus ring color: white in dark mode, black in light mode
++    mixer[kColorSysStateFocusRing] = {properties.dark ? SK_ColorWHITE : SK_ColorBLACK};
++
++    if (!key.user_color.has_value()) {
+       const SkColor system_highlight_color =
+           skia::NSSystemColorToSkColor(NSColor.selectedTextBackgroundColor);
+       mixer[kColorTextSelectionBackground] = {system_highlight_color};
+diff --git a/ui/color/ref_color_mixer.cc b/ui/color/ref_color_mixer.cc
+index 3eb2f1053b895..a57a92344f27a 100644
+--- a/ui/color/ref_color_mixer.cc
++++ b/ui/color/ref_color_mixer.cc
+@@ -25,36 +25,36 @@ namespace ui {
+ void AddBaselinePalette(ColorProvider* provider) {
+   ColorMixer& mixer = provider->AddMixer();
+   mixer[kColorRefPrimary0] = {SkColorSetRGB(0x00, 0x00, 0x00)};
+-  mixer[kColorRefPrimary10] = {SkColorSetRGB(0x04, 0x1E, 0x49)};
+-  mixer[kColorRefPrimary20] = {SkColorSetRGB(0x06, 0x2E, 0x6F)};
+-  mixer[kColorRefPrimary25] = {SkColorSetRGB(0x07, 0x38, 0x88)};
+-  mixer[kColorRefPrimary30] = {SkColorSetRGB(0x08, 0x42, 0xA0)};
+-  mixer[kColorRefPrimary40] = {SkColorSetRGB(0x0B, 0x57, 0xD0)};
+-  mixer[kColorRefPrimary50] = {SkColorSetRGB(0x1B, 0x6E, 0xF3)};
+-  mixer[kColorRefPrimary60] = {SkColorSetRGB(0x4C, 0x8D, 0xF6)};
+-  mixer[kColorRefPrimary70] = {SkColorSetRGB(0x7C, 0xAC, 0xF8)};
+-  mixer[kColorRefPrimary80] = {SkColorSetRGB(0xA8, 0xC7, 0xFA)};
+-  mixer[kColorRefPrimary90] = {SkColorSetRGB(0xD3, 0xE3, 0xFD)};
+-  mixer[kColorRefPrimary95] = {SkColorSetRGB(0xEC, 0xF3, 0xFE)};
+-  mixer[kColorRefPrimary99] = {SkColorSetRGB(0xFA, 0xFB, 0xFF)};
++  mixer[kColorRefPrimary10] = {SkColorSetRGB(0x1A, 0x1A, 0x1A)};
++  mixer[kColorRefPrimary20] = {SkColorSetRGB(0x33, 0x33, 0x33)};
++  mixer[kColorRefPrimary25] = {SkColorSetRGB(0x40, 0x40, 0x40)};
++  mixer[kColorRefPrimary30] = {SkColorSetRGB(0x4D, 0x4D, 0x4D)};
++  mixer[kColorRefPrimary40] = {SkColorSetRGB(0x66, 0x66, 0x66)};
++  mixer[kColorRefPrimary50] = {SkColorSetRGB(0x80, 0x80, 0x80)};
++  mixer[kColorRefPrimary60] = {SkColorSetRGB(0x99, 0x99, 0x99)};
++  mixer[kColorRefPrimary70] = {SkColorSetRGB(0xB3, 0xB3, 0xB3)};
++  mixer[kColorRefPrimary80] = {SkColorSetRGB(0xCC, 0xCC, 0xCC)};
++  mixer[kColorRefPrimary90] = {SkColorSetRGB(0xE6, 0xE6, 0xE6)};
++  mixer[kColorRefPrimary95] = {SkColorSetRGB(0xF2, 0xF2, 0xF2)};
++  mixer[kColorRefPrimary99] = {SkColorSetRGB(0xFA, 0xFA, 0xFA)};
+   mixer[kColorRefPrimary100] = {SkColorSetRGB(0xFF, 0xFF, 0xFF)};
+ 
+   mixer[kColorRefSecondary0] = {SkColorSetRGB(0x00, 0x00, 0x00)};
+-  mixer[kColorRefSecondary10] = {SkColorSetRGB(0x00, 0x1D, 0x35)};
+-  mixer[kColorRefSecondary12] = {SkColorSetRGB(0x00, 0x22, 0x38)};
+-  mixer[kColorRefSecondary15] = {SkColorSetRGB(0x00, 0x28, 0x45)};
+-  mixer[kColorRefSecondary20] = {SkColorSetRGB(0x00, 0x33, 0x55)};
+-  mixer[kColorRefSecondary25] = {SkColorSetRGB(0x00, 0x3f, 0x66)};
+-  mixer[kColorRefSecondary30] = {SkColorSetRGB(0x00, 0x4A, 0x77)};
+-  mixer[kColorRefSecondary35] = {SkColorSetRGB(0x00, 0x57, 0x89)};
+-  mixer[kColorRefSecondary40] = {SkColorSetRGB(0x00, 0x63, 0x9B)};
+-  mixer[kColorRefSecondary50] = {SkColorSetRGB(0x04, 0x7D, 0xB7)};
+-  mixer[kColorRefSecondary60] = {SkColorSetRGB(0x39, 0x98, 0xD3)};
+-  mixer[kColorRefSecondary70] = {SkColorSetRGB(0x5A, 0xB3, 0xF0)};
+-  mixer[kColorRefSecondary80] = {SkColorSetRGB(0x7F, 0xCF, 0xFF)};
+-  mixer[kColorRefSecondary90] = {SkColorSetRGB(0xC2, 0xE7, 0xFF)};
+-  mixer[kColorRefSecondary95] = {SkColorSetRGB(0xDF, 0xF3, 0xFF)};
+-  mixer[kColorRefSecondary99] = {SkColorSetRGB(0xF7, 0xFC, 0xFF)};
++  mixer[kColorRefSecondary10] = {SkColorSetRGB(0x1A, 0x1A, 0x1A)};
++  mixer[kColorRefSecondary12] = {SkColorSetRGB(0x1F, 0x1F, 0x1F)};
++  mixer[kColorRefSecondary15] = {SkColorSetRGB(0x26, 0x26, 0x26)};
++  mixer[kColorRefSecondary20] = {SkColorSetRGB(0x33, 0x33, 0x33)};
++  mixer[kColorRefSecondary25] = {SkColorSetRGB(0x40, 0x40, 0x40)};
++  mixer[kColorRefSecondary30] = {SkColorSetRGB(0x4D, 0x4D, 0x4D)};
++  mixer[kColorRefSecondary35] = {SkColorSetRGB(0x59, 0x59, 0x59)};
++  mixer[kColorRefSecondary40] = {SkColorSetRGB(0x66, 0x66, 0x66)};
++  mixer[kColorRefSecondary50] = {SkColorSetRGB(0x80, 0x80, 0x80)};
++  mixer[kColorRefSecondary60] = {SkColorSetRGB(0x99, 0x99, 0x99)};
++  mixer[kColorRefSecondary70] = {SkColorSetRGB(0xB3, 0xB3, 0xB3)};
++  mixer[kColorRefSecondary80] = {SkColorSetRGB(0xCC, 0xCC, 0xCC)};
++  mixer[kColorRefSecondary90] = {SkColorSetRGB(0xE6, 0xE6, 0xE6)};
++  mixer[kColorRefSecondary95] = {SkColorSetRGB(0xF2, 0xF2, 0xF2)};
++  mixer[kColorRefSecondary99] = {SkColorSetRGB(0xFA, 0xFA, 0xFA)};
+   mixer[kColorRefSecondary100] = {SkColorSetRGB(0xFF, 0xFF, 0xFF)};
+ 
+   mixer[kColorRefTertiary0] = {SkColorSetRGB(0x00, 0x00, 0x00)};
+diff --git a/ui/color/sys_color_mixer.cc b/ui/color/sys_color_mixer.cc
+index 4745b7f50a28b..6cef161038ae8 100644
+--- a/ui/color/sys_color_mixer.cc
++++ b/ui/color/sys_color_mixer.cc
+@@ -31,6 +31,8 @@ void AddThemedSysColorOverrides(ColorMixer& mixer,
+                                                   : kColorRefSecondary30};
+   mixer[kColorSysTonalContainer] = {dark_mode ? kColorRefPrimary30
+                                               : kColorRefPrimary90};
++  mixer[kColorSysOnTonalContainer] = {dark_mode ? kColorRefPrimary90
++                                                : kColorRefPrimary10};
+   mixer[kColorSysBaseTonalContainer] = {dark_mode ? kColorRefPrimary10
+                                                   : kColorRefPrimary90};
+   mixer[kColorSysNeutralContainer] = {dark_mode ? kColorRefNeutralVariant15
+@@ -39,18 +41,18 @@ void AddThemedSysColorOverrides(ColorMixer& mixer,
+                                        : kColorRefPrimary90};
+ 
+   // Chrome surfaces.
+-  mixer[kColorSysBase] = {dark_mode ? kColorRefSecondary25
++  mixer[kColorSysBase] = {dark_mode ? kColorRefSecondary10
+                                     : kColorRefNeutral98};
+-  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefSecondary15
++  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefSecondary25
+                                              : kColorSysSurface4};
+   mixer[kColorSysBaseContainerElevated] = {dark_mode ? kColorRefSecondary25
+                                                      : kColorRefNeutral98};
+ 
+-  mixer[kColorSysHeader] = {dark_mode ? kColorRefSecondary12
++  mixer[kColorSysHeader] = {dark_mode ? kColorRefSecondary10
+                                       : kColorRefSecondary90};
+   mixer[kColorSysHeaderContainer] = {dark_mode ? kColorRefSecondary25
+                                                : kColorRefPrimary95};
+-  mixer[kColorSysHeaderContainerInactive] = {dark_mode ? kColorRefNeutral25
++  mixer[kColorSysHeaderContainerInactive] = {dark_mode ? kColorRefNeutral10
+                                                        : kColorRefNeutral99};
+   mixer[kColorSysOnHeaderDivider] = {dark_mode ? kColorRefSecondary25
+                                                : kColorRefPrimary80};
+@@ -78,12 +80,12 @@ void AddGrayscaleSysColorOverrides(ColorMixer& mixer,
+ 
+   // General
+   mixer[kColorSysOnSurfacePrimary] = {dark_mode ? kColorRefNeutral90
+-                                                : kColorRefNeutral10};
+-  mixer[kColorSysDivider] = {dark_mode ? kColorRefNeutral40
+-                                       : kColorRefNeutral90};
++    : kColorRefNeutral10};
++mixer[kColorSysDivider] = {dark_mode ? kColorRefNeutral40
++: kColorRefNeutral90};
+ 
+   // Chrome surfaces.
+-  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral12
++  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral10
+                                       : kColorRefNeutral90};
+   mixer[kColorSysHeaderInactive] = {
+       dark_mode ? AlphaBlend({kColorSysHeader}, {kColorRefNeutral25}, 0x99)
+@@ -116,24 +118,24 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+   ColorMixer& mixer = provider->AddMixer();
+ 
+   // Primary.
+-  mixer[kColorSysPrimary] = {dark_mode ? kColorRefPrimary80
+-                                       : kColorRefPrimary40};
+-  mixer[kColorSysOnPrimary] = {dark_mode ? kColorRefPrimary20
+-                                         : kColorRefPrimary100};
+-  mixer[kColorSysPrimaryContainer] = {dark_mode ? kColorRefPrimary30
+-                                                : kColorRefPrimary90};
+-  mixer[kColorSysOnPrimaryContainer] = {dark_mode ? kColorRefPrimary90
+-                                                  : kColorRefPrimary10};
++  mixer[kColorSysPrimary] = {dark_mode ? kColorRefPrimary90
++                                       : kColorRefPrimary10};
++  mixer[kColorSysOnPrimary] = {dark_mode ? kColorRefPrimary10
++                                         : kColorRefPrimary90};
++  mixer[kColorSysPrimaryContainer] = {dark_mode ? kColorRefPrimary90
++                                                : kColorRefPrimary10};
++  mixer[kColorSysOnPrimaryContainer] = {dark_mode ? kColorRefPrimary10
++                                                  : kColorRefPrimary90};
+ 
+   // Secondary.
+-  mixer[kColorSysSecondary] = {dark_mode ? kColorRefSecondary80
+-                                         : kColorRefSecondary40};
+-  mixer[kColorSysOnSecondary] = {dark_mode ? kColorRefSecondary20
+-                                           : kColorRefSecondary100};
+-  mixer[kColorSysSecondaryContainer] = {dark_mode ? kColorRefSecondary30
+-                                                  : kColorRefSecondary90};
+-  mixer[kColorSysOnSecondaryContainer] = {dark_mode ? kColorRefSecondary90
+-                                                    : kColorRefSecondary10};
++  mixer[kColorSysSecondary] = {dark_mode ? kColorRefSecondary90
++                                         : kColorRefSecondary10};
++  mixer[kColorSysOnSecondary] = {dark_mode ? kColorRefSecondary10
++                                           : kColorRefSecondary90};
++  mixer[kColorSysSecondaryContainer] = {dark_mode ? kColorRefSecondary90
++                                                  : kColorRefSecondary10};
++  mixer[kColorSysOnSecondaryContainer] = {dark_mode ? kColorRefSecondary10
++                                                    : kColorRefSecondary90};
+   // Tertiary.
+   mixer[kColorSysTertiary] = {dark_mode ? kColorRefTertiary80
+                                         : kColorRefTertiary40};
+@@ -179,8 +181,8 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+   mixer[kColorSysSurface] = {dark_mode ? kColorRefNeutral10
+                                        : kColorRefNeutral100};
+   mixer[kColorSysSurfaceNumberedForeground] = {
+-      dark_mode ? SkColorSetRGB(0xD1, 0xE1, 0xFF)
+-                : SkColorSetRGB(0x69, 0x91, 0xD6)};
++      dark_mode ? kColorRefNeutral90
++                : kColorRefNeutral10};
+   mixer[kColorSysSurface1] = AlphaBlend({kColorSysSurfaceNumberedForeground},
+                                         {kColorSysSurface}, 0x0C);
+   mixer[kColorSysSurface2] = AlphaBlend({kColorSysSurfaceNumberedForeground},
+@@ -202,10 +204,10 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+   mixer[kColorSysOnSurfacePrimaryInactive] = {dark_mode ? kColorRefNeutral90
+                                                         : kColorRefNeutral10};
+ 
+-  mixer[kColorSysTonalContainer] = {dark_mode ? kColorRefSecondary30
+-                                              : kColorRefPrimary90};
+-  mixer[kColorSysOnTonalContainer] = {dark_mode ? kColorRefSecondary90
+-                                                : kColorRefPrimary10};
++  mixer[kColorSysTonalContainer] = {dark_mode ? kColorRefSecondary100
++                                              : kColorRefPrimary0};
++  mixer[kColorSysOnTonalContainer] = {dark_mode ? kColorRefSecondary0
++                                                : kColorRefPrimary100};
+   mixer[kColorSysBaseTonalContainer] = {dark_mode ? kColorRefSecondary10
+                                                   : kColorRefPrimary90};
+   mixer[kColorSysOnBaseTonalContainer] = {dark_mode ? kColorRefSecondary90
+@@ -220,14 +222,13 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+                                        : kColorRefPrimary90};
+ 
+   // Chrome surfaces.
+-  mixer[kColorSysBase] = {dark_mode ? kColorRefNeutral25 : kColorRefNeutral100};
+-  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefNeutral15
+-                                             : kColorSysSurface4};
++  mixer[kColorSysBase] = {dark_mode ? kColorRefNeutral10 : kColorRefNeutral100};
++  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefNeutral25 : kColorSysSurface4};
+   mixer[kColorSysBaseContainerElevated] = {dark_mode ? kColorRefNeutral25
+                                                      : kColorRefNeutral100};
+ 
+-  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral12
+-                                      : kColorRefPrimary90};
++  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral10
++                                      : kColorRefNeutral90};
+   mixer[kColorSysHeaderInactive] = {
+       dark_mode
+           ? AlphaBlend({kColorSysHeader}, {kColorRefNeutral25}, 0x99)
+diff --git a/ui/views/controls/menu/menu_item_view.h b/ui/views/controls/menu/menu_item_view.h
+index cd70752a23e34..6725f520d89c2 100644
+--- a/ui/views/controls/menu/menu_item_view.h
++++ b/ui/views/controls/menu/menu_item_view.h
+@@ -186,6 +186,10 @@ class VIEWS_EXPORT MenuItemView : public View, public LayoutDelegate {
+ 
+   std::optional<ui::ColorId> GetSelectedColorId() { return selected_color_id_; }
+ 
++  void SetForegroundColorId(std::optional<ui::ColorId> foreground_color_id) {
++    foreground_color_id_ = foreground_color_id;
++  }
++
+   void SetHighlightWhenSelectedWithChildViews(
+       bool highlight_when_selected_with_child_views) {
+     highlight_when_selected_with_child_views_ =
+@@ -596,10 +600,6 @@ class VIEWS_EXPORT MenuItemView : public View, public LayoutDelegate {
+   // Calculates the X coordinate of the icon.
+   int CalculateIconX(const ImageView* icon_view) const;
+ 
+-  void SetForegroundColorId(std::optional<ui::ColorId> foreground_color_id) {
+-    foreground_color_id_ = foreground_color_id;
+-  }
+-
+   // Returns the corresponding margin from the `MenuConfig` if
+   // `vertical_margin_` is not set.
+   int GetVerticalMargin() const;
+diff --git a/ui/webui/resources/cr_components/searchbox/searchbox.css b/ui/webui/resources/cr_components/searchbox/searchbox.css
+index 34e70f33711a1..dc4fdb93e0fa3 100644
+--- a/ui/webui/resources/cr_components/searchbox/searchbox.css
++++ b/ui/webui/resources/cr_components/searchbox/searchbox.css
+@@ -299,7 +299,7 @@ cr-searchbox-icon {
+ 
+ :host([use-webkit-search-icons_][compose-button-enabled]) #voiceSearchButton,
+ :host([use-webkit-search-icons_][compose-button-enabled]) #lensSearchButton {
+-  background-color: #1F1F1F;
++  background-color: var(--color-searchbox-lens-voice-icon-background);
+ }
+ 
+ :host([compose-button-enabled][searchbox-lens-search-enabled_]) {
+diff --git a/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts b/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts
+index 6c77613866851..8c2a9b66df274 100644
+--- a/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts
++++ b/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts
+@@ -29,26 +29,26 @@ export const DARK_DEFAULT_COLOR: Color = {
+ };
+ 
+ export const LIGHT_BASELINE_BLUE_COLOR: Color = {
+-  background: {value: 0xff0b57d0},
+-  foreground: {value: 0xffd3e3fd},
+-  base: {value: 0xffc7c7c7},
++  background: {value: 0xff000000},
++  foreground: {value: 0xffffffff},
++  base: {value: 0xff606060},
+ };
+ 
+ export const DARK_BASELINE_BLUE_COLOR: Color = {
+-  background: {value: 0xffa8c7fa},
+-  foreground: {value: 0xff0842a0},
++  background: {value: 0xffffffff},
++  foreground: {value: 0xff000000},
+   base: {value: 0xff757575},
+ };
+ 
+ export const LIGHT_BASELINE_GREY_COLOR: Color = {
+-  background: {value: 0xff0b57d0},
+-  foreground: {value: 0xffe3e3e3},
+-  base: {value: 0xffc7c7c7},
++  background: {value: 0xff000000},
++  foreground: {value: 0xffffffff},
++  base: {value: 0xff606060},
+ };
+ 
+ export const DARK_BASELINE_GREY_COLOR: Color = {
+-  background: {value: 0xffa8c7fa},
+-  foreground: {value: 0xff474747},
++  background: {value: 0xffffffff},
++  foreground: {value: 0xff000000},
+   base: {value: 0xff757575},
+ };
+ 
