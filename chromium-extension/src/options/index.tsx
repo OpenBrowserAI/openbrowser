@@ -62,6 +62,14 @@ const OptionsPage = () => {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
+  // Update favicon based on theme
+  useEffect(() => {
+    const favicon = document.getElementById("favicon") as HTMLLinkElement;
+    if (favicon) {
+      favicon.href = isDarkMode ? "/icon_dark.png" : "/icon_light.png";
+    }
+  }, [isDarkMode]);
+
   // Fetch models data on component mount
   useEffect(() => {
     const loadModels = async () => {
@@ -232,7 +240,7 @@ const OptionsPage = () => {
         <div className="max-w-3xl mx-auto px-6 py-6">
           <div className="flex items-center gap-4">
             <img
-              src={isDarkMode ? "/icon_white.png" : "/icon.png"}
+              src={isDarkMode ? "/icon_dark.png" : "/icon_light.png"}
               alt="OpenBrowser Logo"
               className="w-12 h-12 radius-8px"
             />
