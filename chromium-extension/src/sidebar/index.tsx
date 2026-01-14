@@ -8,29 +8,11 @@ import { MessageItem } from "./components/MessageItem";
 import type { ChatMessage, UploadedFile } from "./types";
 import { useChatCallbacks } from "./hooks/useChatCallbacks";
 import { useSessionManagement } from "./hooks/useSessionManagement";
-import { useThemeColors } from "./hooks/useThemeColors";
+import { ThemeProvider } from "./providers/ThemeProvider";
 import { Empty, message as AntdMessage } from "antd";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 const AppRun = () => {
-  // Use Chrome theme colors
-  const { colors: themeColors } = useThemeColors();
-
-  // Apply theme colors to CSS variables
-  useEffect(() => {
-    if (themeColors.kColorSysBase) {
-      document.documentElement.style.setProperty('--chrome-bg-primary', themeColors.kColorSysBase);
-    }
-    if (themeColors.kColorSysOnSurface) {
-      document.documentElement.style.setProperty('--chrome-text-primary', themeColors.kColorSysOnSurface);
-      document.documentElement.style.setProperty('--chrome-icon-color', themeColors.kColorSysOnSurface);
-    }
-    if (themeColors.kColorSysBaseContainer) {
-      document.documentElement.style.setProperty('--chrome-input-background', themeColors.kColorSysBaseContainer);
-      document.documentElement.style.setProperty('--chrome-input-border', themeColors.kColorSysBaseContainer);
-    }
-  }, [themeColors]);
-
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
@@ -343,6 +325,8 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <React.StrictMode>
-    <AppRun />
+    <ThemeProvider>
+      <AppRun />
+    </ThemeProvider>
   </React.StrictMode>
 );

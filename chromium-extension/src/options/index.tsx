@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Form, Input, Button, message, Select, Checkbox, Spin } from "antd";
 import { SaveOutlined, LoadingOutlined } from "@ant-design/icons";
 import "../sidebar/index.css";
-import { useThemeColors } from "../sidebar/hooks/useThemeColors";
+import { ThemeProvider } from "../sidebar/providers/ThemeProvider";
 import {
   fetchModelsData,
   getProvidersWithImageSupport,
@@ -20,24 +20,6 @@ import type {
 const { Option } = Select;
 
 const OptionsPage = () => {
-  // Use Chrome theme colors
-  const { colors: themeColors } = useThemeColors();
-
-  // Apply theme colors to CSS variables
-  useEffect(() => {
-    if (themeColors.kColorSysBase) {
-      document.documentElement.style.setProperty('--chrome-bg-primary', themeColors.kColorSysBase);
-    }
-    if (themeColors.kColorSysOnSurface) {
-      document.documentElement.style.setProperty('--chrome-text-primary', themeColors.kColorSysOnSurface);
-      document.documentElement.style.setProperty('--chrome-icon-color', themeColors.kColorSysOnSurface);
-    }
-    if (themeColors.kColorSysBaseContainer) {
-      document.documentElement.style.setProperty('--chrome-input-background', themeColors.kColorSysBaseContainer);
-      document.documentElement.style.setProperty('--chrome-input-border', themeColors.kColorSysBaseContainer);
-    }
-  }, [themeColors]);
-
   const [form] = Form.useForm();
 
   const [config, setConfig] = useState({
@@ -230,12 +212,19 @@ const OptionsPage = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-theme-primary flex items-center justify-center">
-        <Spin indicator={<LoadingOutlined className="fill-theme-icon" style={{ fontSize: 48 }} spin />} />
+        <Spin
+          indicator={
+            <LoadingOutlined
+              className="fill-theme-icon"
+              style={{ fontSize: 48 }}
+              spin
+            />
+          }
+        />
       </div>
     );
   }
 
-  
   return (
     <div className="min-h-screen bg-theme-primary">
       {/* Header */}
@@ -248,8 +237,13 @@ const OptionsPage = () => {
               className="w-12 h-12 radius-8px"
             />
             <div>
-              <h1 className="text-2xl font-semibold text-theme-primary">Settings</h1>
-              <p className="text-sm text-theme-primary mt-1" style={{opacity: 0.7}}>
+              <h1 className="text-2xl font-semibold text-theme-primary">
+                Settings
+              </h1>
+              <p
+                className="text-sm text-theme-primary mt-1"
+                style={{ opacity: 0.7 }}
+              >
                 Configure your AI model preferences (vision models only)
               </p>
             </div>
@@ -259,7 +253,10 @@ const OptionsPage = () => {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-8">
-        <div className="bg-theme-primary border-theme-input rounded-xl p-6" style={{borderWidth: '1px', borderStyle: 'solid'}}>
+        <div
+          className="bg-theme-primary border-theme-input rounded-xl p-6"
+          style={{ borderWidth: "1px", borderStyle: "solid" }}
+        >
           <Form form={form} layout="vertical" initialValues={config}>
             <Form.Item
               name="llm"
@@ -362,7 +359,13 @@ const OptionsPage = () => {
               label={
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-theme-primary">
-                    Base URL <span className="text-theme-primary" style={{opacity: 0.5}}>(Optional)</span>
+                    Base URL{" "}
+                    <span
+                      className="text-theme-primary"
+                      style={{ opacity: 0.5 }}
+                    >
+                      (Optional)
+                    </span>
                   </span>
                   <Button
                     type="text"
@@ -408,7 +411,12 @@ const OptionsPage = () => {
                       label={
                         <span className="text-sm font-medium text-theme-primary">
                           Exa API Key{" "}
-                          <span className="text-theme-primary" style={{opacity: 0.5}}>(Optional)</span>
+                          <span
+                            className="text-theme-primary"
+                            style={{ opacity: 0.5 }}
+                          >
+                            (Optional)
+                          </span>
                         </span>
                       }
                       tooltip="Uses free tier if not provided"
@@ -450,6 +458,8 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <React.StrictMode>
-    <OptionsPage />
+    <ThemeProvider>
+      <OptionsPage />
+    </ThemeProvider>
   </React.StrictMode>
 );

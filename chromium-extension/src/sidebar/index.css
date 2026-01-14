@@ -2,18 +2,18 @@
 
 /* CSS variables for Chrome theme colors - Light mode defaults */
 :root {
-  --chrome-bg-primary: #FFFFFF;
+  --chrome-bg-primary: #ffffff;
   --chrome-bg-secondary: #f5f5f5;
   --chrome-text-primary: #000000;
   --chrome-icon-color: #000000;
-  --chrome-input-background: #FFFFFF;
-  --chrome-input-border: #E0E0E0;
+  --chrome-input-background: #ffffff;
+  --chrome-input-border: #e0e0e0;
 }
 
 /* Dark mode defaults - before theme colors load */
 @media (prefers-color-scheme: dark) {
   :root {
-    --chrome-bg-primary: #1F1F1F;
+    --chrome-bg-primary: #1f1f1f;
     --chrome-bg-secondary: #2a2b2e;
     --chrome-text-primary: #ffffff;
     --chrome-icon-color: #ffffff;
@@ -111,17 +111,17 @@
 
 /* Checkbox Utilities */
 .checkbox-theme .ant-checkbox-inner {
-  background-color: #FFFFFF !important;
-  border-color: #000000 !important;
+  background-color: var(--chrome-bg-primary) !important;
+  border-color: var(--chrome-text-primary) !important;
 }
 
 .checkbox-theme .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: #FFFFFF !important;
-  border-color: #000000 !important;
+  background-color: var(--chrome-bg-primary) !important;
+  border-color: var(--chrome-text-primary) !important;
 }
 
 .checkbox-theme .ant-checkbox-inner::after {
-  border-color: #000000 !important;
+  border-color: var(--chrome-text-primary) !important;
 }
 
 /* Select/Input Focus and Hover Utilities */
@@ -152,7 +152,7 @@
   .bg-theme-input input::-webkit-input-placeholder,
   .bg-theme-input .ant-input::-webkit-input-placeholder,
   .bg-theme-input .ant-input-password input::-webkit-input-placeholder {
-    color: #FFFFFF !important;
+    color: #ffffff !important;
     opacity: 0.7 !important;
   }
 }
@@ -160,7 +160,7 @@
 /* Tooltip Styling */
 .ant-tooltip .ant-tooltip-inner {
   background-color: #000000 !important;
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 .ant-tooltip .ant-tooltip-arrow::before {
@@ -169,12 +169,12 @@
 
 @media (prefers-color-scheme: dark) {
   .ant-tooltip .ant-tooltip-inner {
-    background-color: #FFFFFF !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
   }
 
   .ant-tooltip .ant-tooltip-arrow::before {
-    background: #FFFFFF !important;
+    background: #ffffff !important;
   }
 }
 
@@ -187,8 +187,6 @@
 .dropdown-theme-items .ant-select-item-option-active * {
   background-color: var(--chrome-bg-primary) !important;
 }
-
-
 
 .theme-card {
   background-color: var(--chrome-input-background) !important;
@@ -230,11 +228,11 @@
 /* Light mode overrides for theme utilities */
 @media (prefers-color-scheme: light) {
   .bg-theme-input {
-    background-color: #FFFFFF !important;
+    background-color: #ffffff !important;
   }
 
   .bg-theme-input * {
-    background-color: #FFFFFF !important;
+    background-color: #ffffff !important;
   }
 }
 
@@ -362,7 +360,7 @@
 }
 
 .bg-white {
-  background-color: #FFFFFF !important;
+  background-color: #ffffff !important;
 }
 
 .bg-gray-50 {
@@ -370,11 +368,11 @@
 }
 
 .bg-gray-100 {
-  background-color: #F5F5F5 !important;
+  background-color: #f5f5f5 !important;
 }
 
 .bg-gray-200 {
-  background-color: #E0E0E0 !important;
+  background-color: #e0e0e0 !important;
 }
 
 .bg-gray-800 {
@@ -386,7 +384,7 @@
 }
 
 .text-white {
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 .text-gray-400 {
@@ -403,12 +401,12 @@
 }
 
 .fill-white {
-  fill: #FFFFFF !important;
+  fill: #ffffff !important;
 }
 
 .fill-white svg,
 .fill-white svg * {
-  fill: #FFFFFF !important;
+  fill: #ffffff !important;
 }
 
 .border-black {
@@ -416,11 +414,11 @@
 }
 
 .border-white {
-  border-color: #FFFFFF !important;
+  border-color: #ffffff !important;
 }
 
 .border-gray-200 {
-  border-color: #E0E0E0 !important;
+  border-color: #e0e0e0 !important;
 }
 
 /* Special background utilities */
@@ -435,7 +433,7 @@
 .bg-inverted button,
 .bg-inverted div {
   background-color: #000000 !important;
-  color: #FFFFFF !important;
+  color: #ffffff !important;
 }
 
 .bg-inverted:hover {
@@ -444,7 +442,7 @@
 
 .bg-inverted .anticon svg,
 .bg-inverted .anticon svg * {
-  fill: #FFFFFF !important;
+  fill: #ffffff !important;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -453,12 +451,12 @@
   .bg-inverted span,
   .bg-inverted button,
   .bg-inverted div {
-    background-color: #FFFFFF !important;
+    background-color: #ffffff !important;
     color: #000000 !important;
   }
 
   .bg-inverted:hover {
-    background-color: #E0E0E0 !important;
+    background-color: #e0e0e0 !important;
   }
 
   .bg-inverted .anticon svg,
@@ -499,7 +497,12 @@ body,
 div,
 span,
 p,
-h1, h2, h3, h4, h5, h6,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
 button,
 input,
 textarea {
@@ -513,7 +516,6 @@ textarea {
 [class*="Error"] {
   color: #ef4444 !important;
 }
-
 
 /* Override Tailwind's background utilities */
 #root > * {
@@ -617,7 +619,7 @@ textarea {
 /* Force white background in light mode */
 @media (prefers-color-scheme: light) {
   .chat-input-box {
-    background-color: #FFFFFF !important;
+    background-color: #ffffff !important;
   }
 }
 
@@ -717,9 +719,6 @@ textarea {
   .tool-call-collapse .ant-collapse-content-box,
   .thinking-collapse .ant-collapse-content-box,
   .agent-collapse .ant-collapse-content-box {
-    background-color: #FFFFFF !important;
+    background-color: #ffffff !important;
   }
 }
-
-
-
