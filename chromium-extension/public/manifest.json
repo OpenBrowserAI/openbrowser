@@ -3,7 +3,6 @@
   "description": "OpenBrowser Extension",
   "version": "1.0.0",
   "manifest_version": 3,
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnk6aCCanZ8kXgeZ9DjCSi8m2IhWn+CVGfw9Rm/kGdjGnJrdCCsNi7CwNPqwkC6vW+yRGc1NrBzTTeLzToIeH6p+scCp0zg5iTiOL+xBq1KtyyMGdtH6tb1GvXGud3RwD/GGkmhFsWlRtxzVzyz7NtDBhXlDDDLw/OgDi/DQGYsBfClSSvL1gNToeML+sWiRhBDhUJ+GIRRpOvDCBCXOQXTTwDWiEPFcsmfU2H/nRlWZtfqz8mMPU5ISDTR68dnLc4JhxsegrcQcV9nVxZlUjKXsdR/gdFf3DWCrJQkYwspYyg8MEzqxtRaC/G9RCP88jaBGjf9RFzkB497CpgN5+ywIDAQAB",
   "background": {
     "type": "module",
     "service_worker": "js/background.js"
