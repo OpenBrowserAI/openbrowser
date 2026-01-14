@@ -8,6 +8,7 @@ import { MessageItem } from "./components/MessageItem";
 import type { ChatMessage, UploadedFile } from "./types";
 import { useChatCallbacks } from "./hooks/useChatCallbacks";
 import { useSessionManagement } from "./hooks/useSessionManagement";
+import { ThemeProvider } from "./providers/ThemeProvider";
 import { Empty, message as AntdMessage } from "antd";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
@@ -109,7 +110,10 @@ const AppRun = () => {
             : level === "success"
               ? AntdMessage.success
               : AntdMessage.info;
-        showMessage(msg, 3);
+        showMessage({
+          content: msg,
+          className: "toast-text-black"
+        });
       }
     };
 
@@ -321,6 +325,8 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <React.StrictMode>
-    <AppRun />
+    <ThemeProvider>
+      <AppRun />
+    </ThemeProvider>
   </React.StrictMode>
 );

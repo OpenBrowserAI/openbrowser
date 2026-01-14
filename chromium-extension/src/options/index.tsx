@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { Form, Input, Button, message, Select, Checkbox, Spin } from "antd";
 import { SaveOutlined, LoadingOutlined } from "@ant-design/icons";
 import "../sidebar/index.css";
+import { ThemeProvider } from "../sidebar/providers/ThemeProvider";
 import {
   fetchModelsData,
   getProvidersWithImageSupport,
@@ -49,6 +50,25 @@ const OptionsPage = () => {
     Record<string, ModelOption[]>
   >({});
   const [modelSearchValue, setModelSearchValue] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
+
+  // Listen for theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  // Update favicon based on theme
+  useEffect(() => {
+    const favicon = document.getElementById("favicon") as HTMLLinkElement;
+    if (favicon) {
+      favicon.href = isDarkMode ? "/icon_dark.png" : "/icon_light.png";
+    }
+  }, [isDarkMode]);
 
   // Fetch models data on component mount
   useEffect(() => {
@@ -142,7 +162,10 @@ const OptionsPage = () => {
             webSearchConfig: newWebSearchConfig
           },
           () => {
-            message.success("Save Success!");
+            message.success({
+              content: "Save Success!",
+              className: "toast-text-black"
+            });
           }
         );
       })
@@ -188,31 +211,47 @@ const OptionsPage = () => {
 
     setConfig(newConfig);
     form.setFieldValue(["options", "baseURL"], defaultBaseURL);
-    message.success("Base URL reset to default");
+    message.success({
+      content: "Base URL reset to default",
+      className: "toast-text-black"
+    });
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+      <div className="min-h-screen bg-theme-primary flex items-center justify-center">
+        <Spin
+          indicator={
+            <LoadingOutlined
+              className="fill-theme-icon"
+              style={{ fontSize: 48 }}
+              spin
+            />
+          }
+        />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-theme-primary">
       {/* Header */}
-      <div className="border-b border-gray-200 bg-white">
+      <div className="border-b border-theme-input bg-theme-primary">
         <div className="max-w-3xl mx-auto px-6 py-6">
           <div className="flex items-center gap-4">
             <img
-              src="/icon.png"
+              src={isDarkMode ? "/icon_dark.png" : "/icon_light.png"}
               alt="OpenBrowser Logo"
-              className="w-12 h-12 rounded-lg"
+              className="w-12 h-12 radius-8px"
             />
             <div>
-              <h1 className="text-2xl font-semibold text-black">Settings</h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <h1 className="text-2xl font-semibold text-theme-primary">
+                Settings
+              </h1>
+              <p
+                className="text-sm text-theme-primary mt-1"
+                style={{ opacity: 0.7 }}
+              >
                 Configure your AI model preferences (vision models only)
               </p>
             </div>
@@ -222,12 +261,15 @@ const OptionsPage = () => {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-8">
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div
+          className="bg-theme-primary border-theme-input rounded-xl p-6"
+          style={{ borderWidth: "1px", borderStyle: "solid" }}
+        >
           <Form form={form} layout="vertical" initialValues={config}>
             <Form.Item
               name="llm"
               label={
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-theme-primary">
                   LLM Provider
                 </span>
               }
@@ -242,7 +284,8 @@ const OptionsPage = () => {
                 placeholder="Choose a LLM provider"
                 onChange={handleLLMChange}
                 size="large"
-                className="w-full"
+                className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
+                popupClassName="bg-theme-input border-theme-input dropdown-theme-items"
               >
                 {providerOptions.map((provider) => (
                   <Option key={provider.value} value={provider.value}>
@@ -260,7 +303,7 @@ const OptionsPage = () => {
             <Form.Item
               name="modelName"
               label={
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-theme-primary">
                   Model Name
                 </span>
               }
@@ -275,12 +318,13 @@ const OptionsPage = () => {
                 key={config.llm}
                 placeholder="Select or enter model name"
                 size="large"
-                className="w-full"
+                className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
+                popupClassName="bg-theme-input border-theme-input dropdown-theme-items"
                 showSearch
                 allowClear
                 searchValue={modelSearchValue}
                 onSearch={setModelSearchValue}
-                onDropdownVisibleChange={(open) => {
+                onOpenChange={(open) => {
                   if (open) setModelSearchValue("");
                 }}
                 optionFilterProp="children"
@@ -300,7 +344,7 @@ const OptionsPage = () => {
             <Form.Item
               name="apiKey"
               label={
-                <span className="text-sm font-medium text-gray-900">
+                <span className="text-sm font-medium text-theme-primary">
                   API Key
                 </span>
               }
@@ -314,7 +358,7 @@ const OptionsPage = () => {
               <Input.Password
                 placeholder="Enter your API key"
                 size="large"
-                className="w-full"
+                className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
               />
             </Form.Item>
 
@@ -322,14 +366,20 @@ const OptionsPage = () => {
               name={["options", "baseURL"]}
               label={
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900">
-                    Base URL <span className="text-gray-400">(Optional)</span>
+                  <span className="text-sm font-medium text-theme-primary">
+                    Base URL{" "}
+                    <span
+                      className="text-theme-primary"
+                      style={{ opacity: 0.5 }}
+                    >
+                      (Optional)
+                    </span>
                   </span>
                   <Button
-                    type="link"
+                    type="text"
                     size="small"
                     onClick={handleResetBaseURL}
-                    className="text-xs px-0"
+                    className="text-xs px-0 text-theme-icon"
                   >
                     Reset to default
                   </Button>
@@ -339,18 +389,18 @@ const OptionsPage = () => {
               <Input
                 placeholder="Enter custom base URL"
                 size="large"
-                className="w-full"
+                className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
               />
             </Form.Item>
 
-            <div className="border-t border-gray-200 pt-6 mt-6">
+            <div className="border-t border-theme-input pt-6 mt-6">
               <Form.Item
                 name="webSearchEnabled"
                 valuePropName="checked"
                 className="mb-4"
               >
-                <Checkbox>
-                  <span className="text-sm font-medium text-gray-900">
+                <Checkbox className="checkbox-theme text-theme-primary">
+                  <span className="text-sm font-medium text-theme-primary">
                     Enable web search (Exa AI)
                   </span>
                 </Checkbox>
@@ -367,9 +417,14 @@ const OptionsPage = () => {
                     <Form.Item
                       name="exaApiKey"
                       label={
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-theme-primary">
                           Exa API Key{" "}
-                          <span className="text-gray-400">(Optional)</span>
+                          <span
+                            className="text-theme-primary"
+                            style={{ opacity: 0.5 }}
+                          >
+                            (Optional)
+                          </span>
                         </span>
                       }
                       tooltip="Uses free tier if not provided"
@@ -377,7 +432,7 @@ const OptionsPage = () => {
                       <Input.Password
                         placeholder="sk-..."
                         size="large"
-                        className="w-full"
+                        className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
                         allowClear
                       />
                     </Form.Item>
@@ -391,18 +446,10 @@ const OptionsPage = () => {
                 onClick={handleSave}
                 size="large"
                 icon={<SaveOutlined />}
-                className="w-full bg-black hover:bg-gray-800 border-black text-white"
+                className="w-full bg-inverted"
                 block
                 style={{
-                  backgroundColor: "#000000",
-                  borderColor: "#000000",
-                  color: "#ffffff"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#1f2937";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#000000";
+                  borderColor: "inherit"
                 }}
               >
                 Save Settings
@@ -419,6 +466,8 @@ const root = createRoot(document.getElementById("root")!);
 
 root.render(
   <React.StrictMode>
-    <OptionsPage />
+    <ThemeProvider>
+      <OptionsPage />
+    </ThemeProvider>
   </React.StrictMode>
 );
