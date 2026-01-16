@@ -9,7 +9,7 @@ import type { ChatMessage, UploadedFile } from "./types";
 import { useChatCallbacks } from "./hooks/useChatCallbacks";
 import { useSessionManagement } from "./hooks/useSessionManagement";
 import { ThemeProvider } from "./providers/ThemeProvider";
-import { Empty, message as AntdMessage } from "antd";
+import { message as AntdMessage } from "antd";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 const AppRun = () => {
@@ -282,7 +282,23 @@ const AppRun = () => {
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-gray-100 relative"
       >
         {messages.length === 0 ? (
-          <Empty description="Start a conversation!" className="mt-[20vh]" />
+          <div className="flex items-center justify-center h-full">
+            <div
+              className="w-48 h-48"
+              style={{
+                maskImage: "url(/icon_light.png)",
+                WebkitMaskImage: "url(/icon_light.png)",
+                maskSize: "contain",
+                WebkitMaskSize: "contain",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
+                maskPosition: "center",
+                WebkitMaskPosition: "center",
+                backgroundColor: "var(--chrome-icon-color)",
+                opacity: 0.15
+              }}
+            />
+          </div>
         ) : (
           messages.map((message) => (
             <MessageItem
