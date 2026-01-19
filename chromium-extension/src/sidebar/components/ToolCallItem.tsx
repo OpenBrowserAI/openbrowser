@@ -3,12 +3,13 @@ import {
   ToolOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  LoadingOutlined,
+  LoadingOutlined
 } from "@ant-design/icons";
 import { isJsonStr } from "../utils";
 import type { ChatContentItem } from "../types";
 import { MarkdownRenderer } from "../MarkdownRenderer";
 import { Typography, Tag, Collapse, Image, Spin } from "antd";
+import { getToolDisplayName } from "../utils/toolNameMapper";
 
 const { Text, Paragraph } = Typography;
 
@@ -35,15 +36,17 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
   return (
     <Collapse
       size="small"
-      className="tool-call-collapse"
+      className="tool-call-collapse bg-theme-input border-theme-input"
       defaultActiveKey={[]}
       items={[
         {
           key: "tool",
           label: (
             <div className="flex items-center gap-2">
-              <ToolOutlined className="text-gray-500" />
-              <Text className="text-sm text-gray-700">{item.toolName}</Text>
+              <ToolOutlined className="fill-theme-icon" />
+              <Text className="text-sm text-theme-primary">
+                {getToolDisplayName(item.toolName)}
+              </Text>
               {getStatusIcon()}
             </div>
           ),
@@ -62,10 +65,10 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
               {/* Parameters */}
               {item.params && (
                 <div className="mb-3">
-                  <Text strong className="text-xs text-gray-600">
+                  <Text strong className="text-xs text-theme-primary">
                     Parameters
                   </Text>
-                  <pre className="tool-json-pre mt-1 text-xs">
+                  <pre className="tool-json-pre mt-1 text-xs text-theme-primary">
                     {JSON.stringify(item.params, null, 2)}
                   </pre>
                 </div>
@@ -84,11 +87,11 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
               {item.result && (
                 <div className="mt-2">
                   <div className="flex items-center gap-2 mb-1">
-                    <Text strong className="text-xs text-gray-600">
+                    <Text strong className="text-xs text-theme-primary">
                       Result
                     </Text>
                     {item.result.isError && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-light text-red-500 rounded text-xs">
                         <CloseCircleOutlined />
                         Failed
                       </span>
@@ -98,11 +101,17 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                     {item.result.content.map((part, index) => {
                       if (part.type === "text") {
                         return isJsonStr(part.text) ? (
-                          <pre key={index} className="tool-json-pre text-xs">
+                          <pre
+                            key={index}
+                            className="tool-json-pre text-xs text-theme-primary"
+                          >
                             {JSON.stringify(JSON.parse(part.text), null, 2)}
                           </pre>
                         ) : (
-                          <div key={index} className="text-sm">
+                          <div
+                            key={index}
+                            className="text-sm text-theme-primary"
+                          >
                             <MarkdownRenderer content={part.text} />
                           </div>
                         );
@@ -113,12 +122,12 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                             src={
                               part.data.startsWith("http")
                                 ? part.data
-                                : `data:${part.mimeType || "image/png"};base64,${
-                                    part.data
-                                  }`
+                                : `data:${
+                                    part.mimeType || "image/png"
+                                  };base64,${part.data}`
                             }
                             alt="Tool result"
-                            className="max-w-full mt-2 rounded border border-gray-200"
+                            className="max-w-full mt-2 rounded border-theme-input"
                           />
                         );
                       }
@@ -128,8 +137,8 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                 </div>
               )}
             </div>
-          ),
-        },
+          )
+        }
       ]}
     />
   );

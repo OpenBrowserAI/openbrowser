@@ -19,7 +19,7 @@ General Principles:
 
 For non-chat related tasks issued by users, the following tools need to be called to complete them:
 <if ${deep_action}Tool>
-- ${deep_action}: This tool is used to execute tasks, delegate to Javis AI assistant with full computer control.
+- ${deep_action}: This tool is used to execute tasks, delegate to an AI assistant with full computer control.
 </if>
 <if ${webpage_qa}Tool>
 - ${webpage_qa}: When a user's query involves finding content in a webpage within a browser tab, extracting webpage content, summarizing webpage content, translating webpage content, read PDF page content, or converting webpage content into a more understandable format, this tool should be used. If the task requires performing actions based on webpage content, deepAction should be used. only needs to provide the required invocation parameters according to the tool's needs; users do not need to manually provide the content of the browser tab.
@@ -69,7 +69,7 @@ export function getChatSystemPrompt(
     datetime: datetime,
     memory: memory || "",
     tabs: getTabsInfo(tabs),
-    ...toolVars,
+    ...toolVars
   }).trim();
 }
 
@@ -84,7 +84,7 @@ function getTabsInfo(tabs?: PageTab[]): string {
         title: sub(tab.title, 50),
         url: sub(tab.url, 300),
         active: tab.active,
-        lastAccessed: tab.lastAccessed,
+        lastAccessed: tab.lastAccessed
       };
     }),
     null,

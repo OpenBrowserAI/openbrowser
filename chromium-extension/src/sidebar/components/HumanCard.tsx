@@ -7,7 +7,7 @@ import {
   Radio,
   Button,
   Checkbox,
-  Typography,
+  Typography
 } from "antd";
 import type { AgentContentItem } from "../types";
 import { MarkdownRenderer } from "../MarkdownRenderer";
@@ -20,7 +20,7 @@ const { Text } = Typography;
 const sendHumanCallback = (callbackId: string, value: any) => {
   chrome.runtime.sendMessage({
     type: "callback",
-    data: { callbackId, value },
+    data: { callbackId, value }
   });
 };
 
@@ -44,10 +44,7 @@ const HumanConfirmCard: React.FC<{
   };
 
   return (
-    <Card
-      size="small"
-      className="mb-2 bg-orange-50 border border-orange-300"
-    >
+    <Card size="small" className="mb-2 bg-orange-50 border border-orange-300">
       <div className="mb-3">
         <MarkdownRenderer content={item.prompt} />
       </div>
@@ -92,10 +89,7 @@ const HumanInputCard: React.FC<{
   };
 
   return (
-    <Card
-      size="small"
-      className="mb-2 bg-blue-50 border border-blue-300"
-    >
+    <Card size="small" className="mb-2 bg-blue-50 border border-blue-300">
       <div className="mb-3">
         <MarkdownRenderer content={item.prompt} />
       </div>
@@ -158,10 +152,7 @@ const HumanSelectCard: React.FC<{
   };
 
   return (
-    <Card
-      size="small"
-      className="mb-2 bg-green-50 border border-green-300"
-    >
+    <Card size="small" className="mb-2 bg-green-50 border border-green-300">
       <div className="mb-3">
         <MarkdownRenderer content={item.prompt} />
       </div>
@@ -237,10 +228,7 @@ const HumanHelpCard: React.FC<{
       : "Assistance Required";
 
   return (
-    <Card
-      size="small"
-      className="mb-2 bg-red-50 border border-red-200"
-    >
+    <Card size="small" className="mb-2 bg-red-50 border border-red-200">
       <Space direction="vertical" className="w-full">
         <Tag color="orange">{helpTypeText}</Tag>
         <div className="mb-3">

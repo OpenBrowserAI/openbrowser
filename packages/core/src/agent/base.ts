@@ -10,7 +10,7 @@ import {
   ForeachTaskTool,
   WatchTriggerTool,
   HumanInteractTool,
-  VariableStorageTool,
+  VariableStorageTool
 } from "../tools";
 import {
   Tool,
@@ -21,21 +21,22 @@ import {
   ToolExecuter,
   WorkflowAgent,
   HumanCallback,
-  AgentStreamCallback,
+  AssistantParts,
+  AgentStreamCallback
 } from "../types";
 import {
   LanguageModelV2Prompt,
   LanguageModelV2FilePart,
   LanguageModelV2TextPart,
   LanguageModelV2ToolCallPart,
-  LanguageModelV2ToolResultPart,
+  LanguageModelV2ToolResultPart
 } from "@ai-sdk/provider";
 import {
   getTool,
   convertTools,
   callAgentLLM,
   convertToolResult,
-  defaultMessageProviderOptions,
+  defaultMessageProviderOptions
 } from "./agent-llm";
 import { convertAssistantContent } from "../llm/react";
 import TaskContext, { AgentContext } from "./agent-context";
@@ -108,7 +109,7 @@ export class Agent {
     const agentNode = agentContext.agentChain.agent;
     const tools = [
       ...this.tools,
-      ...this.system_auto_tools(agentNode, agentContext),
+      ...this.system_auto_tools(agentNode, agentContext)
     ];
     const systemPrompt = await this.buildSystemPrompt(agentContext, tools);
     const userPrompt = await this.buildUserPrompt(agentContext, tools);
@@ -116,13 +117,13 @@ export class Agent {
       {
         role: "system",
         content: systemPrompt,
-        providerOptions: defaultMessageProviderOptions(),
+        providerOptions: defaultMessageProviderOptions()
       },
       ...historyMessages,
       {
         role: "user",
-        content: userPrompt,
-      },
+        content: userPrompt
+      }
     ];
     agentContext.messages = messages;
     const rlm = new RetryLanguageModel(context.config.llms, this.llms);
@@ -201,14 +202,14 @@ export class Agent {
     agentContext: AgentContext,
     messages: LanguageModelV2Prompt,
     agentTools: Tool[],
-    results: Array<LanguageModelV2TextPart | LanguageModelV2ToolCallPart>
+    results: AssistantParts
   ): Promise<string | null> {
     const user_messages: LanguageModelV2Prompt = [];
     const toolResults: LanguageModelV2ToolResultPart[] = [];
     // results = memory.removeDuplicateToolUse(results);
     messages.push({
       role: "assistant",
-      content: convertAssistantContent(results),
+      content: convertAssistantContent(results)
     });
     if (results.length == 0) {
       return null;
@@ -248,7 +249,7 @@ export class Agent {
     if (toolResults.length > 0) {
       messages.push({
         role: "tool",
-        content: toolResults,
+        content: toolResults
       });
       user_messages.forEach((message) => messages.push(message));
       return null;
@@ -292,10 +293,10 @@ export class Agent {
         content: [
           {
             type: "text",
-            text: e + "",
-          },
+            text: e + ""
+          }
         ],
-        isError: true,
+        isError: true
       };
       toolChain.updateToolResult(toolResult);
       if (++agentContext.consecutiveErrorNum >= 10) {
@@ -315,7 +316,7 @@ export class Agent {
           toolCallId: result.toolCallId,
           toolName: result.toolName,
           params: result.input || {},
-          toolResult: toolResult,
+          toolResult: toolResult
         },
         agentContext
       );
@@ -387,8 +388,8 @@ export class Agent {
           agentContext.agentChain.agent,
           agentContext.context,
           tools
-        ),
-      },
+        )
+      }
     ];
   }
 
@@ -417,7 +418,7 @@ export class Agent {
           agent_name: agentNode?.name || this.name,
           params: {},
           prompt: agentNode?.task || context.chain.taskPrompt,
-          ...(mcpParams || {}),
+          ...(mcpParams || {})
         },
         context.controller.signal
       );
@@ -444,7 +445,7 @@ export class Agent {
     mcpParams?: Record<string, unknown>;
   }> {
     return {
-      mcpTools: loopNum == 0,
+      mcpTools: loopNum == 0
     };
   }
 
@@ -459,12 +460,12 @@ export class Agent {
               taskId: agentContext.context.taskId,
               nodeId: agentContext.agentChain.agent.id,
               environment: config.platform,
-              agent_name: agentContext.agent.Name,
-            },
+              agent_name: agentContext.agent.Name
+            }
           },
           agentContext.context.controller.signal
         );
-      },
+      }
     };
   }
 
@@ -487,9 +488,9 @@ export class Agent {
             ? typeof result == "string"
               ? result
               : JSON.stringify(result)
-            : "Successful",
-        },
-      ],
+            : "Successful"
+        }
+      ]
     };
   }
 

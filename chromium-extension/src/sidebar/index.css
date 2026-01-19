@@ -1,7 +1,532 @@
 @import "tailwindcss";
 
-body {
+/* CSS variables for Chrome theme colors - Light mode defaults */
+:root {
+  --chrome-bg-primary: #ffffff;
+  --chrome-bg-secondary: #f5f5f5;
+  --chrome-text-primary: #000000;
+  --chrome-icon-color: #000000;
+  --chrome-input-background: #ffffff;
+  --chrome-input-border: #e0e0e0;
+}
+
+/* Dark mode defaults - before theme colors load */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --chrome-bg-primary: #1f1f1f;
+    --chrome-bg-secondary: #2a2b2e;
+    --chrome-text-primary: #ffffff;
+    --chrome-icon-color: #ffffff;
+    --chrome-input-background: #2a2b2e;
+    --chrome-input-border: #2a2b2e;
+  }
+}
+
+/* ============================================
+   THEME UTILITY CLASSES
+   ============================================ */
+
+/* Background Color Utilities */
+.bg-theme-primary {
+  background-color: var(--chrome-bg-primary) !important;
+}
+
+.bg-theme-secondary {
+  background-color: var(--chrome-bg-secondary) !important;
+}
+
+.bg-theme-input {
+  background-color: var(--chrome-input-background) !important;
+}
+
+.bg-theme-input * {
+  background-color: var(--chrome-input-background) !important;
+}
+
+/* Text/Color Utilities */
+.text-theme-primary {
+  color: var(--chrome-text-primary) !important;
+}
+
+.text-theme-primary * {
+  color: var(--chrome-text-primary) !important;
+}
+
+.text-theme-icon {
+  color: var(--chrome-icon-color) !important;
+}
+
+.text-theme-icon * {
+  color: var(--chrome-icon-color) !important;
+}
+
+/* Fill Utilities (for SVG icons) */
+.fill-theme-primary {
+  fill: var(--chrome-bg-primary) !important;
+}
+
+.fill-theme-secondary {
+  fill: var(--chrome-bg-secondary) !important;
+}
+
+.fill-theme-input {
+  fill: var(--chrome-input-background) !important;
+}
+
+.fill-theme-text {
+  fill: var(--chrome-text-primary) !important;
+}
+
+.fill-theme-icon {
+  fill: var(--chrome-icon-color) !important;
+}
+
+/* Fill utilities for SVG children */
+.fill-theme-icon svg,
+.fill-theme-icon svg * {
+  fill: var(--chrome-icon-color) !important;
+}
+
+.fill-theme-text svg,
+.fill-theme-text svg * {
+  fill: var(--chrome-text-primary) !important;
+}
+
+/* Border Color Utilities */
+.border-theme-primary {
+  border-color: var(--chrome-bg-primary) !important;
+}
+
+.border-theme-secondary {
+  border-color: var(--chrome-bg-secondary) !important;
+}
+
+.border-theme-input {
+  border-color: var(--chrome-input-border) !important;
+}
+
+.border-theme-input *:not(button):not(.ant-btn):not(.ant-btn-icon) {
+  border-color: var(--chrome-input-border) !important;
+}
+
+/* Checkbox Utilities */
+.checkbox-theme .ant-checkbox-inner {
+  background-color: var(--chrome-bg-primary) !important;
+  border-color: var(--chrome-text-primary) !important;
+}
+
+.checkbox-theme .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var(--chrome-bg-primary) !important;
+  border-color: var(--chrome-text-primary) !important;
+}
+
+.checkbox-theme .ant-checkbox-inner::after {
+  border-color: var(--chrome-text-primary) !important;
+}
+
+/* Select/Input Focus and Hover Utilities */
+.input-theme-focus *,
+.input-theme-focus:hover *,
+.input-theme-focus:focus *,
+.input-theme-focus:focus-within * {
+  border-color: var(--chrome-input-border) !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Placeholder Text Color */
+.bg-theme-input input::placeholder,
+.bg-theme-input .ant-input::placeholder,
+.bg-theme-input .ant-input-password input::placeholder,
+.bg-theme-input input::-webkit-input-placeholder,
+.bg-theme-input .ant-input::-webkit-input-placeholder,
+.bg-theme-input .ant-input-password input::-webkit-input-placeholder {
+  color: var(--chrome-text-primary) !important;
+  opacity: 0.5 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-theme-input input::placeholder,
+  .bg-theme-input .ant-input::placeholder,
+  .bg-theme-input .ant-input-password input::placeholder,
+  .bg-theme-input input::-webkit-input-placeholder,
+  .bg-theme-input .ant-input::-webkit-input-placeholder,
+  .bg-theme-input .ant-input-password input::-webkit-input-placeholder {
+    color: #ffffff !important;
+    opacity: 0.7 !important;
+  }
+}
+
+/* Tooltip Styling */
+.ant-tooltip .ant-tooltip-inner {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.ant-tooltip .ant-tooltip-arrow::before {
+  background: #000000 !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ant-tooltip .ant-tooltip-inner {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .ant-tooltip .ant-tooltip-arrow::before {
+    background: #ffffff !important;
+  }
+}
+
+/* Dropdown Item States */
+.dropdown-theme-items .ant-select-item-option-selected,
+.dropdown-theme-items .ant-select-item-option-selected *,
+.dropdown-theme-items .ant-select-item-option:hover,
+.dropdown-theme-items .ant-select-item-option:hover *,
+.dropdown-theme-items .ant-select-item-option-active,
+.dropdown-theme-items .ant-select-item-option-active * {
+  background-color: var(--chrome-bg-primary) !important;
+}
+
+.theme-card {
+  background-color: var(--chrome-input-background) !important;
+  border-color: var(--chrome-input-border) !important;
+  border-radius: 8px !important;
+}
+
+/* Modal background */
+.modal-bg-primary * {
+  background-color: var(--chrome-bg-primary) !important;
+}
+
+/* Border radius 8px */
+.radius-8px {
+  border-radius: 8px !important;
+}
+
+.radius-8px * {
+  border-radius: 8px !important;
+}
+
+.radius-8 * {
+  border-radius: 8px !important;
+}
+
+/* Selected/Highlighted item background */
+.bg-selected,
+.bg-selected *,
+.hover\:bg-selected:hover,
+.hover\:bg-selected:hover * {
+  background-color: var(--chrome-input-background) !important;
+}
+
+.theme-text-icon {
+  color: var(--chrome-icon-color) !important;
+  fill: var(--chrome-icon-color) !important;
+}
+
+/* Light mode overrides for theme utilities */
+@media (prefers-color-scheme: light) {
+  .bg-theme-input {
+    background-color: #ffffff !important;
+  }
+
+  .bg-theme-input * {
+    background-color: #ffffff !important;
+  }
+}
+
+/* Dark mode overrides for theme utilities */
+@media (prefers-color-scheme: dark) {
+  .bg-theme-input {
+    background-color: var(--chrome-input-background) !important;
+  }
+
+  .bg-theme-input * {
+    background-color: var(--chrome-input-background) !important;
+  }
+
+  .border-theme-input {
+    border-color: var(--chrome-input-border) !important;
+  }
+
+  .text-theme-primary {
+    color: var(--chrome-text-primary) !important;
+  }
+
+  .text-theme-primary * {
+    color: var(--chrome-text-primary) !important;
+  }
+}
+
+/* ============================================
+   STATIC COLOR UTILITIES (non-theme colors)
+   ============================================ */
+
+/* Red Colors - for errors, danger buttons, delete */
+.bg-red-500 {
+  background-color: #ef4444 !important;
+}
+
+.bg-red-600 {
+  background-color: #dc2626 !important;
+}
+
+.bg-red-danger {
+  background-color: #ff4d4f !important;
+}
+
+.bg-red-light {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
+.bg-red-danger-light {
+  background-color: rgba(255, 77, 79, 0.1) !important;
+}
+
+.hover\:bg-red-danger-light:hover,
+.hover\:bg-red-danger-light:hover * {
+  background-color: rgba(255, 77, 79, 0.15) !important;
+}
+
+.text-red-500 {
+  color: #ef4444 !important;
+}
+
+.text-red-600 {
+  color: #dc2626 !important;
+}
+
+.text-red-danger {
+  color: #ff4d4f !important;
+}
+
+.fill-red-500 {
+  fill: #ef4444 !important;
+}
+
+.fill-red-500 svg,
+.fill-red-500 svg * {
+  fill: #ef4444 !important;
+}
+
+.fill-red-600 {
+  fill: #dc2626 !important;
+}
+
+.fill-red-600 svg,
+.fill-red-600 svg * {
+  fill: #dc2626 !important;
+}
+
+.fill-red-danger {
+  fill: #ff4d4f !important;
+}
+
+.fill-red-danger svg,
+.fill-red-danger svg * {
+  fill: #ff4d4f !important;
+}
+
+/* Green Colors - for success messages */
+.bg-green-success {
+  background-color: #52c41a !important;
+}
+
+.text-green-700 {
+  color: #047857 !important;
+}
+
+.bg-green-100 {
+  background-color: #d1fae5 !important;
+}
+
+/* Blue Colors - for links, primary actions */
+.bg-blue-50 {
+  background-color: rgba(22, 119, 255, 0.1) !important;
+}
+
+.bg-blue-light {
+  background-color: rgba(22, 119, 255, 0.12) !important;
+}
+
+.text-blue-primary {
+  color: #1677ff !important;
+}
+
+/* Black/White Colors - for buttons and contrasts */
+.bg-black {
+  background-color: #000000 !important;
+}
+
+.bg-white {
+  background-color: #ffffff !important;
+}
+
+.bg-gray-50 {
+  background-color: #f5f5f5 !important;
+}
+
+.bg-gray-100 {
+  background-color: #f5f5f5 !important;
+}
+
+.bg-gray-200 {
+  background-color: #e0e0e0 !important;
+}
+
+.bg-gray-800 {
+  background-color: #333333 !important;
+}
+
+.text-black {
+  color: #000000 !important;
+}
+
+.text-white {
+  color: #ffffff !important;
+}
+
+.text-gray-400 {
+  color: rgba(0, 0, 0, 0.88) !important;
+}
+
+.fill-black {
+  fill: #000000 !important;
+}
+
+.fill-black svg,
+.fill-black svg * {
+  fill: #000000 !important;
+}
+
+.fill-white {
+  fill: #ffffff !important;
+}
+
+.fill-white svg,
+.fill-white svg * {
+  fill: #ffffff !important;
+}
+
+.border-black {
+  border-color: #000000 !important;
+}
+
+.border-white {
+  border-color: #ffffff !important;
+}
+
+.border-gray-200 {
+  border-color: #e0e0e0 !important;
+}
+
+/* Special background utilities */
+.bg-code {
+  background-color: var(--chrome-input-background) !important;
+}
+
+/* Save button - inverted colors */
+.bg-inverted,
+.bg-inverted *,
+.bg-inverted span,
+.bg-inverted button,
+.bg-inverted div {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.bg-inverted:hover {
+  background-color: #333333 !important;
+}
+
+.bg-inverted .anticon svg,
+.bg-inverted .anticon svg * {
+  fill: #ffffff !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .bg-inverted,
+  .bg-inverted *,
+  .bg-inverted span,
+  .bg-inverted button,
+  .bg-inverted div {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .bg-inverted:hover {
+    background-color: #e0e0e0 !important;
+  }
+
+  .bg-inverted .anticon svg,
+  .bg-inverted .anticon svg * {
+    fill: #000000 !important;
+  }
+}
+
+/* Toast text only - black text */
+.toast-text-black,
+.toast-text-black * {
+  color: #000000 !important;
+}
+
+.toast-text-black svg,
+.toast-text-black svg * {
+  fill: #000000 !important;
+}
+
+/* ============================================
+   END THEME UTILITY CLASSES
+   ============================================ */
+
+/* Force background color with highest priority */
+html,
+body,
+#root {
   margin: 0 !important;
+  background-color: var(--chrome-bg-primary) !important;
+  background: var(--chrome-bg-primary) !important;
+  color: var(--chrome-text-primary) !important;
+  min-height: 100vh !important;
+}
+
+/* Apply theme text color globally */
+*,
+body,
+div,
+span,
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+button,
+input,
+textarea {
+  color: var(--chrome-text-primary) !important;
+}
+
+/* Exception: Error messages should always be red */
+.ant-message-error,
+.ant-message-error .ant-message-notice-content,
+[class*="error"],
+[class*="Error"] {
+  color: #ef4444 !important;
+}
+
+/* Override Tailwind's background utilities */
+#root > * {
+  background-color: transparent !important;
+}
+
+/* Ensure no white backgrounds from Tailwind */
+.bg-white,
+.bg-gray-50,
+.bg-gray-100 {
+  background-color: transparent !important;
 }
 
 /* Animation for streaming cursor */
@@ -11,10 +536,12 @@ body {
 }
 
 @keyframes blink {
-  0%, 50% {
+  0%,
+  50% {
     opacity: 1;
   }
-  51%, 100% {
+  51%,
+  100% {
     opacity: 0;
   }
 }
@@ -22,7 +549,7 @@ body {
 /* Markdown body styles */
 .markdown-body {
   font-size: 14px;
-  color: rgba(0, 0, 0, 0.88);
+  color: var(--chrome-text-primary);
 }
 
 .markdown-body p {
@@ -36,15 +563,29 @@ body {
 }
 
 .markdown-body code {
-  background: rgba(0, 0, 0, 0.04);
+  background-color: var(--chrome-input-background);
   padding: 2px 4px;
   border-radius: 4px;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  color: var(--chrome-text-primary);
+}
+
+.markdown-body pre {
+  background-color: var(--chrome-input-background);
+  border-radius: 6px;
+  padding: 0;
+  margin: 8px 0;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .markdown-body pre code {
   display: block;
   padding: 12px;
+  background-color: transparent;
+  white-space: pre;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 /* Tool JSON pre formatting */
@@ -54,10 +595,32 @@ body {
   overflow-x: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  background-color: var(--chrome-input-background);
+  padding: 12px;
+  border-radius: 6px;
 }
 
 .tool-json-pre::-webkit-scrollbar {
   display: none;
+}
+
+/* Chat input container - outer wrapper */
+.chat-input-container {
+  background-color: transparent !important;
+}
+
+/* Chat input box - main container (same as NTP search box) */
+.chat-input-box {
+  background-color: var(--chrome-input-background) !important;
+  border: 1px solid var(--chrome-input-border) !important;
+  border-radius: 8px !important;
+}
+
+/* Force white background in light mode */
+@media (prefers-color-scheme: light) {
+  .chat-input-box {
+    background-color: #ffffff !important;
+  }
 }
 
 /* Chat input editor styles */
@@ -65,6 +628,9 @@ body {
   position: relative;
   flex: 1;
   margin: 0 4px;
+  background-color: transparent !important;
+  border-radius: 0;
+  padding: 0;
 }
 
 .chat-input-editor {
@@ -78,6 +644,8 @@ body {
   transition: none;
   white-space: pre-wrap;
   word-break: break-word;
+  background-color: transparent !important;
+  color: var(--chrome-text-primary) !important;
 }
 
 .chat-input-editor:focus {
@@ -88,7 +656,8 @@ body {
 
 .chat-input-editor:empty::before {
   content: attr(data-placeholder);
-  color: rgba(0, 0, 0, 0.25);
+  color: var(--chrome-text-primary);
+  opacity: 0.5;
 }
 
 /* Webpage reference styles */
@@ -113,23 +682,43 @@ body {
   margin-right: 2px;
 }
 
-/* Minimal collapse styles for tools and thinking */
+/* Minimal collapse styles for tools, thinking, and agents */
 .tool-call-collapse .ant-collapse-header,
-.thinking-collapse .ant-collapse-header {
+.thinking-collapse .ant-collapse-header,
+.agent-collapse .ant-collapse-header {
   padding: 6px 12px !important;
   background: transparent !important;
   border: none !important;
+  overflow: hidden !important;
+  border-color: var(--chrome-bg-primary) !important;
+}
+
+.agent-collapse .ant-collapse-header .ant-collapse-header-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .tool-call-collapse .ant-collapse-content-box,
-.thinking-collapse .ant-collapse-content-box {
+.thinking-collapse .ant-collapse-content-box,
+.agent-collapse .ant-collapse-content-box {
   padding: 8px 12px !important;
+  background-color: var(--chrome-input-background) !important;
 }
 
 .tool-call-collapse,
-.thinking-collapse {
+.thinking-collapse,
+.agent-collapse {
   background: transparent !important;
-  border: 1px solid #e5e7eb !important;
+  border: 1px solid var(--chrome-input-border) !important;
   border-radius: 6px !important;
 }
 
+/* Force white background in light mode for collapse content */
+@media (prefers-color-scheme: light) {
+  .tool-call-collapse .ant-collapse-content-box,
+  .thinking-collapse .ant-collapse-content-box,
+  .agent-collapse .ant-collapse-content-box {
+    background-color: #ffffff !important;
+  }
+}

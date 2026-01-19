@@ -10,7 +10,7 @@ import {
   OpenBrowserConfig,
   OpenBrowserResult,
   Workflow,
-  NormalAgentNode,
+  NormalAgentNode
 } from "../types/agent.types";
 import global from "../config/global";
 import { checkTaskReplan, replanWorkflow } from "./replan";
@@ -102,7 +102,7 @@ export class OpenBrowser {
             : e instanceof Error
             ? e.name + ": " + e.message
             : String(e || "Unknown error"),
-        error: e,
+        error: e
       };
     }
   }
@@ -145,7 +145,9 @@ export class OpenBrowser {
     return context;
   }
 
-  private async doRunWorkflow(context: TaskContext): Promise<OpenBrowserResult> {
+  private async doRunWorkflow(
+    context: TaskContext
+  ): Promise<OpenBrowserResult> {
     const agents = context.agents as Agent[];
     const workflow = context.workflow as Workflow;
     if (!workflow || workflow.agents.length == 0) {
@@ -254,7 +256,7 @@ export class OpenBrowser {
       success: true,
       stopReason: "done",
       taskId: context.taskId,
-      result: results[results.length - 1] || "",
+      result: results[results.length - 1] || ""
     };
   }
 
@@ -275,7 +277,7 @@ export class OpenBrowser {
             agentName: agentNode.agent.name,
             nodeId: agentNode.agent.id,
             type: "agent_start",
-            agentNode: agentNode.agent,
+            agentNode: agentNode.agent
           },
           agent.AgentContext
         ));
@@ -291,7 +293,7 @@ export class OpenBrowser {
             nodeId: agentNode.agent.id,
             type: "agent_result",
             agentNode: agentNode.agent,
-            result: agentNode.result,
+            result: agentNode.result
           },
           agent.AgentContext
         ));
@@ -308,7 +310,7 @@ export class OpenBrowser {
             nodeId: agentNode.agent.id,
             type: "agent_result",
             agentNode: agentNode.agent,
-            error: e,
+            error: e
           },
           agent.AgentContext
         ));

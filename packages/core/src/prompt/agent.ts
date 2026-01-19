@@ -121,7 +121,7 @@ export function getAgentSystemPrompt(
     hasForEachNode: agentNode.xml.indexOf("</forEach>") > -1,
     canParallelToolCalls: agent.canParallelToolCalls(),
     datetime: context.variables.get("datetime") || new Date().toLocaleString(),
-    ...toolVars,
+    ...toolVars
   }).trim();
 }
 

@@ -12,17 +12,17 @@ interface MarkdownRendererProps {
 
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
   content,
-  secondary = false,
+  secondary = false
 }) => {
   if (!content) {
     return null;
   }
   return (
-    <div 
+    <div
       className="markdown-body"
       style={{
-        color: secondary ? 'rgba(0, 0, 0, 0.45)' : undefined,
-        opacity: secondary ? 0.85 : 1,
+        color: secondary ? "rgba(0, 0, 0, 0.45)" : undefined,
+        opacity: secondary ? 0.85 : 1
       }}
     >
       <ReactMarkdown

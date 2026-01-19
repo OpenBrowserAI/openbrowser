@@ -1,7 +1,7 @@
 import {
   LanguageModelV2,
   LanguageModelV2StreamPart,
-  LanguageModelV2CallOptions,
+  LanguageModelV2CallOptions
 } from "@ai-sdk/provider";
 import Log from "../common/log";
 import config from "../config";
@@ -17,7 +17,7 @@ import {
   LLMs,
   LLMRequest,
   StreamResult,
-  GenerateResult,
+  GenerateResult
 } from "../types/llm.types";
 import { defaultLLMProviderOptions } from "../agent/agent-llm";
 import TaskContext, { AgentContext } from "../agent/agent-context";
@@ -68,7 +68,7 @@ export class RetryLanguageModel {
       topK: request.topK,
       stopSequences: request.stopSequences,
       abortSignal: request.abortSignal,
-      providerOptions: request.providerOptions,
+      providerOptions: request.providerOptions
     });
   }
 
@@ -124,7 +124,7 @@ export class RetryLanguageModel {
         if (Log.isEnableInfo()) {
           Log.info(`LLM nonstream request, name: ${name} => `, {
             tools: _options.tools,
-            messages: _options.prompt,
+            messages: _options.prompt
           });
         }
         Log.error(`LLM error, name: ${name} => `, e);
@@ -146,7 +146,7 @@ export class RetryLanguageModel {
       topK: request.topK,
       stopSequences: request.stopSequences,
       abortSignal: request.abortSignal,
-      providerOptions: request.providerOptions,
+      providerOptions: request.providerOptions
     });
   }
 
@@ -229,7 +229,7 @@ export class RetryLanguageModel {
         if (Log.isEnableInfo()) {
           Log.info(`LLM stream request, name: ${name} => `, {
             tools: _options.tools,
-            messages: _options.prompt,
+            messages: _options.prompt
           });
         }
         Log.error(`LLM error, name: ${name} => `, e);
@@ -259,100 +259,88 @@ export class RetryLanguageModel {
         baseURL = await llm.config.baseURL();
       }
     }
-    if (llm.provider == "openai") {
-      if (
-        !baseURL ||
-        baseURL.indexOf("openai.com") > -1 ||
-        llm.config?.organization ||
-        llm.config?.openai
-      ) {
+
+    // Use npm field to determine SDK, default to openai-compatible if not present
+    const npm = llm.npm || "@ai-sdk/openai-compatible";
+
+    switch (npm) {
+      case "@ai-sdk/openai":
         return createOpenAI({
           apiKey: apiKey,
           baseURL: baseURL,
           fetch: llm.fetch,
           organization: llm.config?.organization,
           project: llm.config?.project,
-          headers: llm.config?.headers,
+          headers: llm.config?.headers
         }).languageModel(llm.model);
-      } else {
-        return createOpenAICompatible({
-          name: llm.model,
+
+      case "@ai-sdk/anthropic":
+        return createAnthropic({
+          apiKey: apiKey,
+          baseURL: baseURL,
+          fetch: llm.fetch,
+          headers: llm.config?.headers
+        }).languageModel(llm.model);
+
+      case "@ai-sdk/google":
+      case "@ai-sdk/google-vertex":
+        return createGoogleGenerativeAI({
+          apiKey: apiKey,
+          baseURL: baseURL,
+          fetch: llm.fetch,
+          headers: llm.config?.headers
+        }).languageModel(llm.model);
+
+      case "@ai-sdk/amazon-bedrock":
+        apiKey = apiKey.trim();
+        let keyInfos;
+        if (apiKey.startsWith("{") && apiKey.endsWith("}")) {
+          keyInfos = JSON.parse(apiKey);
+        } else {
+          keyInfos = {
+            apiKey: apiKey
+          };
+        }
+        return createAmazonBedrock({
+          baseURL: baseURL,
+          apiKey: keyInfos.apiKey,
+          accessKeyId: keyInfos.accessKeyId,
+          secretAccessKey: keyInfos.secretAccessKey,
+          region: keyInfos.region || llm.config?.region || "us-west-1",
+          sessionToken: keyInfos.sessionToken || llm.config?.sessionToken,
+          fetch: llm.fetch,
+          headers: llm.config?.headers
+        }).languageModel(llm.model);
+
+      case "@ai-sdk/azure":
+        return createAzure({
           apiKey: apiKey,
           baseURL: baseURL,
           fetch: llm.fetch,
           headers: llm.config?.headers,
+          resourceName: llm.config?.resourceName,
+          apiVersion: llm.config?.apiVersion,
+          useDeploymentBasedUrls: llm.config?.useDeploymentBasedUrls
         }).languageModel(llm.model);
-      }
-    } else if (llm.provider == "anthropic") {
-      return createAnthropic({
-        apiKey: apiKey,
-        baseURL: baseURL,
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-      }).languageModel(llm.model);
-    } else if (llm.provider == "google") {
-      return createGoogleGenerativeAI({
-        apiKey: apiKey,
-        baseURL: baseURL,
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-      }).languageModel(llm.model);
-    } else if (llm.provider == "bedrock") {
-      apiKey = apiKey.trim();
-      let keyInfos;
-      if (apiKey.startsWith("{") && apiKey.endsWith("}")) {
-        keyInfos = JSON.parse(apiKey);
-      } else {
-        keyInfos = {
+
+      case "@openrouter/ai-sdk-provider":
+        return createOpenRouter({
           apiKey: apiKey,
-        };
-      }
-      return createAmazonBedrock({
-        baseURL: baseURL,
-        apiKey: keyInfos.apiKey,
-        accessKeyId: keyInfos.accessKeyId,
-        secretAccessKey: keyInfos.secretAccessKey,
-        region: keyInfos.region || llm.config?.region || "us-west-1",
-        sessionToken: keyInfos.sessionToken || llm.config?.sessionToken,
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-      }).languageModel(llm.model);
-    } else if (llm.provider == "azure") {
-      return createAzure({
-        apiKey: apiKey,
-        baseURL: baseURL,
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-        resourceName: llm.config?.resourceName,
-        apiVersion: llm.config?.apiVersion,
-        useDeploymentBasedUrls: llm.config?.useDeploymentBasedUrls,
-      }).languageModel(llm.model);
-    } else if (llm.provider == "openai-compatible") {
-      return createOpenAICompatible({
-        name: llm.config?.name || llm.model.split("/")[0],
-        apiKey: apiKey,
-        baseURL: baseURL || "https://openrouter.ai/api/v1",
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-      }).languageModel(llm.model);
-    } else if (llm.provider == "openrouter") {
-      return createOpenRouter({
-        apiKey: apiKey,
-        baseURL: baseURL || "https://openrouter.ai/api/v1",
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-        compatibility: llm.config?.compatibility,
-      }).languageModel(llm.model);
-    } else if (llm.provider == "modelscope") {
-      return createOpenAICompatible({
-        name: llm.config?.name || llm.model.split("/")[0],
-        apiKey: apiKey,
-        baseURL: baseURL || "https://api-inference.modelscope.cn/v1",
-        fetch: llm.fetch,
-        headers: llm.config?.headers,
-      }).languageModel(llm.model);
-    } else {
-      return llm.provider.languageModel(llm.model);
+          baseURL: baseURL || "https://openrouter.ai/api/v1",
+          fetch: llm.fetch,
+          headers: llm.config?.headers,
+          compatibility: llm.config?.compatibility
+        }).languageModel(llm.model);
+
+      default:
+        // Default to openai-compatible for all other npm packages
+        return createOpenAICompatible({
+          name: llm.config?.name || llm.model.split("/")[0],
+          apiKey: apiKey,
+          baseURL: baseURL || "",
+          fetch: llm.fetch,
+          headers: llm.config?.headers
+        }).languageModel(llm.model);
     }
   }
 
@@ -386,7 +374,7 @@ export class RetryLanguageModel {
       cancel: (reason) => {
         timer && clearTimeout(timer);
         reader.cancel(reason);
-      },
+      }
     });
   }
 

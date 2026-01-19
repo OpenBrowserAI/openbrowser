@@ -1,5 +1,8 @@
 import { Agent, AgentContext } from "@openbrowser-ai/core";
-import { LanguageModelV2ToolCallPart, ToolResult } from "@openbrowser-ai/core/types";
+import {
+  LanguageModelV2ToolCallPart,
+  ToolResult
+} from "@openbrowser-ai/core/types";
 
 export default class WriteFileAgent extends Agent {
   constructor() {
@@ -16,13 +19,13 @@ export default class WriteFileAgent extends Agent {
               filename: {
                 type: "string",
                 description:
-                  "File name only, path is not supported. For example: data.md",
+                  "File name only, path is not supported. For example: data.md"
               },
               content: {
                 type: "string",
-                description: "The content to write to the file.",
-              },
-            },
+                description: "The content to write to the file."
+              }
+            }
           },
           execute: async (
             args: Record<string, unknown>,
@@ -33,10 +36,10 @@ export default class WriteFileAgent extends Agent {
               args.filename as string,
               args.content as string
             );
-          },
-        },
+          }
+        }
       ],
-      llms: [],
+      llms: []
     });
   }
 
@@ -52,7 +55,7 @@ export default class WriteFileAgent extends Agent {
         {
           url: dataUrl,
           filename: sanitizedFilename,
-          saveAs: false,
+          saveAs: false
         },
         (downloadId) => {
           if (chrome.runtime.lastError) {
@@ -70,9 +73,9 @@ export default class WriteFileAgent extends Agent {
       content: [
         {
           type: "text",
-          text: `File written successfully: ${sanitizedFilename}`,
-        },
-      ],
+          text: `File written successfully: ${sanitizedFilename}`
+        }
+      ]
     };
   }
 

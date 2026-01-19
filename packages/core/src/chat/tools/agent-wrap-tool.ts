@@ -4,7 +4,7 @@ import {
   DialogueTool,
   DialogueParams,
   NormalAgentNode,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "../../types";
 import { Agent } from "../../agent";
 import global from "../../config/global";
@@ -48,29 +48,29 @@ export default class AgentWrapTool implements DialogueTool {
       properties: {
         language: {
           type: "string",
-          description: "User language used, eg: English",
+          description: "User language used, eg: English"
         },
         taskDescription: {
           type: "string",
           description:
-            "Task description, please do not omit any information from the user's instructions, and use the same language as the user's question.",
+            "Task description, please do not omit any information from the user's instructions, and use the same language as the user's question."
         },
         tabIds: {
           type: "array",
           description:
             "Browser Tab IDs associated with this task, When user says 'left side' or 'current', it means current active tab",
-          items: { type: "integer" },
+          items: { type: "integer" }
         },
         dependentVariables: {
           type: "array",
           description:
             "The current task relies on variable data from prerequisite execution outputs. Provide the name of the dependent variable.",
           items: {
-            type: "string",
-          },
-        },
+            type: "string"
+          }
+        }
       },
-      required: ["language", "taskDescription"],
+      required: ["language", "taskDescription"]
     };
   }
 
@@ -92,7 +92,7 @@ export default class AgentWrapTool implements DialogueTool {
         return {
           file_name: part.filename,
           file_path: part.filePath,
-          file_url: part.data,
+          file_url: part.data
         };
       });
     const taskWebsite = await this.getTaskWebsite(tabIds);
@@ -105,7 +105,7 @@ export default class AgentWrapTool implements DialogueTool {
       attachments: attachments,
       taskWebsite: taskWebsite,
       dependentVariables: dependentVariables,
-      datetime: this.params.datetime || new Date().toLocaleString(),
+      datetime: this.params.datetime || new Date().toLocaleString()
     };
     const agents = [this.agent];
     const chain: Chain = new Chain(taskDescription);
@@ -115,7 +115,7 @@ export default class AgentWrapTool implements DialogueTool {
       taskId,
       {
         ...config,
-        callback: this.params.callback?.taskCallback,
+        callback: this.params.callback?.taskCallback
       },
       agents,
       chain
@@ -129,7 +129,7 @@ export default class AgentWrapTool implements DialogueTool {
       taskId,
       name: "Task",
       agentName: this.agent.Name,
-      task: taskDescription,
+      task: taskDescription
     });
     try {
       global.taskMap.set(taskId, context);
@@ -139,7 +139,7 @@ export default class AgentWrapTool implements DialogueTool {
         this.agent,
         {
           type: "normal",
-          agent: agentNode,
+          agent: agentNode
         },
         new AgentChain(agentNode)
       );
@@ -147,9 +147,9 @@ export default class AgentWrapTool implements DialogueTool {
         content: [
           {
             type: "text",
-            text: resultText || "",
-          },
-        ],
+            text: resultText || ""
+          }
+        ]
       };
     } finally {
       global.taskMap.delete(taskId);
@@ -174,7 +174,7 @@ export default class AgentWrapTool implements DialogueTool {
             agentName: agentNode.agent.name,
             nodeId: agentNode.agent.id,
             type: "agent_start",
-            agentNode: agentNode.agent,
+            agentNode: agentNode.agent
           },
           agent.AgentContext
         ));
@@ -190,7 +190,7 @@ export default class AgentWrapTool implements DialogueTool {
             nodeId: agentNode.agent.id,
             type: "agent_result",
             agentNode: agentNode.agent,
-            result: agentNode.result,
+            result: agentNode.result
           },
           agent.AgentContext
         ));
@@ -207,7 +207,7 @@ export default class AgentWrapTool implements DialogueTool {
             nodeId: agentNode.agent.id,
             type: "agent_result",
             agentNode: agentNode.agent,
-            error: e,
+            error: e
           },
           agent.AgentContext
         ));
@@ -227,7 +227,7 @@ export default class AgentWrapTool implements DialogueTool {
       return {
         tabId: tab.tabId,
         title: tab.title,
-        url: sub(tab.url, 300),
+        url: sub(tab.url, 300)
       };
     });
   }

@@ -27,7 +27,7 @@ export {
   RetryLanguageModel,
   TaskContext as Context,
   callLLM,
-  callWithReAct,
+  callWithReAct
 };
 
 export {
@@ -37,7 +37,7 @@ export {
   WebSearchTool,
   WebpageQaTool,
   DeepActionTool,
-  TaskVariableStorageTool,
+  TaskVariableStorageTool
 } from "./chat";
 
 export {
@@ -45,7 +45,7 @@ export {
   type AgentParams,
   BaseBrowserAgent,
   BaseBrowserLabelsAgent,
-  BaseBrowserScreenAgent,
+  BaseBrowserScreenAgent
 } from "./agent";
 
 export {
@@ -53,10 +53,11 @@ export {
   WatchTriggerTool,
   HumanInteractTool,
   TaskNodeStatusTool,
-  VariableStorageTool,
+  VariableStorageTool
 } from "./tools";
 
 export type { ChatService, BrowserService } from "./service";
+export { ExaSearchService } from "./service";
 
 export {
   sub,
@@ -66,13 +67,13 @@ export {
   mergeTools,
   call_timeout,
   compressImageData,
-  convertToolSchema,
+  convertToolSchema
 } from "./common/utils";
 
 export {
   parseWorkflow,
   resetWorkflowXml,
-  buildSimpleAgentWorkflow,
+  buildSimpleAgentWorkflow
 } from "./common/xml";
 
 export { buildAgentTree } from "./common/tree";

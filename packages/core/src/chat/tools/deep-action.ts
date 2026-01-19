@@ -4,7 +4,7 @@ import {
   DialogueTool,
   DialogueParams,
   GlobalPromptKey,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "../../types";
 import config from "../../config";
 import Log from "../../common/log";
@@ -17,7 +17,7 @@ import { recursiveTextNode } from "../../common/workflow";
 export const TOOL_NAME = "deepAction";
 
 const deep_action_description =
-  "Delegate tasks to a Javis AI assistant for completion. This assistant can understand natural language instructions and has full control over both networked computers, browser agent, and multiple specialized agents ({agentNames}). The assistant can autonomously decide to use various software tools, browse the internet to query information, write code, and perform direct operations to complete tasks. He can deliver various digitized outputs (text reports, tables, images, music, videos, websites, deepSearch, programs, etc.) and handle design/analysis tasks. and execute operational tasks (such as batch following bloggers of specific topics on certain websites). For operational tasks, the focus is on completing the process actions rather than delivering final outputs, and the assistant can complete these types of tasks well. It should also be noted that users may actively mention deepsearch, which is also one of the capabilities of this tool. If users mention it, please explicitly tell the assistant to use deepsearch. Supports parallel execution of multiple tasks.";
+  "Delegate tasks to an AI assistant for completion. This assistant can understand natural language instructions and has full control over both networked computers, browser agent, and multiple specialized agents ({agentNames}). The assistant can autonomously decide to use various software tools, browse the internet to query information, write code, and perform direct operations to complete tasks. He can deliver various digitized outputs (text reports, tables, images, music, videos, websites, deepSearch, programs, etc.) and handle design/analysis tasks. and execute operational tasks (such as batch following bloggers of specific topics on certain websites). For operational tasks, the focus is on completing the process actions rather than delivering final outputs, and the assistant can complete these types of tasks well. It should also be noted that users may actively mention deepsearch, which is also one of the capabilities of this tool. If users mention it, please explicitly tell the assistant to use deepsearch. Supports parallel execution of multiple tasks.";
 const deep_action_param_task_description =
   "Task description, please output the user's original instructions without omitting any information from the user's instructions, and use the same language as the user's question.";
 
@@ -45,28 +45,28 @@ export default class DeepActionTool implements DialogueTool {
       properties: {
         language: {
           type: "string",
-          description: "User language used, eg: English",
+          description: "User language used, eg: English"
         },
         taskDescription: {
           type: "string",
-          description: paramTaskDescription.trim(),
+          description: paramTaskDescription.trim()
         },
         tabIds: {
           type: "array",
           description:
             "Browser Tab IDs associated with this task, When user says 'left side' or 'current', it means current active tab",
-          items: { type: "integer" },
+          items: { type: "integer" }
         },
         dependentVariables: {
           type: "array",
           description:
             "The current task relies on variable data from prerequisite execution outputs. Provide the name of the dependent variable.",
           items: {
-            type: "string",
-          },
-        },
+            type: "string"
+          }
+        }
       },
-      required: ["language", "taskDescription"],
+      required: ["language", "taskDescription"]
     };
     this.params = params;
   }
@@ -86,7 +86,7 @@ export default class DeepActionTool implements DialogueTool {
     const openbrowser = new OpenBrowser(
       {
         ...chatConfig,
-        callback: this.params.callback?.taskCallback,
+        callback: this.params.callback?.taskCallback
       },
       chatId
     );
@@ -108,7 +108,7 @@ export default class DeepActionTool implements DialogueTool {
         return {
           file_name: part.filename,
           file_path: part.filePath,
-          file_url: part.data,
+          file_url: part.data
         };
       });
     const taskWebsite = await this.getTaskWebsite(tabIds);
@@ -120,7 +120,7 @@ export default class DeepActionTool implements DialogueTool {
       attachments: attachments,
       taskWebsite: taskWebsite,
       dependentVariables: dependentVariables,
-      datetime: this.params.datetime || new Date().toLocaleString(),
+      datetime: this.params.datetime || new Date().toLocaleString()
     });
     const context = openbrowser.getTask(messageId)!;
     Log.info("==> workflow", workflow);
@@ -133,7 +133,7 @@ export default class DeepActionTool implements DialogueTool {
           agentName: "",
           type: "workflow_confirm",
           workflow: workflow,
-          resolve,
+          resolve
         });
       });
       if (result === "cancel") {
@@ -141,9 +141,9 @@ export default class DeepActionTool implements DialogueTool {
           content: [
             {
               type: "text",
-              text: "User has canceled the execution.",
-            },
-          ],
+              text: "User has canceled the execution."
+            }
+          ]
         };
       }
     }
@@ -175,15 +175,15 @@ export default class DeepActionTool implements DialogueTool {
               return {
                 agent: agent.agent.name,
                 subTask: agent.agent.task,
-                agentResult: sub(agent.agentResult || "", 800, true),
+                agentResult: sub(agent.agentResult || "", 800, true)
               };
             }),
             variables: variableNames,
             taskResult: result.result,
-            success: result.success,
-          }),
-        },
-      ],
+            success: result.success
+          })
+        }
+      ]
     };
   }
 
@@ -199,7 +199,7 @@ export default class DeepActionTool implements DialogueTool {
       return {
         tabId: tab.tabId,
         title: tab.title,
-        url: sub(tab.url, 300),
+        url: sub(tab.url, 300)
       };
     });
   }

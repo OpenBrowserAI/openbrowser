@@ -40,7 +40,7 @@ export enum GlobalPromptKey {
   chat_system = "chat_system",
   webpage_qa_prompt = "webpage_qa_prompt",
   deep_action_description = "deep_action_description",
-  deep_action_param_task_description = "deep_action_param_task_description",
+  deep_action_param_task_description = "deep_action_param_task_description"
 }
 
 export type Global = {

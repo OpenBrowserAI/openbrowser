@@ -7,7 +7,7 @@ import {
   Workflow,
   LLMRequest,
   WorkflowAgent,
-  LanguageModelV2Prompt,
+  LanguageModelV2Prompt
 } from "../types";
 import Log from "../common/log";
 
@@ -36,12 +36,12 @@ If after executing some subtasks it is found that the previous plan has issues o
       ...chain.planRequest.messages,
       {
         role: "assistant",
-        content: [{ type: "text", text: chain.planResult as string }],
+        content: [{ type: "text", text: chain.planResult as string }]
       },
       {
         role: "user",
-        content: [{ type: "text", text: prompt }],
-      },
+        content: [{ type: "text", text: prompt }]
+      }
     ];
     const functionName = "check_task_status";
     const request: LLMRequest = {
@@ -61,22 +61,22 @@ If after executing some subtasks it is found that the previous plan has issues o
               thinking: {
                 type: "string",
                 description:
-                  "Output the thinking process, analyzing whether the unexecuted task nodes need to be replanned.(100 words or less)",
+                  "Output the thinking process, analyzing whether the unexecuted task nodes need to be replanned.(100 words or less)"
               },
               replan: {
                 type: "boolean",
                 description:
-                  "Determine whether replanning of unexecuted task nodes is needed. If the existing unexecuted task nodes can meet the task requirements, then replanning is not necessary; if they cannot meet the requirements, then replanning is needed.",
-              },
+                  "Determine whether replanning of unexecuted task nodes is needed. If the existing unexecuted task nodes can meet the task requirements, then replanning is not necessary; if they cannot meet the requirements, then replanning is needed."
+              }
             },
-            required: ["thinking", "replan"],
-          },
-        },
+            required: ["thinking", "replan"]
+          }
+        }
       ],
       toolChoice: {
         type: "tool",
-        toolName: functionName,
-      },
+        toolName: functionName
+      }
     };
     const result = await rlm.call(request);
     let input = result.content.find((c) => c.type === "tool-call")?.input;
@@ -110,10 +110,10 @@ export async function replanWorkflow(agentContext: AgentContext) {
         );
         agentContext.context.config.callback?.onMessage({
           ...message,
-          workflow: agentContext.context.workflow as Workflow,
+          workflow: agentContext.context.workflow as Workflow
         });
       }
-    },
+    }
   });
   const agentExecution = getAgentExecutionPrompt(agentContext);
   const prompt = `# Task Execution Status
@@ -130,12 +130,12 @@ Please do not output nodes that have already been executed. The new plan is an i
       ...chain.planRequest.messages,
       {
         role: "assistant",
-        content: [{ type: "text", text: chain.planResult }],
+        content: [{ type: "text", text: chain.planResult }]
       },
       {
         role: "user",
-        content: [{ type: "text", text: prompt }],
-      },
+        content: [{ type: "text", text: prompt }]
+      }
     ];
     newWorkflow = await planner.doPlan("", messages, true);
   } else {

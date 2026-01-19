@@ -21,19 +21,19 @@ export default class TaskVariableStorageTool implements DialogueTool {
         operation: {
           type: "string",
           description: "variable storage operation type.",
-          enum: ["read_variable", "write_variable", "list_all_variable"],
+          enum: ["read_variable", "write_variable", "list_all_variable"]
         },
         name: {
           type: "string",
           description:
-            "variable name, required when reading and writing variables, If reading variables, it supports reading multiple variables separated by commas.",
+            "variable name, required when reading and writing variables, If reading variables, it supports reading multiple variables separated by commas."
         },
         value: {
           type: "string",
-          description: "variable value, required when writing variables",
-        },
+          description: "variable value, required when writing variables"
+        }
       },
-      required: ["operation"],
+      required: ["operation"]
     };
   }
 
@@ -73,7 +73,7 @@ export default class TaskVariableStorageTool implements DialogueTool {
       }
       case "list_all_variable": {
         resultText = JSON.stringify([
-          ...this.chatContext.getGlobalVariables().keys(),
+          ...this.chatContext.getGlobalVariables().keys()
         ]);
         break;
       }
@@ -82,9 +82,9 @@ export default class TaskVariableStorageTool implements DialogueTool {
       content: [
         {
           type: "text",
-          text: resultText || "",
-        },
-      ],
+          text: resultText || ""
+        }
+      ]
     };
   }
 }

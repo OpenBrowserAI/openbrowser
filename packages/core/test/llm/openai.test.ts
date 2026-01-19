@@ -16,13 +16,13 @@ if (!apiKey) {
 export async function testOpenaiPrompt() {
   const client: LanguageModelV2 = createOpenAI({
     apiKey: apiKey,
-    baseURL: baseURL,
+    baseURL: baseURL
   }).languageModel("gpt-5-mini");
 
   let result = await client.doGenerate({
     prompt: [{ role: "user", content: [{ type: "text", text: "Hello" }] }],
     maxOutputTokens: 1024,
-    temperature: 0.7,
+    temperature: 0.7
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -33,14 +33,14 @@ export async function testOpenaiPrompt() {
 export async function testOpenaiStream() {
   const client: LanguageModelV2 = createOpenAI({
     apiKey: apiKey,
-    baseURL: baseURL,
+    baseURL: baseURL
   }).languageModel("gpt-5-mini");
 
   let result = await client.doStream({
     prompt: [{ role: "user", content: [{ type: "text", text: "Hello" }] }],
     maxOutputTokens: 1024,
     temperature: 0.7,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -64,7 +64,7 @@ export async function testOpenaiStream() {
 export async function testToolsPrompt() {
   const client: LanguageModelV2 = createOpenAI({
     apiKey: apiKey,
-    baseURL: baseURL,
+    baseURL: baseURL
   }).languageModel("gpt-5-mini");
 
   let result = await client.doGenerate({
@@ -75,8 +75,8 @@ export async function testToolsPrompt() {
         description: "user current country",
         inputSchema: {
           type: "object",
-          properties: {},
-        },
+          properties: {}
+        }
       },
       {
         type: "function",
@@ -87,33 +87,33 @@ export async function testToolsPrompt() {
           properties: {
             query: {
               type: "string",
-              description: "search for keywords",
+              description: "search for keywords"
             },
             country: {
-              type: "string",
+              type: "string"
             },
             maxResults: {
               type: "number",
-              description: "Maximum search results, default 5",
-            },
+              description: "Maximum search results, default 5"
+            }
           },
-          required: ["query"],
-        },
-      },
+          required: ["query"]
+        }
+      }
     ],
     toolChoice: {
-      type: "auto",
+      type: "auto"
     },
     prompt: [
       { role: "system", content: "You are a helpful AI assistant" },
       {
         role: "user",
-        content: [{ type: "text", text: "Search for recent national affairs" }],
-      },
+        content: [{ type: "text", text: "Search for recent national affairs" }]
+      }
     ],
     maxOutputTokens: 1024,
     temperature: 0.7,
-    providerOptions: defaultMessageProviderOptions(),
+    providerOptions: defaultMessageProviderOptions()
   });
 
   console.log(JSON.stringify(result, null, 2));

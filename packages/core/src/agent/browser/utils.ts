@@ -25,7 +25,7 @@ export function extract_page_content(params?: {
       "href",
       "value",
       "checked",
-      "selected",
+      "selected"
     ]
   );
   const urlLimit = params.max_url_length || 200;
@@ -38,7 +38,7 @@ export function extract_page_content(params?: {
   const escapeHtml = (text: string): string => {
     const map: Record<string, string> = {
       "<": "&lt;",
-      ">": "&gt;",
+      ">": "&gt;"
     };
     return text.replace(/[<>]/g, (m) => map[m] || m);
   };
@@ -423,7 +423,7 @@ export function mark_screenshot_highlight_elements(
           const imageBitmap = await createImageBitmap(blob, {
             resizeQuality: "high",
             resizeWidth: client_rect.width,
-            resizeHeight: client_rect.height,
+            resizeHeight: client_rect.height
           } as any);
           return { img: imageBitmap };
         }
@@ -462,7 +462,7 @@ export function mark_screenshot_highlight_elements(
                   rej(new Error("Failed to convert blob to base64"));
                 reader.readAsDataURL(blob);
               });
-            },
+            }
           };
         }
         if (hasDOM) {
@@ -471,7 +471,7 @@ export function mark_screenshot_highlight_elements(
           canvas.height = height;
           return {
             ctx: canvas.getContext("2d") as any,
-            exportDataUrl: async (mime: string) => canvas.toDataURL(mime),
+            exportDataUrl: async (mime: string) => canvas.toDataURL(mime)
           };
         }
         if (isNode) {
@@ -480,7 +480,7 @@ export function mark_screenshot_highlight_elements(
           const canvas = createCanvas(width, height);
           return {
             ctx: canvas.getContext("2d"),
-            exportDataUrl: async (mime: string) => canvas.toDataURL(mime),
+            exportDataUrl: async (mime: string) => canvas.toDataURL(mime)
           };
         }
         throw new Error("No canvas environment available");
@@ -522,7 +522,7 @@ export function mark_screenshot_highlight_elements(
         "#FF4500",
         "#2E8B57",
         "#DC143C",
-        "#4682B4",
+        "#4682B4"
       ];
       sortedEntries.forEach(([id, area], index) => {
         const color = colors[index % colors.length];

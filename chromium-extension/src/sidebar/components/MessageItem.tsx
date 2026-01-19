@@ -7,7 +7,12 @@ import { WorkflowCard } from "./WorkflowCard";
 import { MarkdownRenderer } from "../MarkdownRenderer";
 import { AgentExecutionCard } from "./AgentExecutionCard";
 import { Typography, Image, Spin } from "antd";
-import { RobotOutlined, UserOutlined, FileOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
+import {
+  RobotOutlined,
+  UserOutlined,
+  FileOutlined,
+  ExclamationCircleOutlined
+} from "@ant-design/icons";
 
 const { Text, Paragraph } = Typography;
 
@@ -96,7 +101,7 @@ interface MessageItemProps {
 
 export const MessageItem: React.FC<MessageItemProps> = ({
   message,
-  onUpdateMessage,
+  onUpdateMessage
 }) => {
   const handleWebRefClick = (url: string) => {
     if (!url) return;
@@ -137,10 +142,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               {message.uploadedFiles.map((file) => {
                 const isImage = file.mimeType.startsWith("image/");
                 return (
-                  <div
-                    key={file.id}
-                    className="inline-block"
-                  >
+                  <div key={file.id} className="inline-block">
                     {isImage ? (
                       <Image
                         src={
@@ -231,13 +233,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               (item.task.workflow || item.task.agents?.length > 0)
             ) {
               return (
-                <div
-                  key={`chat-task-${item.taskId}-${index}`}
-                  className="mb-2"
-                >
+                <div key={`chat-task-${item.taskId}-${index}`} className="mb-2">
                   {item.task.workflow ? (
                     // Multi-agent workflow
-                    <WorkflowCard task={item.task} onUpdateTask={onUpdateMessage} />
+                    <WorkflowCard
+                      task={item.task}
+                      onUpdateTask={onUpdateMessage}
+                    />
                   ) : (
                     // Single agent tool
                     <AgentExecutionCard

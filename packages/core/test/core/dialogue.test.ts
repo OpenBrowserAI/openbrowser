@@ -4,13 +4,13 @@ import {
   Agent,
   uuidv4,
   ChatAgent,
-  StreamCallbackMessage,
+  StreamCallbackMessage
 } from "../../src/index";
 import dotenv from "dotenv";
 import {
   SimpleFileAgent,
   SimpleBrowserAgent,
-  SimpleComputerAgent,
+  SimpleComputerAgent
 } from "./agents";
 import { ChatStreamMessage } from "../../src/types";
 
@@ -24,10 +24,11 @@ const llms: LLMs = {
     provider: "openrouter",
     model: "anthropic/claude-sonnet-4",
     apiKey: openaiApiKey || "",
+    npm: "@openrouter/ai-sdk-provider",
     config: {
-      baseURL: openaiBaseURL,
-    },
-  },
+      baseURL: openaiBaseURL
+    }
+  }
 };
 
 async function run() {
@@ -41,7 +42,7 @@ async function run() {
         return;
       }
       console.log("chat message: ", JSON.stringify(message, null, 2));
-    },
+    }
   };
   const taskCallback = {
     onMessage: async (message: StreamCallbackMessage) => {
@@ -55,12 +56,12 @@ async function run() {
         return;
       }
       console.log("openbrowser message: ", JSON.stringify(message, null, 2));
-    },
+    }
   };
   const agents: Agent[] = [
     new SimpleBrowserAgent(),
     new SimpleComputerAgent(),
-    new SimpleFileAgent(),
+    new SimpleFileAgent()
   ];
   const chatAgent = new ChatAgent({ llms, agents });
   const result1 = await chatAgent.chat({
@@ -68,8 +69,8 @@ async function run() {
     user: [{ type: "text", text: "Hello" }],
     callback: {
       chatCallback,
-      taskCallback,
-    },
+      taskCallback
+    }
   });
   console.log("=================>\nresult1: ", result1);
   const result2 = await chatAgent.chat({
@@ -77,8 +78,8 @@ async function run() {
     user: [{ type: "text", text: "Search for information about Musk" }],
     callback: {
       chatCallback,
-      taskCallback,
-    },
+      taskCallback
+    }
   });
   console.log("=================>\nresult2: ", result2);
 }

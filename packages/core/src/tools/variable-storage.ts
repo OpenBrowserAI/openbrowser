@@ -17,19 +17,19 @@ export default class VariableStorageTool implements Tool {
         operation: {
           type: "string",
           description: "variable storage operation type.",
-          enum: ["read_variable", "write_variable", "list_all_variable"],
+          enum: ["read_variable", "write_variable", "list_all_variable"]
         },
         name: {
           type: "string",
           description:
-            "variable name, required when reading and writing variables, If reading variables, it supports reading multiple variables separated by commas.",
+            "variable name, required when reading and writing variables, If reading variables, it supports reading multiple variables separated by commas."
         },
         value: {
           type: "string",
-          description: "variable value, required when writing variables",
-        },
+          description: "variable value, required when writing variables"
+        }
       },
-      required: ["operation"],
+      required: ["operation"]
     };
   }
 
@@ -79,9 +79,9 @@ export default class VariableStorageTool implements Tool {
       content: [
         {
           type: "text",
-          text: resultText || "",
-        },
-      ],
+          text: resultText || ""
+        }
+      ]
     };
   }
 }

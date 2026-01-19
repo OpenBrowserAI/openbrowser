@@ -7,6 +7,7 @@ import {
   PaperClipOutlined,
   PlusOutlined,
   HistoryOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 import type { UploadedFile } from "../types";
 import { Button, Space, Image, Typography } from "antd";
@@ -39,13 +40,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   sending,
   currentMessageId,
   onNewSession,
-  onShowSessionHistory,
+  onShowSessionHistory
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEmpty = !inputValue.trim() && uploadedFiles.length === 0;
 
   return (
-    <div className="p-4 bg-gray-100">
+    <div className="p-4">
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
         <div className="mb-3">
@@ -55,7 +56,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               return (
                 <div
                   key={file.id}
-                  className="inline-flex items-center px-2 py-1 bg-gray-100 rounded border border-gray-200"
+                  className="inline-flex items-center px-2 py-1 bg-theme-input rounded border-theme-input"
                 >
                   {isImage ? (
                     <Image
@@ -69,9 +70,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                       preview={false}
                     />
                   ) : (
-                    <FileOutlined className="mr-2" />
+                    <FileOutlined className="mr-2 fill-theme-icon" />
                   )}
-                  <Text className="text-xs mr-2 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap">
+                  <Text className="text-xs mr-2 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-theme-primary">
                     {file.filename}
                   </Text>
                   <Button
@@ -89,7 +90,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Floating Chat Input Box */}
-      <div className="relative bg-white border border-gray-300 rounded-xl shadow-sm hover:shadow-md transition-shadow">
+      <div
+        className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px"
+        style={{ borderWidth: "1px", borderStyle: "solid", overflow: "hidden" }}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -111,7 +115,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
         {/* Bottom Action Bar */}
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2">
-          {/* Left: Attachment and History Buttons */}
+          {/* Left: Attachment, History, and Settings Buttons */}
           <Space size="small">
             <Button
               type="text"
@@ -127,6 +131,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               disabled={sending || currentMessageId !== null}
               className="text-gray-500 hover:text-gray-700"
             />
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              onClick={() => chrome.runtime.openOptionsPage()}
+              disabled={sending || currentMessageId !== null}
+              className="text-gray-500 hover:text-gray-700"
+            />
           </Space>
 
           {/* Right: Send/Stop/New Session Button */}
@@ -134,26 +145,26 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             <Button
               type="text"
               danger
-              icon={<StopOutlined />}
+              icon={<StopOutlined className="fill-red-500" />}
               onClick={onStop}
-              className="text-red-500 hover:text-red-600"
+              className="text-red-500"
             />
           ) : isEmpty ? (
             <Button
               type="text"
-              icon={<PlusOutlined />}
+              icon={<PlusOutlined className="fill-theme-icon" />}
               onClick={onNewSession}
               disabled={sending}
-              className="text-blue-500 hover:text-blue-600 disabled:text-gray-300"
+              className="text-theme-icon"
             />
           ) : (
             <Button
               type="text"
-              icon={<SendOutlined />}
+              icon={<SendOutlined className="fill-theme-icon" />}
               onClick={onSend}
               loading={sending}
               disabled={sending}
-              className="text-blue-500 hover:text-blue-600 disabled:text-gray-300"
+              className="text-theme-icon"
             />
           )}
         </div>

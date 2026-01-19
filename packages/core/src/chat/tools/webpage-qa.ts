@@ -10,7 +10,7 @@ import {
   DialogueParams,
   GlobalPromptKey,
   LanguageModelV2StreamPart,
-  LanguageModelV2ToolCallPart,
+  LanguageModelV2ToolCallPart
 } from "../../types";
 import { sub, uuidv4 } from "../../common/utils";
 import { PromptTemplate } from "../../prompt/prompt-template";
@@ -52,16 +52,16 @@ export default class WebpageQaTool implements DialogueTool {
       properties: {
         language: {
           type: "string",
-          description: "User language used, eg: English",
+          description: "User language used, eg: English"
         },
         tabIds: {
           type: "array",
           description:
             "The browser tab ids to be used for the QA. When the user says 'left side' or 'current', it means current active tab.",
-          items: { type: "integer" },
-        },
+          items: { type: "integer" }
+        }
       },
-      required: ["tabIds", "language"],
+      required: ["tabIds", "language"]
     };
   }
 
@@ -75,9 +75,9 @@ export default class WebpageQaTool implements DialogueTool {
         content: [
           {
             type: "text",
-            text: "Error: not implemented",
-          },
-        ],
+            text: "Error: not implemented"
+          }
+        ]
       };
     }
     const tabIds = args.tabIds as string[];
@@ -97,13 +97,13 @@ export default class WebpageQaTool implements DialogueTool {
           .map((part) => (part.type == "text" ? part.text : ""))
           .join("\n")
           .trim(),
-        contexts: this.buildTabContents(tabs),
+        contexts: this.buildTabContents(tabs)
       }
     ).trim();
     const result = await rlm.callStream({
       temperature: 0.7,
       maxOutputTokens: config.maxOutputTokens,
-      messages: [{ role: "user", content: [{ type: "text", text: prompt }] }],
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }] }]
     });
     const stream = result.stream;
     const reader = stream.getReader();
@@ -128,7 +128,7 @@ export default class WebpageQaTool implements DialogueTool {
             toolCallId: toolCall.toolCallId,
             text: text,
             streamId: streamId,
-            streamDone: false,
+            streamDone: false
           });
         } else if (chunk.type == "error") {
           throw new Error(chunk.error as string);
@@ -147,16 +147,16 @@ export default class WebpageQaTool implements DialogueTool {
         toolCallId: toolCall.toolCallId,
         text: text,
         streamId: streamId,
-        streamDone: true,
+        streamDone: true
       });
     }
     return {
       content: [
         {
           type: "text",
-          text: text,
-        },
-      ],
+          text: text
+        }
+      ]
     };
   }
 

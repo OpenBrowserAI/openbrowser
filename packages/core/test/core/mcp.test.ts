@@ -5,7 +5,7 @@ import {
   Agent,
   StreamCallbackMessage,
   SimpleSseMcpClient,
-  SimpleHttpMcpClient,
+  SimpleHttpMcpClient
 } from "../../src/index";
 import { TaskNodeStatusTool } from "../../src/tools";
 import dotenv from "dotenv";
@@ -22,18 +22,20 @@ const llms: LLMs = {
     provider: "anthropic",
     model: "claude-sonnet-4-5-20250929",
     apiKey: claudeApiKey || "",
+    npm: "@ai-sdk/anthropic",
     config: {
-      baseURL: claudeBaseURL,
-    },
+      baseURL: claudeBaseURL
+    }
   },
   openai: {
     provider: "openai",
     model: "gpt-5",
     apiKey: openaiApiKey || "",
+    npm: "@ai-sdk/openai",
     config: {
-      baseURL: openaiBaseURL,
-    },
-  },
+      baseURL: openaiBaseURL
+    }
+  }
 };
 
 async function runWithSse() {
@@ -50,19 +52,20 @@ async function runWithSse() {
         return;
       }
       console.log("message: ", JSON.stringify(message, null, 2));
-    },
+    }
   };
   let sseUrl = "http://localhost:8083/sse";
   let mcpClient = new SimpleSseMcpClient(sseUrl);
   let agents: Agent[] = [
     new Agent({
       name: "SmartMall",
-      description: "Provide product inquiry, inventory management, and order processing.",
+      description:
+        "Provide product inquiry, inventory management, and order processing.",
       tools: [],
       // tools: [new TaskNodeStatusTool()],
       mcpClient: mcpClient,
-      llms: Object.keys(llms),
-    }),
+      llms: Object.keys(llms)
+    })
   ];
   let openbrowser = new OpenBrowser({ llms, agents, callback });
   let result = await openbrowser.run(
@@ -85,7 +88,7 @@ async function runWithHttp() {
         return;
       }
       console.log("message: ", JSON.stringify(message, null, 2));
-    },
+    }
   };
   let httpUrl = "http://localhost:3088/mcp";
   let mcpClient = new SimpleHttpMcpClient(httpUrl);
@@ -96,8 +99,8 @@ async function runWithHttp() {
       tools: [],
       // tools: [new TaskNodeStatusTool()],
       mcpClient: mcpClient,
-      llms: Object.keys(llms),
-    }),
+      llms: Object.keys(llms)
+    })
   ];
   let openbrowser = new OpenBrowser({ llms, agents, callback });
   let result = await openbrowser.run(

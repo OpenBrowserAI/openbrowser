@@ -5,7 +5,7 @@ import {
   Workflow,
   OpenBrowserConfig,
   WorkflowAgent,
-  LanguageModelV2Prompt,
+  LanguageModelV2Prompt
 } from "../types";
 
 export default class TaskContext {

@@ -23,7 +23,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
   visible,
   onClose,
   onSelectSession,
-  currentSessionId,
+  currentSessionId
 }) => {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(false);
@@ -46,7 +46,10 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
     }
   };
 
-  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+  const handleDeleteSession = async (
+    sessionId: string,
+    e: React.MouseEvent
+  ) => {
     e.stopPropagation();
     try {
       await dbService.deleteSession(sessionId);
@@ -84,6 +87,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
       onCancel={onClose}
       footer={null}
       width={500}
+      className="modal-bg-primary radius-8"
     >
       <List
         loading={loading}
@@ -94,14 +98,15 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
               description="No sessions yet"
               image={Empty.PRESENTED_IMAGE_SIMPLE}
             />
-          ),
+          )
         }}
         renderItem={(session) => (
           <List.Item
             key={session.id}
-            className={`cursor-pointer hover:bg-gray-50 transition-colors !pl-2 ${
-              session.id === currentSessionId ? "bg-blue-50" : ""
+            className={`cursor-pointer transition-colors hover:bg-selected radius-8px ${
+              session.id === currentSessionId ? "bg-selected" : ""
             }`}
+            style={{ paddingLeft: "8px", marginLeft: "4px" }}
             onClick={() => handleSelectSession(session.id)}
             actions={[
               <Button
@@ -109,23 +114,33 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
                 type="text"
                 size="small"
                 danger
-                icon={<DeleteOutlined />}
+                icon={<DeleteOutlined className="fill-red-danger" />}
                 onClick={(e) => handleDeleteSession(session.id, e)}
-              />,
+                className="text-red-danger hover:bg-red-danger-light"
+              />
             ]}
           >
             <List.Item.Meta
-              avatar={<MessageOutlined className="text-gray-400" />}
+              avatar={
+                <MessageOutlined
+                  className="fill-theme-icon"
+                  style={{ marginLeft: "4px" }}
+                />
+              }
               title={
                 <Text
                   strong={session.id === currentSessionId}
-                  className="text-sm"
+                  className="text-sm text-theme-primary"
                 >
                   {session.title}
                 </Text>
               }
               description={
-                <Text type="secondary" className="text-xs">
+                <Text
+                  type="secondary"
+                  className="text-xs text-theme-primary"
+                  style={{ opacity: 0.7 }}
+                >
                   {formatDate(session.updatedAt)}
                 </Text>
               }

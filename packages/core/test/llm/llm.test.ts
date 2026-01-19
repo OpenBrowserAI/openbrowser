@@ -1,6 +1,6 @@
 import {
   LanguageModelV2Prompt,
-  LanguageModelV2StreamPart,
+  LanguageModelV2StreamPart
 } from "@ai-sdk/provider";
 import { toImage } from "../../src/common/utils";
 import { RetryLanguageModel } from "../../src/llm";
@@ -19,54 +19,59 @@ const llms: LLMs = {
     provider: "openai",
     model: "gpt-5-mini",
     apiKey: openaiApiKey || "",
+    npm: "@ai-sdk/openai",
     config: {
-      baseURL: openaiBaseURL,
+      baseURL: openaiBaseURL
     },
     fetch: (url, options) => {
       const body = JSON.parse(options?.body as string);
       body.user = "zhuowei@openbrowser.ai";
       body.metadata = {
-        test: "xxx",
+        test: "xxx"
       };
       console.log("====> body", JSON.stringify(body, null, 2));
       return fetch(url, {
         ...options,
-        body: JSON.stringify(body),
+        body: JSON.stringify(body)
       });
-    },
+    }
   },
   test1: {
     provider: "anthropic",
     model: "claude-sonnet-4-20250514",
     apiKey: "xxx",
+    npm: "@ai-sdk/anthropic",
     config: {
-      baseURL: claudeBaseURL,
-    },
+      baseURL: claudeBaseURL
+    }
   },
   test2: {
     provider: "openai",
     model: "xxx",
     apiKey: openaiApiKey || "",
+    npm: "@ai-sdk/openai",
     config: {
-      baseURL: openaiBaseURL,
-    },
+      baseURL: openaiBaseURL
+    }
   },
   openai: {
     provider: "openai",
     model: "gpt-5",
     apiKey: openaiApiKey || "",
+    npm: "@ai-sdk/openai",
     config: {
-      baseURL: openaiBaseURL,
-    },
+      baseURL: openaiBaseURL
+    }
   },
   claude: {
     provider: "anthropic",
     model: "claude-sonnet-4-5-20250929",
     apiKey: claudeApiKey || "",
+    npm: "@ai-sdk/anthropic",
     config: {
-      baseURL: claudeBaseURL,
-    },
-  },
+      baseURL: claudeBaseURL
+    }
+  }
 };
 
 const names = ["test1", "test2", "default"];
@@ -77,7 +82,7 @@ async function testRetryGenerate() {
   let result = await client.call({
     maxOutputTokens: 1024,
     temperature: 0.7,
-    messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }],
+    messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }]
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -91,7 +96,7 @@ async function testOpenaiStream() {
   let result = await client.callStream({
     maxOutputTokens: 1024,
     temperature: 0.7,
-    messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }],
+    messages: [{ role: "user", content: [{ type: "text", text: "Hello" }] }]
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -123,8 +128,8 @@ export async function testToolsPrompt() {
         description: "user current country",
         inputSchema: {
           type: "object",
-          properties: {},
-        },
+          properties: {}
+        }
       },
       {
         type: "function",
@@ -135,29 +140,32 @@ export async function testToolsPrompt() {
           properties: {
             query: {
               type: "string",
-              description: "search for keywords",
+              description: "search for keywords"
             },
             country: {
-              type: "string",
+              type: "string"
             },
             maxResults: {
               type: "number",
-              description: "Maximum search results, default 5",
-            },
+              description: "Maximum search results, default 5"
+            }
           },
-          required: ["query"],
-        },
-      },
+          required: ["query"]
+        }
+      }
     ],
     toolChoice: {
-      type: "auto",
+      type: "auto"
     },
     messages: [
       { role: "system", content: "You are a helpful AI assistant" },
-      { role: "user", content: [{ type: "text", text: "Search for recent national affairs" }] },
+      {
+        role: "user",
+        content: [{ type: "text", text: "Search for recent national affairs" }]
+      }
     ],
     maxOutputTokens: 1024,
-    temperature: 0.7,
+    temperature: 0.7
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -179,12 +187,12 @@ async function testImage() {
           {
             type: "file",
             data: toImage(imageBase64),
-            mediaType: "image/jpeg",
+            mediaType: "image/jpeg"
           },
-          { type: "text", text: "What is included in the picture?" },
-        ],
-      },
-    ],
+          { type: "text", text: "What is included in the picture?" }
+        ]
+      }
+    ]
   });
 
   console.log(JSON.stringify(result, null, 2));
@@ -207,21 +215,26 @@ export async function testImageToolsPrompt(llm: "openai" | "claude") {
             type: {
               type: "string",
               description: "Generate image type",
-              enum: ["handwritten_text", "scenic", "anime"],
-            },
+              enum: ["handwritten_text", "scenic", "anime"]
+            }
           },
-          required: ["type"],
-        },
-      },
+          required: ["type"]
+        }
+      }
     ],
     toolChoice: {
-      type: "auto",
+      type: "auto"
     },
     messages: [
       { role: "system", content: "You are a helpful AI assistant" },
       {
         role: "user",
-        content: [{ type: "text", text: "Help me randomly generate handwritten text images" }],
+        content: [
+          {
+            type: "text",
+            text: "Help me randomly generate handwritten text images"
+          }
+        ]
       },
       {
         role: "assistant",
@@ -230,9 +243,9 @@ export async function testImageToolsPrompt(llm: "openai" | "claude") {
             type: "tool-call",
             toolCallId: "tool_613DVw1dqWT9d33YDkZDKhFH",
             toolName: "random_gen_image",
-            input: { type: "handwritten_text" },
-          },
-        ],
+            input: { type: "handwritten_text" }
+          }
+        ]
       },
       // Only the claude model supports returning images from tool results, while openai only supports text.
       ...((llm == "claude"
@@ -250,13 +263,13 @@ export async function testImageToolsPrompt(llm: "openai" | "claude") {
                       {
                         type: "media",
                         data: imageBase64,
-                        mediaType: "image/jpeg",
+                        mediaType: "image/jpeg"
                       }
                     ]
-                  },
-                },
-              ],
-            },
+                  }
+                }
+              ]
+            }
           ]
         : [
             {
@@ -268,10 +281,10 @@ export async function testImageToolsPrompt(llm: "openai" | "claude") {
                   toolName: "random_gen_image",
                   output: {
                     type: "json",
-                    value: { success: true },
+                    value: { success: true }
                   }
-                },
-              ],
+                }
+              ]
             },
             {
               role: "user",
@@ -279,15 +292,15 @@ export async function testImageToolsPrompt(llm: "openai" | "claude") {
                 {
                   type: "file",
                   data: toImage(imageBase64),
-                  mediaType: "image/jpeg",
+                  mediaType: "image/jpeg"
                 },
-                { type: "text", text: "call `random_gen_image` tool result" },
-              ],
-            },
-          ]) as LanguageModelV2Prompt),
+                { type: "text", text: "call `random_gen_image` tool result" }
+              ]
+            }
+          ]) as LanguageModelV2Prompt)
     ],
     maxOutputTokens: 1024,
-    temperature: 0.7,
+    temperature: 0.7
   });
 
   console.log(JSON.stringify(result, null, 2));

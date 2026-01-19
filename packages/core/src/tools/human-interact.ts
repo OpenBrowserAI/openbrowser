@@ -25,31 +25,31 @@ request_help: Request assistance from the user; for instance, when an operation 
         interactType: {
           type: "string",
           description: "The type of interaction with users.",
-          enum: ["confirm", "input", "select", "request_help"],
+          enum: ["confirm", "input", "select", "request_help"]
         },
         prompt: {
           type: "string",
-          description: "Display prompts to users",
+          description: "Display prompts to users"
         },
         selectOptions: {
           type: "array",
           description:
             "Options provided to users, this parameter is required when interactType is select.",
           items: {
-            type: "string",
-          },
+            type: "string"
+          }
         },
         selectMultiple: {
           type: "boolean",
-          description: "isMultiple, used when interactType is select",
+          description: "isMultiple, used when interactType is select"
         },
         helpType: {
           type: "string",
           description: "Help type, required when interactType is request_help.",
-          enum: ["request_login", "request_assistance"],
-        },
+          enum: ["request_login", "request_assistance"]
+        }
       },
-      required: ["interactType", "prompt"],
+      required: ["interactType", "prompt"]
     };
   }
 
@@ -117,19 +117,19 @@ request_help: Request assistance from the user; for instance, when an operation 
         content: [
           {
             type: "text",
-            text: resultText,
-          },
-        ],
+            text: resultText
+          }
+        ]
       };
     } else {
       return {
         content: [
           {
             type: "text",
-            text: `Error: Unsupported ${interactType} interaction operation`,
-          },
+            text: `Error: Unsupported ${interactType} interaction operation`
+          }
         ],
-        isError: true,
+        isError: true
       };
     }
   }
@@ -140,7 +140,10 @@ request_help: Request assistance from the user; for instance, when an operation 
       return false;
     }
     try {
-      let imageResult = (await screenshot.call(agentContext.agent, agentContext)) as {
+      let imageResult = (await screenshot.call(
+        agentContext.agent,
+        agentContext
+      )) as {
         imageBase64: string;
         imageType: "image/jpeg" | "image/png";
       };
@@ -158,16 +161,16 @@ request_help: Request assistance from the user; for instance, when an operation 
               {
                 type: "file",
                 data: image,
-                mediaType: imageResult.imageType,
+                mediaType: imageResult.imageType
               },
               {
                 type: "text",
-                text: "Check if the current website is logged in. If not logged in, output `NOT_LOGIN`. If logged in, output `LOGGED_IN`. Output directly without explanation.",
-              },
-            ],
-          },
+                text: "Check if the current website is logged in. If not logged in, output `NOT_LOGIN`. If logged in, output `LOGGED_IN`. Output directly without explanation."
+              }
+            ]
+          }
         ],
-        abortSignal: agentContext.context.controller.signal,
+        abortSignal: agentContext.context.controller.signal
       };
       let result = await rlm.call(request);
       return result.text && result.text.indexOf("LOGGED_IN") > -1;

@@ -2,7 +2,7 @@ import {
   WorkflowAgent,
   AgentNode,
   NormalAgentNode,
-  ParallelAgentNode,
+  ParallelAgentNode
 } from "../types/agent.types";
 
 export function buildAgentTree(agents: WorkflowAgent[]): AgentNode {
@@ -71,7 +71,7 @@ export function buildAgentTree(agents: WorkflowAgent[]): AgentNode {
       return {
         type: "normal",
         agent: currentAgents[0],
-        nextAgent: nextNode,
+        nextAgent: nextNode
       } as NormalAgentNode;
     } else {
       const parallelNodes: NormalAgentNode[] = currentAgents.map(
@@ -79,13 +79,13 @@ export function buildAgentTree(agents: WorkflowAgent[]): AgentNode {
           ({
             type: "normal",
             agent: agent,
-            nextAgent: undefined,
+            nextAgent: undefined
           } as NormalAgentNode)
       );
       return {
         type: "parallel",
         agents: parallelNodes,
-        nextAgent: nextNode,
+        nextAgent: nextNode
       } as ParallelAgentNode;
     }
   }
