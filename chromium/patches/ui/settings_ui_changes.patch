@@ -24,9 +24,8 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
 +      <message name="IDS_SETTINGS_ABOUT_PROGRAM" desc="Menu title for the About OpenBrowser page.">
 +        About OpenBrowser
        </message>
--      <message name="IDS_SETTINGS_GET_HELP_USING_CHROME" desc="Text of the button which takes the user to the Chrome help page.">
+       <message name="IDS_SETTINGS_GET_HELP_USING_CHROME" desc="Text of the button which takes the user to the Chrome help page.">
 -        Get help with Chromium
-+      <message name="IDS_SETTINGS_GET_HELP_USING_CHROME" desc="Text of the button which takes the user to the OpenBrowser help page.">
 +        Get help with OpenBrowser
        </message>
      </else>
@@ -170,7 +169,7 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
          </message>
        </else>
      </if>
-@@ -138,347 +138,347 @@ Chromium understands forms better and can autofill them faster for you. This set
+@@ -138,342 +138,342 @@ Chromium understands forms better and can autofill them faster for you. This set
  
    <!-- Preloading Page-->
    <message name="IDS_SETTINGS_PRELOAD_PAGES_STANDARD_PRELOADING_WHEN_ON_BULLET_TWO" desc="Bullet point in the standard preloading and when on column. Informs the user about what the standard preloading setting does.">
@@ -455,19 +454,13 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
 +    OpenBrowser data in your account
    </message>
    <message name="IDS_SETTINGS_ENCRYPT_ACCOUNT_DATA_WITH_PASSPHRASE_LABEL" desc="Label for the radio button which, when selected, causes synced settings to be encrypted with a user-provided password.">
--    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the Chromium data in your Google Account. Payment methods and addresses from Google Pay won’t be encrypted. Browsing history from Chromium won’t sync.
-+    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the OpenBrowser data in your Google Account. Payment methods and addresses from Google Pay won’t be encrypted. Browsing history from OpenBrowser won’t sync.
+-    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the Chromium data in your Google Account. Addresses and any data saved in Google Wallet won’t be encrypted by your passphrase. Browsing history from Chromium won’t sync.
++    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the OpenBrowser data in your Google Account. Addresses and any data saved in Google Wallet won’t be encrypted by your passphrase. Browsing history from OpenBrowser won’t sync.
    </message>
    <message name="IDS_SETTINGS_ENCRYPT_ACCOUNT_DATA_WITH_PASSPHRASE_EXPLANATION_TEXT" desc="Message shown when explicit passphrase is selected.">
 -    Only someone with your passphrase can read your encrypted data. The passphrase is not sent to or stored by Google. If you forget your passphrase or want to change this setting, you’ll need to <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>delete the Chromium data in your account<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph>.
 +    Only someone with your passphrase can read your encrypted data. The passphrase is not sent to or stored by Google. If you forget your passphrase or want to change this setting, you’ll need to <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>delete the OpenBrowser data in your account<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph>.
    </message>
- <if expr="not is_chromeos">
-   <message name="IDS_SETTINGS_ENCRYPT_ACCOUNT_DATA_WITH_PASSPHRASE_WALLET_LABEL" desc="Label for the radio button which, when selected, causes synced settings to be encrypted with a user-provided password.">
--    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the Chromium data in your Google Account. Addresses and any data saved in Google Wallet won’t be encrypted by your passphrase. Browsing history from Chromium won’t sync.
-+    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the OpenBrowser data in your Google Account. Addresses and any data saved in Google Wallet won’t be encrypted by your passphrase. Browsing history from OpenBrowser won’t sync.
-   </message>
- </if>
    <message name="IDS_SETTINGS_PASSPHRASE_RESET_HINT_ACCOUNT_DATA_ENCRYPTION" desc="Informs user how to change their encryption setting.">
 -    If you forgot your passphrase or want to change this setting, <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>delete the Chromium data in your account<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph>
 +    If you forgot your passphrase or want to change this setting, <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>delete the OpenBrowser data in your account<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph>
@@ -577,14 +570,12 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
 +      OpenBrowser is up to date
      </message>
    </if>
--  <message name="IDS_SETTINGS_SAFETY_HUB_VERSION_NAVIGATION_ARIA_LABEL" desc="Safety Check settings page (chrome://settings/safetyCheck) gives users an overview over their safety status. The version card, which this text is a part of, informs the user whether their Chrome is up to date. This string is for the accesibility label for the card to call out where to navigation will happen (chrome://settings/help) if the card is clicked.">
+   <message name="IDS_SETTINGS_SAFETY_HUB_VERSION_NAVIGATION_ARIA_LABEL" desc="Safety Check settings page (chrome://settings/safetyCheck) gives users an overview over their safety status. The version card, which this text is a part of, informs the user whether their Chrome is up to date. This string is for the accesibility label for the card to call out where to navigation will happen (chrome://settings/help) if the card is clicked.">
 -    Go to About Chromium page
-+  <message name="IDS_SETTINGS_SAFETY_HUB_VERSION_NAVIGATION_ARIA_LABEL" desc="Safety Check settings page (chrome://settings/safetyCheck) gives users an overview over their safety status. The version card, which this text is a part of, informs the user whether their OpenBrowser is up to date. This string is for the accesibility label for the card to call out where to navigation will happen (chrome://settings/help) if the card is clicked.">
 +    Go to About OpenBrowser page
    </message>
--  <message name="IDS_SETTINGS_SAFETY_HUB_VERSION_RELAUNCH_ARIA_LABEL" desc="Safety Check settings page (chrome://settings/safetyCheck) gives users an overview over their safety status. The version card, which this text is a part of, informs the user whether their Chrome is up to date. This string is for the accesibility label for the card to call out the click on card will result restarting the browser.">
+   <message name="IDS_SETTINGS_SAFETY_HUB_VERSION_RELAUNCH_ARIA_LABEL" desc="Safety Check settings page (chrome://settings/safetyCheck) gives users an overview over their safety status. The version card, which this text is a part of, informs the user whether their Chrome is up to date. This string is for the accesibility label for the card to call out the click on card will result restarting the browser.">
 -    Relaunch Chromium
-+  <message name="IDS_SETTINGS_SAFETY_HUB_VERSION_RELAUNCH_ARIA_LABEL" desc="Safety Check settings page (chrome://settings/safetyCheck) gives users an overview over their safety status. The version card, which this text is a part of, informs the user whether their OpenBrowser is up to date. This string is for the accesibility label for the card to call out the click on card will result restarting the browser.">
 +    Relaunch OpenBrowser
    </message>
    <message name="IDS_SETTINGS_SAFETY_HUB_UNUSED_SITE_PERMISSIONS_REMOVED_ONE_PERMISSION_LABEL" desc="'Revoked Permissions' shows the revoked permissions of unused websites. This text describes which permission was removed from an unused site and is shown if there is exactly one permission.">
@@ -634,7 +625,7 @@ diff --git a/chrome/app/settings_strings.grdp b/chrome/app/settings_strings.grdp
 index 7edfde1f4fd6c..e72339448cda0 100644
 --- a/chrome/app/settings_strings.grdp
 +++ b/chrome/app/settings_strings.grdp
-@@ -340,7 +340,7 @@
+@@ -331,7 +331,7 @@
      Settings
    </message>
    <message name="IDS_SETTINGS_ALT_PAGE_TITLE" desc="The settings page title for the about page.">
@@ -643,7 +634,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
    </message>
    <message name="IDS_SETTINGS_SUBPAGE_BUTTON" desc="Accessibility description for a button navigating the user from a settings page to one of the settings subpages.">
      Subpage button
-@@ -759,7 +759,7 @@
+@@ -750,7 +750,7 @@
      <message name="IDS_AUTOFILL_MANAGE_PASSKEYS_DELETE_CONFIRMATION_DESCRIPTION" desc="The body of a dialog that asks the user to confirm the deletion of a passkey. For consistency, the word 'passkey' is in the glossary with translations already suggested.">
        Are you sure you want to delete this passkey?
      </message>
@@ -652,7 +643,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
        Can't delete passkey
      </message>
      <message name="IDS_AUTOFILL_MANAGE_PASSKEYS_CANNOT_DELETE_BODY" desc="The body of a dialog that explains that we cannot delete certain passkeys on Windows which are involved when the user signs into the Windows computer itself. For consistency, the word 'passkey' is in the glossary with translations already suggested.">
-@@ -1756,7 +1756,7 @@
+@@ -1747,7 +1747,7 @@
      Passwords
    </message>
    <message name="IDS_SETTINGS_SAFETY_CHECK_PASSWORDS_FEATURE_UNAVAILABLE" desc="Explains that the password check feature is not available in this version of the browser.">
@@ -661,7 +652,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
    </message>
    <message name="IDS_SETTINGS_SAFETY_CHECK_SAFE_BROWSING_ENABLED" desc="This text points out that Safe Browsing is enabled and that the user is protected.">
      Safe Browsing is on and protecting you from harmful sites and downloads
-@@ -3644,8 +3644,8 @@
+@@ -3635,8 +3635,8 @@
    </message>
  
    <!-- Sync / People Page -->
@@ -672,7 +663,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
    </message>
    <message name="IDS_SETTINGS_CHANGE_PICTURE_PROFILE_PHOTO" desc="The text on the Google profile photo of the user.">
      Google Profile photo
-@@ -3654,7 +3654,7 @@
+@@ -3645,7 +3645,7 @@
    <message name="IDS_SETTINGS_PEOPLE_SIGN_IN" desc="The label of the button that lets user sign-in to chrome.">
      Sign in
    </message>

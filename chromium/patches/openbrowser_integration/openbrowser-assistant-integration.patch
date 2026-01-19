@@ -1,0 +1,644 @@
+diff --git a/chrome/app/theme/theme_resources.grd b/chrome/app/theme/theme_resources.grd
+index d38aa879d082b..3a86c54500ce1 100644
+--- a/chrome/app/theme/theme_resources.grd
++++ b/chrome/app/theme/theme_resources.grd
+@@ -161,6 +161,7 @@
+       <structure type="chrome_scaled_image" name="IDR_PRERENDER" file="common/prerender_succeed_icon.png" />
+       <structure type="chrome_scaled_image" name="IDR_PRODUCT_LOGO_32" file="${branding_path_component}/product_logo_32.png" />
+       <structure type="chrome_scaled_image" name="IDR_PRODUCT_LOGO_32_WHITE" file="${branding_path_component}/product_logo_32_white.png" />
++      <structure type="chrome_scaled_image" name="IDR_PRODUCT_LOGO_16_WHITE" file="${branding_path_component}/product_logo_16_white.png" />
+       <if expr="_google_chrome">
+         <then>
+           <if expr="is_linux">
+diff --git a/chrome/browser/browser_resources.grd b/chrome/browser/browser_resources.grd
+index a549f50a0d16a..af614822591c0 100644
+--- a/chrome/browser/browser_resources.grd
++++ b/chrome/browser/browser_resources.grd
+@@ -229,6 +229,8 @@
+         <include name="IDR_PDF_MANIFEST" file="resources\pdf\manifest.json" type="BINDATA" />
+       </if>
+       <include name="IDR_WEBSTORE_MANIFEST" file="resources\webstore_app\manifest.json" type="BINDATA" />
++      <!-- OpenBrowser Assistant Component Extension -->
++      <include name="IDR_OPENBROWSER_ASSISTANT_MANIFEST" file="resources\openbrowser_assistant\manifest.json" type="BINDATA" />
+       <if expr="is_chromeos">
+         <!-- Contact Center Insights extension, enabled on managed ChromeOS devices -->
+         <include name="IDR_CONTACT_CENTER_INSIGHTS_MANIFEST" file="resources\chromeos\contact_center_insights\manifest.json" type="BINDATA" />
+diff --git a/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc b/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
+index cd53ca53c51ff..bf68378f2d306 100644
+--- a/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
++++ b/chrome/browser/extensions/component_extensions_allowlist/allowlist.cc
+@@ -34,6 +34,7 @@ bool IsComponentExtensionAllowlisted(const std::string& extension_id) {
+   constexpr auto kAllowed = base::MakeFixedFlatSet<std::string_view>({
+       extension_misc::kInAppPaymentsSupportAppId,
+       extension_misc::kPdfExtensionId,
++      extension_misc::kOpenBrowserAssistantExtensionId,
+ #if BUILDFLAG(IS_CHROMEOS)
+       extension_misc::kAssessmentAssistantExtensionId,
+       extension_misc::kAccessibilityCommonExtensionId,
+diff --git a/chrome/browser/extensions/component_loader.cc b/chrome/browser/extensions/component_loader.cc
+index ba347da2a2d2e..076602a74ef9f 100644
+--- a/chrome/browser/extensions/component_loader.cc
++++ b/chrome/browser/extensions/component_loader.cc
+@@ -505,6 +505,15 @@ void ComponentLoader::AddDefaultComponentExtensions(
+   DCHECK(!skip_session_components);
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+ 
++#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CHROMEOS_ASH)
++  // OpenBrowser Assistant - load from BINDATA resources 
++  std::string openbrowser_manifest =
++      ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
++          IDR_OPENBROWSER_ASSISTANT_MANIFEST);
++  base::FilePath extension_path(FILE_PATH_LITERAL("openbrowser_assistant"));
++  Add(openbrowser_manifest, extension_path);
++#endif
++
+   if (!skip_session_components) {
+     AddWebStoreApp();
+ #if BUILDFLAG(IS_CHROMEOS)
+diff --git a/chrome/browser/resources/component_extension_resources.grd b/chrome/browser/resources/component_extension_resources.grd
+index c8f16f0451d7a..654a9a962f259 100644
+--- a/chrome/browser/resources/component_extension_resources.grd
++++ b/chrome/browser/resources/component_extension_resources.grd
+@@ -22,6 +22,86 @@
+       <include name="IDR_READING_MODE_GDOC_HELPER_CONTENT_JS" file="reading_mode_gdocs_helper/content.js" type="BINDATA" />
+       <include name="IDR_READING_MODE_GDOC_HELPER_GDOCS_SCRIPT_JS" file="reading_mode_gdocs_helper/gdocs_script.js" type="BINDATA" />
+ 
++      <!-- OpenBrowser Assistant extension -->
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON" file="openbrowser_assistant/icon.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_16" file="openbrowser_assistant/icon-16.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_32" file="openbrowser_assistant/icon-32.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_WHITE" file="openbrowser_assistant/icon_white.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_WHITE_16" file="openbrowser_assistant/icon_white-16.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_WHITE_32" file="openbrowser_assistant/icon_white-32.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_DARK" file="openbrowser_assistant/icon_dark.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_LIGHT" file="openbrowser_assistant/icon_light.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_NEUTRAL" file="openbrowser_assistant/icon_neutral.png" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_SIDEBAR_HTML" file="openbrowser_assistant/sidebar.html" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_OPTIONS_HTML" file="openbrowser_assistant/options.html" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_BACKGROUND_JS" file="openbrowser_assistant/js/background.js" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_SIDEBAR_JS" file="openbrowser_assistant/js/sidebar.js" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_OPTIONS_JS" file="openbrowser_assistant/js/options.js" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_CONTENT_SCRIPT_JS" file="openbrowser_assistant/js/content_script.js" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_VENDOR_JS" file="openbrowser_assistant/js/vendor.js" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_THEME_JS" file="openbrowser_assistant/js/theme.js" type="BINDATA" />
++      <!-- OpenBrowser Assistant KaTeX fonts -->
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_AMS_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_AMS-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_AMS_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_AMS-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_AMS_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_AMS-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_CALIGRAPHIC_BOLD_TTF" file="openbrowser_assistant/js/assets/KaTeX_Caligraphic-Bold.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_CALIGRAPHIC_BOLD_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Caligraphic-Bold.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_CALIGRAPHIC_BOLD_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Caligraphic-Bold.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_CALIGRAPHIC_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Caligraphic-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_CALIGRAPHIC_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Caligraphic-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_CALIGRAPHIC_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Caligraphic-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_FRAKTUR_BOLD_TTF" file="openbrowser_assistant/js/assets/KaTeX_Fraktur-Bold.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_FRAKTUR_BOLD_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Fraktur-Bold.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_FRAKTUR_BOLD_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Fraktur-Bold.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_FRAKTUR_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Fraktur-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_FRAKTUR_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Fraktur-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_FRAKTUR_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Fraktur-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_BOLD_TTF" file="openbrowser_assistant/js/assets/KaTeX_Main-Bold.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_BOLD_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Main-Bold.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_BOLD_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Main-Bold.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_BOLDITALIC_TTF" file="openbrowser_assistant/js/assets/KaTeX_Main-BoldItalic.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_BOLDITALIC_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Main-BoldItalic.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_BOLDITALIC_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Main-BoldItalic.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_ITALIC_TTF" file="openbrowser_assistant/js/assets/KaTeX_Main-Italic.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_ITALIC_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Main-Italic.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_ITALIC_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Main-Italic.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Main-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Main-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MAIN_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Main-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MATH_BOLDITALIC_TTF" file="openbrowser_assistant/js/assets/KaTeX_Math-BoldItalic.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MATH_BOLDITALIC_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Math-BoldItalic.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MATH_BOLDITALIC_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Math-BoldItalic.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MATH_ITALIC_TTF" file="openbrowser_assistant/js/assets/KaTeX_Math-Italic.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MATH_ITALIC_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Math-Italic.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_MATH_ITALIC_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Math-Italic.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_BOLD_TTF" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Bold.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_BOLD_WOFF" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Bold.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_BOLD_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Bold.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_ITALIC_TTF" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Italic.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_ITALIC_WOFF" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Italic.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_ITALIC_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Italic.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SANSSERIF_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_SansSerif-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SCRIPT_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Script-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SCRIPT_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Script-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SCRIPT_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Script-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE1_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Size1-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE1_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Size1-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE1_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Size1-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE2_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Size2-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE2_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Size2-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE2_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Size2-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE3_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Size3-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE3_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Size3-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE3_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Size3-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE4_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Size4-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE4_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Size4-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_SIZE4_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Size4-Regular.woff2" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_TYPEWRITER_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_Typewriter-Regular.ttf" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_TYPEWRITER_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_Typewriter-Regular.woff" type="BINDATA" />
++      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_TYPEWRITER_REGULAR_WOFF2" file="openbrowser_assistant/js/assets/KaTeX_Typewriter-Regular.woff2" type="BINDATA" />
++
+       <!-- Hangout Services extension, included in Google Chrome builds only. -->
+       <if expr="_google_chrome or enable_hangout_services_extension">
+         <include name="IDR_HANGOUT_SERVICES_BACKGROUND_HTML" file="hangout_services/background.html" type="BINDATA" />
+diff --git a/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc b/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
+index d9315fa4fa5b0..c4ec7c1540ca3 100644
+--- a/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
++++ b/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
+@@ -22,10 +22,13 @@
+ #include "chrome/browser/ui/toolbar/toolbar_pref_names.h"
+ #include "chrome/browser/ui/ui_features.h"
+ #include "chrome/common/chrome_features.h"
++#include "chrome/common/extensions/extension_constants.h"
+ #include "chrome/common/pref_names.h"
+ #include "components/prefs/pref_change_registrar.h"
+ #include "components/prefs/pref_service.h"
+ #include "components/prefs/scoped_user_pref_update.h"
++#include "extensions/browser/extension_registry.h"
++#include "extensions/common/extension.h"
+ #include "ui/actions/action_id.h"
+ #include "ui/actions/actions.h"
+ 
+diff --git a/chrome/browser/ui/toolbar/toolbar_pref_names.cc b/chrome/browser/ui/toolbar/toolbar_pref_names.cc
+index 2ac0c02e74ee0..47369cb48522e 100644
+--- a/chrome/browser/ui/toolbar/toolbar_pref_names.cc
++++ b/chrome/browser/ui/toolbar/toolbar_pref_names.cc
+@@ -46,6 +46,8 @@ void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
+   registry->RegisterBooleanPref(
+       prefs::kTabSearchMigrationComplete, false,
+       user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
++  registry->RegisterBooleanPref(prefs::kPinnedOpenBrowserMigrationComplete,
++                                false);
+ }
+ 
+ }  // namespace toolbar
+diff --git a/chrome/browser/ui/toolbar/toolbar_pref_names.h b/chrome/browser/ui/toolbar/toolbar_pref_names.h
+index c59d5f14f663d..05b27103a00ac 100644
+--- a/chrome/browser/ui/toolbar/toolbar_pref_names.h
++++ b/chrome/browser/ui/toolbar/toolbar_pref_names.h
+@@ -33,6 +33,10 @@ inline constexpr char kPinnedCastMigrationComplete[] =
+ inline constexpr char kTabSearchMigrationComplete[] =
+     "toolbar.tab_search_migration_complete";
+ 
++// Indicates whether the OpenBrowser extension has been auto-pinned.
++inline constexpr char kPinnedOpenBrowserMigrationComplete[] =
++    "toolbar.pinned_openbrowser_migration_complete";
++
+ }  // namespace prefs
+ 
+ namespace toolbar {
+diff --git a/chrome/browser/ui/views/frame/contents_rounded_corner.cc b/chrome/browser/ui/views/frame/contents_rounded_corner.cc
+index 597e5905bc40d..231fa20f55d71 100644
+--- a/chrome/browser/ui/views/frame/contents_rounded_corner.cc
++++ b/chrome/browser/ui/views/frame/contents_rounded_corner.cc
+@@ -36,16 +36,17 @@ gfx::Size ContentsRoundedCorner::CalculatePreferredSize(
+   // http://crbug.com/40178332). The nullptr dereference does not always
+   // crash due to compiler optimizations, so CHECKing here ensures we crash.
+   CHECK(GetLayoutProvider());
+-  const float corner_radius = GetLayoutProvider()->GetCornerRadiusMetric(
+-      views::ShapeContextTokens::kContentSeparatorRadius);
++  // Remove rounded corners for new tab page - override to 0
++  const float corner_radius = 0 * GetLayoutProvider()->GetCornerRadiusMetric(
++      corner_radius_token_);
+   const float corner_size = corner_radius + views::Separator::kThickness;
+   return gfx::Size(corner_size, corner_size);
+ }
+ 
+ void ContentsRoundedCorner::OnBoundsChanged(const gfx::Rect& previous_bounds) {
+   SkPathBuilder path;
+-  const float corner_radius =
+-      GetLayoutProvider()->GetCornerRadiusMetric(corner_radius_token_);
++  // Remove rounded corners for new tab page
++  const float corner_radius = 0;
+   const gfx::Rect local_bounds = GetLocalBounds();
+   if (is_right_aligned_callback_.Run()) {
+     path.moveTo(0, 0);
+@@ -82,8 +83,8 @@ void ContentsRoundedCorner::OnPaint(gfx::Canvas* canvas) {
+   flags.setStyle(cc::PaintFlags::kStroke_Style);
+   flags.setAntiAlias(true);
+ 
+-  const float corner_radius =
+-      GetLayoutProvider()->GetCornerRadiusMetric(corner_radius_token_);
++  // Remove rounded corners for new tab page
++  const float corner_radius = 0;
+   const gfx::Rect local_bounds = GetLocalBounds();
+   SkPathBuilder path;
+   if (is_right_aligned_callback_.Run()) {
+diff --git a/chrome/browser/ui/views/side_panel/side_panel.cc b/chrome/browser/ui/views/side_panel/side_panel.cc
+index 8a128e29e68eb..d5740ceed44f0 100644
+--- a/chrome/browser/ui/views/side_panel/side_panel.cc
++++ b/chrome/browser/ui/views/side_panel/side_panel.cc
+@@ -60,7 +60,7 @@ namespace {
+ // This thickness includes the solid-color background and the inner round-rect
+ // border-color stroke. It does not include the outer-color separator.
+ int GetBorderThickness() {
+-  return 8 + views::Separator::kThickness;
++  return 0;
+ }
+ 
+ // This is how many units of the toolbar are essentially expected to be
+@@ -125,9 +125,8 @@ class SidePanelBorder : public views::Border {
+         view.GetLocalBounds(), view.layer()->device_scale_factor());
+ 
+     gfx::RectF scaled_contents_bounds_f = scaled_view_bounds_f;
+-    const float corner_radius =
+-        dsf * view.GetLayoutProvider()->GetCornerRadiusMetric(
+-                  views::ShapeContextTokens::kSidePanelContentRadius);
++    // Remove rounded corners for all sidepanels
++    const float corner_radius = 0;
+     const gfx::InsetsF insets_in_pixels(
+         gfx::ConvertInsetsToPixels(GetInsets(), dsf));
+     scaled_contents_bounds_f.Inset(insets_in_pixels);
+@@ -191,7 +190,7 @@ class SidePanelBorder : public views::Border {
+     // there is a header we want to increase the top inset to give room for the
+     // header to paint on top of the border area.
+     int top_inset =
+-        views::Separator::kThickness + header_height_ - GetBorderInsets().top();
++        views::Separator::kThickness + header_height_ - GetBorderInsets().top() + 1;
+     return GetBorderInsets() + gfx::Insets::TLBR(top_inset, 0, 0, 0);
+   }
+   gfx::Size GetMinimumSize() const override {
+@@ -246,11 +245,8 @@ class ContentParentView : public views::View {
+   }
+ 
+   gfx::RoundedCornersF GetRoundedCorners() {
+-    return should_round_corners_ && GetLayoutProvider()
+-               ? gfx::RoundedCornersF(
+-                     GetLayoutProvider()->GetCornerRadiusMetric(
+-                         views::ShapeContextTokens::kSidePanelContentRadius))
+-               : gfx::RoundedCornersF();
++    // Remove rounded corners for all sidepanels
++    return gfx::RoundedCornersF(0);
+   }
+ 
+   bool should_round_corners_ = false;
+diff --git a/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc b/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc
+index c79799b24b682..2bca27c33d5f3 100644
+--- a/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc
++++ b/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc
+@@ -130,6 +130,17 @@ void SidePanelCoordinator::Show(
+ 
+   SidePanelEntry* entry = GetEntryForUniqueKey(input);
+ 
++  // Close OpenBrowser Assistant when any other content sidepanel is opening
++  if (entry->type() == SidePanelEntry::PanelType::kContent &&
++      input.key.id() != SidePanelEntryId::kOpenBrowserAssistant &&
++      IsSidePanelShowing(SidePanelEntry::PanelType::kContent) &&
++      GetCurrentEntryId(SidePanelEntry::PanelType::kContent) ==
++          SidePanelEntryId::kOpenBrowserAssistant) {
++    Close(SidePanelEntry::PanelType::kContent,
++          SidePanelEntryHideReason::kSidePanelClosed,
++          /*suppress_animations=*/true);
++  }
++
+   if (!IsSidePanelShowing(entry->type())) {
+     SetOpenedTimestamp(entry->type(), base::TimeTicks::Now());
+     SidePanelUtil::RecordSidePanelOpen(entry->type(), open_trigger);
+diff --git a/chrome/browser/ui/views/side_panel/side_panel_entry_id.h b/chrome/browser/ui/views/side_panel/side_panel_entry_id.h
+index 201d94283a5c0..0a389c4429d65 100644
+--- a/chrome/browser/ui/views/side_panel/side_panel_entry_id.h
++++ b/chrome/browser/ui/views/side_panel/side_panel_entry_id.h
+@@ -40,6 +40,7 @@
+   V(kMerchantTrust, kActionSidePanelShowMerchantTrust, "MerchantTrust")       \
+   V(kComments, kActionSidePanelShowComments, "Comments")                      \
+   V(kGlic, kActionSidePanelShowGlic, "Glic")                                  \
++  V(kOpenBrowserAssistant, std::nullopt, "OpenBrowserAssistant")             \
+   /* Extensions (nothing more should be added below here) */                  \
+   V(kExtension, std::nullopt, "Extension")
+ 
+diff --git a/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc b/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc
+index 3086e688c3cfe..1095d76a934d0 100644
+--- a/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc
++++ b/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc
+@@ -82,9 +82,12 @@ SidePanelHeaderController::SidePanelHeaderController(
+   CHECK(side_panel_entry_);
+   actions::ActionItem* const action_item =
+       SidePanelUtil::GetActionItem(browser, side_panel_entry->key());
+-  action_item_controller_subscription_ = action_item->AddActionChangedCallback(
+-      base::BindRepeating(&SidePanelHeaderController::OnActionItemChanged,
+-                          base::Unretained(this)));
++  // Some entries like OpenBrowserAssistant don't have ActionItems
++  if (action_item) {
++    action_item_controller_subscription_ = action_item->AddActionChangedCallback(
++        base::BindRepeating(&SidePanelHeaderController::OnActionItemChanged,
++                            base::Unretained(this)));
++  }
+   side_panel_toolbar_pinning_controller_observation_.Observe(
+       side_panel_toolbar_pinning_controller);
+ }
+@@ -267,9 +270,10 @@ void SidePanelHeaderController::UpdatePinButton() {
+       side_panel_toolbar_pinning_controller_->GetPinnedStateFor(
+           side_panel_entry_->key());
+   pin_button_->SetToggled(current_pinned_state);
++  // Some entries like OpenBrowserAssistant don't have ActionItems
+   pin_button_->SetVisible(
+       !profile->IsIncognitoProfile() && !profile->IsGuestSession() &&
+-      action_item->GetProperty(actions::kActionItemPinnableKey) ==
++      action_item && action_item->GetProperty(actions::kActionItemPinnableKey) ==
+           static_cast<int>(actions::ActionPinnableState::kPinnable));
+ 
+   if (!current_pinned_state) {
+@@ -280,9 +284,13 @@ void SidePanelHeaderController::UpdatePinButton() {
+ 
+ ui::ImageModel SidePanelHeaderController::GetIconImage() {
+   CHECK(side_panel_entry_);
+-  ui::ImageModel icon =
+-      SidePanelUtil::GetActionItem(browser_, side_panel_entry_->key())
+-          ->GetImage();
++  actions::ActionItem* const action_item =
++      SidePanelUtil::GetActionItem(browser_, side_panel_entry_->key());
++  // Some entries like OpenBrowserAssistant don't have ActionItems
++  if (!action_item) {
++    return ui::ImageModel();
++  }
++  ui::ImageModel icon = action_item->GetImage();
+   if (icon.IsVectorIcon()) {
+     icon = ui::ImageModel::FromVectorIcon(*icon.GetVectorIcon().vector_icon(),
+                                           kColorSidePanelEntryIcon,
+@@ -293,10 +301,13 @@ ui::ImageModel SidePanelHeaderController::GetIconImage() {
+ 
+ std::u16string_view SidePanelHeaderController::GetTitleText() {
+   CHECK(side_panel_entry_);
+-  return side_panel_entry_->GetProperty(kShouldShowTitleInSidePanelHeaderKey)
+-             ? SidePanelUtil::GetActionItem(browser_, side_panel_entry_->key())
+-                   ->GetText()
+-             : std::u16string_view();
++  if (!side_panel_entry_->GetProperty(kShouldShowTitleInSidePanelHeaderKey)) {
++    return std::u16string_view();
++  }
++  actions::ActionItem* const action_item =
++      SidePanelUtil::GetActionItem(browser_, side_panel_entry_->key());
++  // Some entries like OpenBrowserAssistant don't have ActionItems
++  return action_item ? action_item->GetText() : std::u16string_view();
+ }
+ 
+ void SidePanelHeaderController::UpdatePinState() {
+diff --git a/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc b/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc
+index f38005a7f2f93..ddb42374bb83b 100644
+--- a/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc
++++ b/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc
+@@ -66,7 +66,10 @@ bool SidePanelToolbarPinningController::GetPinnedStateFor(
+ 
+     std::optional<actions::ActionId> action_id =
+         SidePanelEntryIdToActionId(key.id());
+-    CHECK(action_id.has_value());
++    // Some entries like OpenBrowserAssistant don't have ActionIds
++    if (!action_id.has_value()) {
++      return false;
++    }
+     return actions_model->Contains(action_id.value());
+   }
+ }
+@@ -75,9 +78,13 @@ void SidePanelToolbarPinningController::UpdatePinState(
+     SidePanelEntry::Key entry_key) {
+   Profile* const profile = browser_view_->GetProfile();
+ 
+-  std::optional<actions::ActionId> action_id =
+-      SidePanelUtil::GetActionItem(browser_view_->browser(), entry_key)
+-          ->GetActionId();
++  actions::ActionItem* const action_item =
++      SidePanelUtil::GetActionItem(browser_view_->browser(), entry_key);
++  // Some entries like OpenBrowserAssistant don't have ActionItems
++  if (!action_item) {
++    return;
++  }
++  std::optional<actions::ActionId> action_id = action_item->GetActionId();
+   CHECK(action_id.has_value());
+ 
+   bool updated_pin_state = false;
+@@ -118,7 +125,10 @@ void SidePanelToolbarPinningController::UpdateActiveState(
+   } else {
+     std::optional<actions::ActionId> action_id =
+         SidePanelEntryIdToActionId(key.id());
+-    CHECK(action_id.has_value());
++    // Some entries like OpenBrowserAssistant don't have ActionIds
++    if (!action_id.has_value()) {
++      return;
++    }
+     toolbar_container->UpdateActionState(*action_id, show_active_in_toolbar);
+   }
+ }
+diff --git a/chrome/browser/ui/views/side_panel/side_panel_util.cc b/chrome/browser/ui/views/side_panel/side_panel_util.cc
+index 2dbc320b01891..a24771df3ddba 100644
+--- a/chrome/browser/ui/views/side_panel/side_panel_util.cc
++++ b/chrome/browser/ui/views/side_panel/side_panel_util.cc
+@@ -9,6 +9,7 @@
+ #include "base/metrics/user_metrics_action.h"
+ #include "base/strings/strcat.h"
+ #include "base/time/time.h"
++#include "url/gurl.h"
+ #include "chrome/browser/history_clusters/history_clusters_service_factory.h"
+ #include "chrome/browser/profiles/profile.h"
+ #include "chrome/browser/ui/browser.h"
+@@ -23,6 +24,8 @@
+ #include "chrome/browser/ui/views/side_panel/reading_list/reading_list_side_panel_coordinator.h"
+ #include "chrome/browser/ui/views/side_panel/side_panel_content_proxy.h"
+ #include "chrome/browser/ui/views/side_panel/side_panel_coordinator.h"
++#include "chrome/browser/ui/views/side_panel/side_panel_entry.h"
++#include "chrome/browser/ui/views/side_panel/side_panel_entry_scope.h"
+ #include "chrome/browser/ui/views/side_panel/side_panel_registry.h"
+ #include "chrome/browser/ui/views/side_panel/side_panel_ui.h"
+ #include "chrome/browser/ui/webui_browser/webui_browser.h"
+@@ -30,8 +33,11 @@
+ #include "components/history_clusters/core/features.h"
+ #include "components/history_clusters/core/history_clusters_service.h"
+ #include "components/prefs/pref_service.h"
++#include "extensions/browser/extension_registry.h"
++#include "extensions/common/constants.h"
+ #include "ui/accessibility/accessibility_features.h"
+ #include "ui/actions/actions.h"
++#include "ui/views/controls/webview/webview.h"
+ 
+ #if BUILDFLAG(ENABLE_GLIC)
+ #include "chrome/browser/glic/public/glic_enabling.h"
+@@ -96,6 +102,23 @@ void SidePanelUtil::PopulateGlobalEntries(Browser* browser,
+         ->CreateAndRegisterEntry(browser, window_registry);
+   }
+ #endif
++
++  // OpenBrowser Assistant - register side panel entry
++  auto assistant_entry = std::make_unique<SidePanelEntry>(
++      SidePanelEntry::Key(SidePanelEntry::Id::kOpenBrowserAssistant),
++      base::BindRepeating(
++          [](Profile* profile, SidePanelEntryScope& scope)
++              -> std::unique_ptr<views::View> {
++            auto web_view = std::make_unique<views::WebView>(profile);
++            web_view->LoadInitialURL(GURL(
++                "chrome-extension://cbjnlnglpbmhbeekoalifpaallpcmelp/sidebar.html"));
++            return web_view;
++          },
++          browser->profile()),
++      base::BindRepeating([]() { return 360; }));
++  // Hide the header (which includes the close button) for the assistant
++  assistant_entry->set_should_show_header(false);
++  window_registry->Register(std::move(assistant_entry));
+ }
+ 
+ SidePanelContentProxy* SidePanelUtil::GetSidePanelContentProxy(
+@@ -123,6 +146,11 @@ actions::ActionItem* SidePanelUtil::GetActionItem(
+     return action_item;
+   }
+ 
++  // OpenBrowserAssistant doesn't use ActionItems
++  if (entry_key.id() == SidePanelEntryId::kOpenBrowserAssistant) {
++    return nullptr;
++  }
++
+   std::optional<actions::ActionId> action_id =
+       SidePanelEntryIdToActionId(entry_key.id());
+   CHECK(action_id.has_value());
+diff --git a/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc b/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc
+index 4ef3578829404..a1d02e1c3dc4b 100644
+--- a/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc
++++ b/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc
+@@ -308,6 +308,21 @@ void PinnedActionToolbarButton::OnAnchorCountChanged(size_t anchor_count) {
+   }
+ }
+ 
++bool PinnedActionToolbarButton::CanUserUnpin() const {
++  // Get action ID
++  const actions::ActionId& action_id = action_id_;
++  const std::optional<std::string>& id_str =
++      actions::ActionIdMap::ActionIdToString(action_id);
++
++  // Prevent unpinning OpenBrowser
++  if (id_str.has_value() &&
++      id_str->find("openbrowser") != std::string::npos) {
++    return false;
++  }
++
++  return !permanent_;  // existing logic
++}
++
+ std::unique_ptr<views::ActionViewInterface>
+ PinnedActionToolbarButton::GetActionViewInterface() {
+   return std::make_unique<PinnedActionToolbarButtonActionViewInterface>(this);
+diff --git a/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.h b/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.h
+index 5faebc2c5021d..7352e6df452ae 100644
+--- a/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.h
++++ b/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.h
+@@ -56,6 +56,7 @@ class PinnedActionToolbarButton : public ToolbarButton {
+   bool IsIconVisible() { return is_icon_visible_; }
+   bool IsPinned() { return pinned_; }
+   bool IsPermanent() { return permanent_; }
++  bool CanUserUnpin() const;
+   views::View* GetImageContainerView() { return image_container_view(); }
+ 
+   bool ShouldSkipExecutionForTesting() { return skip_execution_; }
+diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
+index e86eec19bd872..b2166b6249940 100644
+--- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
++++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
+@@ -71,6 +71,9 @@
+ #include "chrome/browser/ui/views/performance_controls/battery_saver_button.h"
+ #include "chrome/browser/ui/views/performance_controls/performance_intervention_button.h"
+ #include "chrome/browser/ui/views/side_panel/side_panel.h"
++#include "chrome/browser/ui/views/side_panel/side_panel_coordinator.h"
++#include "chrome/browser/ui/views/side_panel/side_panel_entry.h"
++#include "chrome/browser/ui/views/side_panel/side_panel_entry_id.h"
+ #include "chrome/browser/ui/views/tabs/tab_strip.h"
+ #include "chrome/browser/ui/views/tabs/tab_strip_controller.h"
+ #include "chrome/browser/ui/views/toolbar/app_menu.h"
+@@ -115,6 +118,7 @@
+ #include "ui/base/window_open_disposition_utils.h"
+ #include "ui/color/color_id.h"
+ #include "ui/color/color_provider.h"
++#include "ui/gfx/color_utils.h"
+ #include "ui/compositor/layer.h"
+ #include "ui/gfx/canvas.h"
+ #include "ui/gfx/image/canvas_image_source.h"
+@@ -522,6 +526,17 @@ void ToolbarView::Init() {
+       container_view_->AddChildView(std::make_unique<OverflowButton>());
+   overflow_button_->SetVisible(false);
+ 
++  // OpenBrowser Assistant button
++  auto assistant_button = std::make_unique<ToolbarButton>(
++      base::BindRepeating(&ToolbarView::OnAssistantButtonPressed,
++                          base::Unretained(this)));
++  assistant_button->SetTooltipText(u"Open Assistant");
++  assistant_button->GetViewAccessibility().SetName(u"Assistant");
++  assistant_button->SetImageModel(
++      views::Button::STATE_NORMAL,
++      ui::ImageModel::FromResourceId(IDR_PRODUCT_LOGO_16));
++  assistant_button_ = container_view_->AddChildView(std::move(assistant_button));
++
+   auto app_menu_button = std::make_unique<BrowserAppMenuButton>(this);
+   app_menu_button->SetFlipCanvasOnPaintForRTLUI(true);
+   app_menu_button->GetViewAccessibility().SetName(
+@@ -895,6 +910,16 @@ void ToolbarView::OnThemeChanged() {
+     LoadImages();
+   }
+ 
++  // Update OpenBrowser Assistant icon based on theme
++  if (assistant_button_) {
++    const bool is_dark_mode =
++        color_utils::IsDark(GetColorProvider()->GetColor(kColorToolbar));
++    const int icon_id = is_dark_mode ? IDR_PRODUCT_LOGO_16_WHITE : IDR_PRODUCT_LOGO_16;
++    assistant_button_->SetImageModel(
++        views::Button::STATE_NORMAL,
++        ui::ImageModel::FromResourceId(icon_id));
++  }
++
+   SchedulePaint();
+ }
+ 
+@@ -937,6 +962,19 @@ void ToolbarView::NewTabButtonPressed(const ui::Event& event) {
+                  NewTabTypes::kNewTabButtonInToolbarForTouch);
+ }
+ 
++void ToolbarView::OnAssistantButtonPressed() {
++  auto* side_panel_ui = browser_->GetFeatures().side_panel_ui();
++
++  // Toggle: if already showing OpenBrowser Assistant, close it; otherwise open it
++  if (side_panel_ui->IsSidePanelShowing(SidePanelEntry::PanelType::kContent) &&
++      side_panel_ui->GetCurrentEntryId(SidePanelEntry::PanelType::kContent) ==
++          SidePanelEntryId::kOpenBrowserAssistant) {
++    side_panel_ui->Close(SidePanelEntry::PanelType::kContent);
++  } else {
++    side_panel_ui->Show(SidePanelEntryId::kOpenBrowserAssistant);
++  }
++}
++
+ bool ToolbarView::AcceleratorPressed(const ui::Accelerator& accelerator) {
+   const views::View* focused_view = focus_manager()->GetFocusedView();
+   if (focused_view && (focused_view->GetID() == VIEW_ID_OMNIBOX)) {
+diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
+index d29a28f80fb0c..57872d3be618d 100644
+--- a/chrome/browser/ui/views/toolbar/toolbar_view.h
++++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
+@@ -280,6 +280,8 @@ class ToolbarView : public views::AccessiblePaneView,
+ 
+   void NewTabButtonPressed(const ui::Event& event);
+ 
++  void OnAssistantButtonPressed();
++
+   void UpdateRecedingCornerRadius();
+ 
+   gfx::SlideAnimation size_animation_{this};
+@@ -308,6 +310,7 @@ class ToolbarView : public views::AccessiblePaneView,
+   raw_ptr<BrowserAppMenuButton> app_menu_button_ = nullptr;
+   raw_ptr<views::View> new_tab_button_ = nullptr;
+   raw_ptr<PinnedActionToolbarButton> tab_search_button_ = nullptr;
++  raw_ptr<ToolbarButton> assistant_button_ = nullptr;
+ 
+   const raw_ptr<Browser> browser_;
+   const raw_ptr<BrowserView> browser_view_;
+diff --git a/extensions/common/constants.h b/extensions/common/constants.h
+index a5b9d8e23035d..862265c403126 100644
+--- a/extensions/common/constants.h
++++ b/extensions/common/constants.h
+@@ -284,6 +284,9 @@ inline constexpr char kChromeVoxExtensionId[] =
+ // The extension id of the PDF extension.
+ inline constexpr char kPdfExtensionId[] = "mhjfbmdgcfjbbpaeojofohoefgiehjai";
+ 
++// The extension id of the OpenBrowser Assistant extension.
++inline constexpr char kOpenBrowserAssistantExtensionId[] = "cbjnlnglpbmhbeekoalifpaallpcmelp";
++
+ #if BUILDFLAG(IS_CHROMEOS)
+ // The extension id of the Office Viewer component extension.
+ inline constexpr char kQuickOfficeComponentExtensionId[] =

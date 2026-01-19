@@ -6,34 +6,35 @@
 
 set -e  # Exit on error
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OPENBROWSER_ROOT="$(dirname "$SCRIPT_DIR")"
-CHROMIUM_SRC="${CHROMIUM_SRC:-$OPENBROWSER_ROOT/../chromium/src}"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OB_CHROMIUM_DIR="$(dirname "$SCRIPTS_DIR")"
+OB_ROOT="$(dirname "$OB_CHROMIUM_DIR")"
+CHROMIUM_SOURCE_DIR="${CHROMIUM_SRC:-$OB_ROOT/../chromium/src}"
 
-ASSETS_DIR="$OPENBROWSER_ROOT/branding_assets"
+BRANDING_ASSETS_DIR="$OB_ROOT/branding_assets"
 
 echo "========================================="
 echo "Applying OpenBrowser Branding Assets"
 echo "========================================="
-echo "Assets source: $ASSETS_DIR"
-echo "Chromium source: $CHROMIUM_SRC"
+echo "Assets source: $BRANDING_ASSETS_DIR"
+echo "Chromium source: $CHROMIUM_SOURCE_DIR"
 echo ""
 
-if [ ! -d "$CHROMIUM_SRC" ]; then
-    echo "ERROR: Chromium source directory not found at $CHROMIUM_SRC"
+if [ ! -d "$CHROMIUM_SOURCE_DIR" ]; then
+    echo "ERROR: Chromium source directory not found at $CHROMIUM_SOURCE_DIR"
     echo "Set CHROMIUM_SRC environment variable or run from correct location"
     exit 1
 fi
 
-if [ ! -d "$ASSETS_DIR" ]; then
-    echo "ERROR: Branding assets directory not found at $ASSETS_DIR"
+if [ ! -d "$BRANDING_ASSETS_DIR" ]; then
+    echo "ERROR: Branding assets directory not found at $BRANDING_ASSETS_DIR"
     exit 1
 fi
 
 # Function to copy asset with verification
 copy_asset() {
-    local src="$ASSETS_DIR/$1"
-    local dest="$CHROMIUM_SRC/$2"
+    local src="$BRANDING_ASSETS_DIR/$1"
+    local dest="$CHROMIUM_SOURCE_DIR/$2"
 
     if [ ! -f "$src" ]; then
         echo "⚠️  WARNING: Source file not found: $src"

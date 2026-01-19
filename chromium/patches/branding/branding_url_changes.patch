@@ -523,3 +523,399 @@ index 2c9a990b5e4aa..8f79579d20384 100644
  #if BUILDFLAG(IS_IOS)
    // On iOS, the blob: display URLs should be simply the domain name. However,
    // url_formatter parses everything past blob: as path, not domain, so swap
+diff --git a/openbrowser/BUILD.gn b/openbrowser/BUILD.gn
+new file mode 100644
+index 0000000000000..ccb4384233906
+--- /dev/null
++++ b/openbrowser/BUILD.gn
+@@ -0,0 +1,10 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++group("openbrowser") {
++  deps = [
++    "//openbrowser/browser",
++    "//openbrowser/common",
++  ]
++}
+diff --git a/openbrowser/browser/BUILD.gn b/openbrowser/browser/BUILD.gn
+new file mode 100644
+index 0000000000000..007f4fe1066d8
+--- /dev/null
++++ b/openbrowser/browser/BUILD.gn
+@@ -0,0 +1,17 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++source_set("browser") {
++  sources = [
++    "openbrowser_browser_main_extra_parts.cc",
++    "openbrowser_browser_main_extra_parts.h",
++  ]
++
++  deps = [
++    "//chrome/browser:main_extra_parts",
++    "//content/public/browser",
++    "//openbrowser/browser/ui/webui",
++    "//openbrowser/common",
++  ]
++}
+diff --git a/openbrowser/browser/openbrowser_browser_main_extra_parts.cc b/openbrowser/browser/openbrowser_browser_main_extra_parts.cc
+new file mode 100644
+index 0000000000000..172be1b04e717
+--- /dev/null
++++ b/openbrowser/browser/openbrowser_browser_main_extra_parts.cc
+@@ -0,0 +1,24 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/browser/openbrowser_browser_main_extra_parts.h"
++
++#include "content/public/browser/child_process_security_policy.h"
++#include "content/public/browser/web_ui_controller_factory.h"
++#include "openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h"
++#include "openbrowser/common/openbrowser_constants.h"
++
++OpenBrowserBrowserMainExtraParts::OpenBrowserBrowserMainExtraParts() = default;
++
++OpenBrowserBrowserMainExtraParts::~OpenBrowserBrowserMainExtraParts() = default;
++
++void OpenBrowserBrowserMainExtraParts::PostBrowserStart() {
++  // Step 3: Register openbrowser:// as a WebUI-safe scheme (like chrome://)
++  auto* policy = content::ChildProcessSecurityPolicy::GetInstance();
++  policy->RegisterWebSafeScheme(openbrowser::kOpenBrowserUIScheme);
++
++  // Step 4: Register the OpenBrowser WebUI controller factory
++  content::WebUIControllerFactory::RegisterFactory(
++      OpenBrowserWebUIControllerFactory::GetInstance());
++}
+diff --git a/openbrowser/browser/openbrowser_browser_main_extra_parts.h b/openbrowser/browser/openbrowser_browser_main_extra_parts.h
+new file mode 100644
+index 0000000000000..d77015a99b4b6
+--- /dev/null
++++ b/openbrowser/browser/openbrowser_browser_main_extra_parts.h
+@@ -0,0 +1,22 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
++#define OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
++
++#include "chrome/browser/chrome_browser_main_extra_parts.h"
++
++// Brave-style: handle OpenBrowser-specific browser initialization
++class OpenBrowserBrowserMainExtraParts : public ChromeBrowserMainExtraParts {
++ public:
++  OpenBrowserBrowserMainExtraParts();
++  OpenBrowserBrowserMainExtraParts(const OpenBrowserBrowserMainExtraParts&) = delete;
++  OpenBrowserBrowserMainExtraParts& operator=(const OpenBrowserBrowserMainExtraParts&) = delete;
++  ~OpenBrowserBrowserMainExtraParts() override;
++
++  // ChromeBrowserMainExtraParts overrides:
++  void PostBrowserStart() override;
++};
++
++#endif  // OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
+diff --git a/openbrowser/browser/ui/webui/BUILD.gn b/openbrowser/browser/ui/webui/BUILD.gn
+new file mode 100644
+index 0000000000000..2395dbbcf4054
+--- /dev/null
++++ b/openbrowser/browser/ui/webui/BUILD.gn
+@@ -0,0 +1,21 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++source_set("webui") {
++  sources = [
++    "openbrowser_web_ui_controller_factory.cc",
++    "openbrowser_web_ui_controller_factory.h",
++  ]
++
++  deps = [
++    "//base",
++    "//chrome/browser/profiles",
++    "//chrome/browser/ui/webui",
++    "//chrome/common",
++    "//content/public/browser",
++    "//content/public/common",
++    "//openbrowser/common",
++    "//url",
++  ]
++}
+diff --git a/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc
+new file mode 100644
+index 0000000000000..d82992fd9bf81
+--- /dev/null
++++ b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc
+@@ -0,0 +1,77 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h"
++
++#include "chrome/browser/profiles/profile.h"
++#include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
++#include "chrome/common/webui_url_constants.h"
++#include "content/public/browser/web_ui_controller.h"
++#include "content/public/common/url_constants.h"
++#include "openbrowser/common/openbrowser_constants.h"
++#include "url/gurl.h"
++
++// static
++OpenBrowserWebUIControllerFactory* OpenBrowserWebUIControllerFactory::GetInstance() {
++  static base::NoDestructor<OpenBrowserWebUIControllerFactory> instance;
++  return instance.get();
++}
++
++OpenBrowserWebUIControllerFactory::OpenBrowserWebUIControllerFactory() = default;
++
++OpenBrowserWebUIControllerFactory::~OpenBrowserWebUIControllerFactory() = default;
++
++content::WebUI::TypeID OpenBrowserWebUIControllerFactory::GetWebUIType(
++    content::BrowserContext* browser_context,
++    const GURL& url) {
++  // Only handle openbrowser:// URLs
++  if (!url.SchemeIs(openbrowser::kOpenBrowserUIScheme)) {
++    return content::WebUI::kNoWebUI;
++  }
++
++  // Brave-style: Convert openbrowser:// to chrome:// to check if it exists
++  // This is only for checking - the actual URL stays as openbrowser://
++  GURL::Replacements replacements;
++  replacements.SetSchemeStr(content::kChromeUIScheme);
++  GURL chrome_url = url.ReplaceComponents(replacements);
++
++  return ChromeWebUIControllerFactory::GetInstance()->GetWebUIType(
++      browser_context, chrome_url);
++}
++
++bool OpenBrowserWebUIControllerFactory::UseWebUIForURL(
++    content::BrowserContext* browser_context,
++    const GURL& url) {
++  // Only handle openbrowser:// URLs
++  if (!url.SchemeIs(openbrowser::kOpenBrowserUIScheme)) {
++    return false;
++  }
++
++  // Convert to chrome:// to check if it exists
++  GURL::Replacements replacements;
++  replacements.SetSchemeStr(content::kChromeUIScheme);
++  GURL chrome_url = url.ReplaceComponents(replacements);
++
++  return ChromeWebUIControllerFactory::GetInstance()->UseWebUIForURL(
++      browser_context, chrome_url);
++}
++
++std::unique_ptr<content::WebUIController>
++OpenBrowserWebUIControllerFactory::CreateWebUIControllerForURL(
++    content::WebUI* web_ui,
++    const GURL& url) {
++  // Only handle openbrowser:// URLs
++  if (!url.SchemeIs(openbrowser::kOpenBrowserUIScheme)) {
++    return nullptr;
++  }
++
++  // Brave-style: Convert openbrowser:// to chrome:// to create the controller
++  // The controller will use chrome:// internally, but the URL bar shows openbrowser://
++  GURL::Replacements replacements;
++  replacements.SetSchemeStr(content::kChromeUIScheme);
++  GURL chrome_url = url.ReplaceComponents(replacements);
++
++  return ChromeWebUIControllerFactory::GetInstance()->CreateWebUIControllerForURL(
++      web_ui, chrome_url);
++}
+diff --git a/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h
+new file mode 100644
+index 0000000000000..c315fac329fe3
+--- /dev/null
++++ b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h
+@@ -0,0 +1,38 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
++#define OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
++
++#include <memory>
++
++#include "base/no_destructor.h"
++#include "content/public/browser/web_ui_controller_factory.h"
++
++// Brave-style: Factory that handles openbrowser:// URLs
++// Maps them to existing Chrome WebUI controllers
++class OpenBrowserWebUIControllerFactory : public content::WebUIControllerFactory {
++ public:
++  static OpenBrowserWebUIControllerFactory* GetInstance();
++
++  OpenBrowserWebUIControllerFactory(const OpenBrowserWebUIControllerFactory&) = delete;
++  OpenBrowserWebUIControllerFactory& operator=(const OpenBrowserWebUIControllerFactory&) = delete;
++
++  // content::WebUIControllerFactory overrides:
++  content::WebUI::TypeID GetWebUIType(content::BrowserContext* browser_context,
++                                      const GURL& url) override;
++  bool UseWebUIForURL(content::BrowserContext* browser_context,
++                      const GURL& url) override;
++  std::unique_ptr<content::WebUIController> CreateWebUIControllerForURL(
++      content::WebUI* web_ui,
++      const GURL& url) override;
++
++ private:
++  friend base::NoDestructor<OpenBrowserWebUIControllerFactory>;
++
++  OpenBrowserWebUIControllerFactory();
++  ~OpenBrowserWebUIControllerFactory() override;
++};
++
++#endif  // OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
+diff --git a/openbrowser/buildflags.gni b/openbrowser/buildflags.gni
+new file mode 100644
+index 0000000000000..e0649261cd9ce
+--- /dev/null
++++ b/openbrowser/buildflags.gni
+@@ -0,0 +1,8 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# OpenBrowser build flag - always true for OpenBrowser builds
++declare_args() {
++  openbrowser_build = true
++}
+diff --git a/openbrowser/common/BUILD.gn b/openbrowser/common/BUILD.gn
+new file mode 100644
+index 0000000000000..73cd0ff9b04fd
+--- /dev/null
++++ b/openbrowser/common/BUILD.gn
+@@ -0,0 +1,30 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++import("//build/buildflag_header.gni")
++import("//openbrowser/buildflags.gni")
++
++buildflag_header("buildflags") {
++  header = "buildflags.h"
++  flags = [ "OPENBROWSER_BUILD=$openbrowser_build" ]
++}
++
++source_set("common") {
++  sources = [
++    "openbrowser_constants.cc",
++    "openbrowser_constants.h",
++    "openbrowser_url_rewrite.cc",
++    "openbrowser_url_rewrite.h",
++  ]
++
++  public_deps = [
++    ":buildflags",
++  ]
++
++  deps = [
++    "//base",
++    "//content/public/common",
++    "//url",
++  ]
++}
+diff --git a/openbrowser/common/openbrowser_constants.cc b/openbrowser/common/openbrowser_constants.cc
+new file mode 100644
+index 0000000000000..cae14f964717b
+--- /dev/null
++++ b/openbrowser/common/openbrowser_constants.cc
+@@ -0,0 +1,11 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/common/openbrowser_constants.h"
++
++namespace openbrowser {
++
++const char kOpenBrowserUIScheme[] = "openbrowser";
++
++}  // namespace openbrowser
+diff --git a/openbrowser/common/openbrowser_constants.h b/openbrowser/common/openbrowser_constants.h
+new file mode 100644
+index 0000000000000..6c8cb3c7b039c
+--- /dev/null
++++ b/openbrowser/common/openbrowser_constants.h
+@@ -0,0 +1,15 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
++#define OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
++
++namespace openbrowser {
++
++// URL scheme for OpenBrowser internal pages (like chrome://)
++extern const char kOpenBrowserUIScheme[];
++
++}  // namespace openbrowser
++
++#endif  // OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
+diff --git a/openbrowser/common/openbrowser_url_rewrite.cc b/openbrowser/common/openbrowser_url_rewrite.cc
+new file mode 100644
+index 0000000000000..2262cd7c71550
+--- /dev/null
++++ b/openbrowser/common/openbrowser_url_rewrite.cc
+@@ -0,0 +1,26 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++
++#include "content/public/common/url_constants.h"
++#include "openbrowser/common/openbrowser_constants.h"
++#include "url/gurl.h"
++
++namespace openbrowser {
++
++GURL GetDisplayURLForInternal(const GURL& url) {
++  // Only rewrite chrome:// URLs for UI display
++  // Never change the actual URL used for navigation
++  if (url.SchemeIs(content::kChromeUIScheme)) {
++    GURL::Replacements replacements;
++    replacements.SetSchemeStr(kOpenBrowserUIScheme);
++    return url.ReplaceComponents(replacements);
++  }
++
++  // Return unchanged for all other URLs
++  return url;
++}
++
++}  // namespace openbrowser
+diff --git a/openbrowser/common/openbrowser_url_rewrite.h b/openbrowser/common/openbrowser_url_rewrite.h
+new file mode 100644
+index 0000000000000..f641d1173fb62
+--- /dev/null
++++ b/openbrowser/common/openbrowser_url_rewrite.h
+@@ -0,0 +1,19 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_COMMON_OPENBROWSER_URL_REWRITE_H_
++#define OPENBROWSER_COMMON_OPENBROWSER_URL_REWRITE_H_
++
++class GURL;
++
++namespace openbrowser {
++
++// Brave-style: Rewrites chrome:// URLs to openbrowser:// for display in UI
++// This does NOT change the actual URL used for navigation - only what the user sees
++// Example: chrome://settings → openbrowser://settings (for display only)
++GURL GetDisplayURLForInternal(const GURL& url);
++
++}  // namespace openbrowser
++
++#endif  // OPENBROWSER_COMMON_OPENBROWSER_URL_REWRITE_H_
