@@ -1,8 +1,8 @@
 diff --git a/chrome/app/theme/theme_resources.grd b/chrome/app/theme/theme_resources.grd
-index d38aa879d082b..3a86c54500ce1 100644
+index 3e7015eb63c22..d71e0fc1fd52c 100644
 --- a/chrome/app/theme/theme_resources.grd
 +++ b/chrome/app/theme/theme_resources.grd
-@@ -161,6 +161,7 @@
+@@ -164,6 +164,7 @@
        <structure type="chrome_scaled_image" name="IDR_PRERENDER" file="common/prerender_succeed_icon.png" />
        <structure type="chrome_scaled_image" name="IDR_PRODUCT_LOGO_32" file="${branding_path_component}/product_logo_32.png" />
        <structure type="chrome_scaled_image" name="IDR_PRODUCT_LOGO_32_WHITE" file="${branding_path_component}/product_logo_32_white.png" />
@@ -11,10 +11,10 @@ index d38aa879d082b..3a86c54500ce1 100644
          <then>
            <if expr="is_linux">
 diff --git a/chrome/browser/browser_resources.grd b/chrome/browser/browser_resources.grd
-index a549f50a0d16a..af614822591c0 100644
+index c5f6cbb073dbe..14219ae345c15 100644
 --- a/chrome/browser/browser_resources.grd
 +++ b/chrome/browser/browser_resources.grd
-@@ -229,6 +229,8 @@
+@@ -227,6 +227,8 @@
          <include name="IDR_PDF_MANIFEST" file="resources\pdf\manifest.json" type="BINDATA" />
        </if>
        <include name="IDR_WEBSTORE_MANIFEST" file="resources\webstore_app\manifest.json" type="BINDATA" />
@@ -36,10 +36,10 @@ index cd53ca53c51ff..bf68378f2d306 100644
        extension_misc::kAssessmentAssistantExtensionId,
        extension_misc::kAccessibilityCommonExtensionId,
 diff --git a/chrome/browser/extensions/component_loader.cc b/chrome/browser/extensions/component_loader.cc
-index ba347da2a2d2e..076602a74ef9f 100644
+index b0f343384c5a0..4b8cfe4a0f50b 100644
 --- a/chrome/browser/extensions/component_loader.cc
 +++ b/chrome/browser/extensions/component_loader.cc
-@@ -505,6 +505,15 @@ void ComponentLoader::AddDefaultComponentExtensions(
+@@ -504,6 +504,15 @@ void ComponentLoader::AddDefaultComponentExtensions(
    DCHECK(!skip_session_components);
  #endif  // BUILDFLAG(IS_CHROMEOS)
  
@@ -147,7 +147,7 @@ index c8f16f0451d7a..654a9a962f259 100644
        <if expr="_google_chrome or enable_hangout_services_extension">
          <include name="IDR_HANGOUT_SERVICES_BACKGROUND_HTML" file="hangout_services/background.html" type="BINDATA" />
 diff --git a/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc b/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
-index d9315fa4fa5b0..c4ec7c1540ca3 100644
+index 2116104c556d9..55b2bc9cacfc5 100644
 --- a/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
 +++ b/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
 @@ -22,10 +22,13 @@
@@ -229,8 +229,25 @@ index 597e5905bc40d..231fa20f55d71 100644
    const gfx::Rect local_bounds = GetLocalBounds();
    SkPathBuilder path;
    if (is_right_aligned_callback_.Run()) {
+diff --git a/chrome/browser/ui/views/frame/custom_floating_corner.cc b/chrome/browser/ui/views/frame/custom_floating_corner.cc
+index e6148d8a877dc..79ae325e2c91d 100644
+--- a/chrome/browser/ui/views/frame/custom_floating_corner.cc
++++ b/chrome/browser/ui/views/frame/custom_floating_corner.cc
+@@ -110,10 +110,8 @@ gfx::Size CustomFloatingCorner::CalculatePreferredSize(
+   // http://crbug.com/40178332). The nullptr dereference does not always
+   // crash due to compiler optimizations, so CHECKing here ensures we crash.
+   CHECK(GetLayoutProvider());
+-  const float corner_radius =
+-      GetLayoutProvider()->GetCornerRadiusMetric(corner_radius_token_);
+-  const float corner_size =
+-      corner_radius + (stroke_color_ ? views::Separator::kThickness : 0);
++  // Force corner radius to 0 to disable rounded corners - return 0 size to hide
++  const float corner_size = 0;
+   return gfx::Size(corner_size, corner_size);
+ }
+ 
 diff --git a/chrome/browser/ui/views/side_panel/side_panel.cc b/chrome/browser/ui/views/side_panel/side_panel.cc
-index 8a128e29e68eb..d5740ceed44f0 100644
+index 56a63f28ca526..fa60d36b2d87f 100644
 --- a/chrome/browser/ui/views/side_panel/side_panel.cc
 +++ b/chrome/browser/ui/views/side_panel/side_panel.cc
 @@ -60,7 +60,7 @@ namespace {
@@ -242,19 +259,20 @@ index 8a128e29e68eb..d5740ceed44f0 100644
  }
  
  // This is how many units of the toolbar are essentially expected to be
-@@ -125,9 +125,8 @@ class SidePanelBorder : public views::Border {
+@@ -125,10 +125,8 @@ class SidePanelBorder : public views::Border {
          view.GetLocalBounds(), view.layer()->device_scale_factor());
  
      gfx::RectF scaled_contents_bounds_f = scaled_view_bounds_f;
 -    const float corner_radius =
--        dsf * view.GetLayoutProvider()->GetCornerRadiusMetric(
--                  views::ShapeContextTokens::kSidePanelContentRadius);
+-        dsf * view.GetLayoutProvider()->GetDistanceMetric(
+-                  ChromeDistanceMetric::
+-                      DISTANCE_CONTENT_HEIGHT_SIDE_PANEL_CONTENT_RADIUS);
 +    // Remove rounded corners for all sidepanels
 +    const float corner_radius = 0;
      const gfx::InsetsF insets_in_pixels(
          gfx::ConvertInsetsToPixels(GetInsets(), dsf));
      scaled_contents_bounds_f.Inset(insets_in_pixels);
-@@ -191,7 +190,7 @@ class SidePanelBorder : public views::Border {
+@@ -203,7 +201,7 @@ class SidePanelBorder : public views::Border {
      // there is a header we want to increase the top inset to give room for the
      // header to paint on top of the border area.
      int top_inset =
@@ -263,25 +281,43 @@ index 8a128e29e68eb..d5740ceed44f0 100644
      return GetBorderInsets() + gfx::Insets::TLBR(top_inset, 0, 0, 0);
    }
    gfx::Size GetMinimumSize() const override {
-@@ -246,11 +245,8 @@ class ContentParentView : public views::View {
+@@ -225,7 +223,7 @@ class ContentParentView : public views::View, public views::ViewObserver {
+  public:
+   explicit ContentParentView(bool should_round_corners,
+                              SidePanelEntry::PanelType type)
+-      : should_round_corners_(should_round_corners), type_(type) {
++      : should_round_corners_(should_round_corners) {
+     SetUseDefaultFillLayout(true);
+     SetProperty(
+         views::kFlexBehaviorKey,
+@@ -265,20 +263,11 @@ class ContentParentView : public views::View, public views::ViewObserver {
    }
  
    gfx::RoundedCornersF GetRoundedCorners() {
+-    ChromeDistanceMetric corner_radius =
+-        type_ == SidePanelEntry::PanelType::kToolbar
+-            ? ChromeDistanceMetric::
+-                  DISTANCE_TOOLBAR_HEIGHT_SIDE_PANEL_CONTENT_RADIUS
+-            : ChromeDistanceMetric::
+-                  DISTANCE_CONTENT_HEIGHT_SIDE_PANEL_CONTENT_RADIUS;
 -    return should_round_corners_ && GetLayoutProvider()
 -               ? gfx::RoundedCornersF(
--                     GetLayoutProvider()->GetCornerRadiusMetric(
--                         views::ShapeContextTokens::kSidePanelContentRadius))
+-                     GetLayoutProvider()->GetDistanceMetric(corner_radius))
 -               : gfx::RoundedCornersF();
 +    // Remove rounded corners for all sidepanels
 +    return gfx::RoundedCornersF(0);
    }
  
    bool should_round_corners_ = false;
+-  SidePanelEntry::PanelType type_;
+   base::ScopedObservation<views::View, views::ViewObserver> view_observation_{
+       this};
+ };
 diff --git a/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc b/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc
-index c79799b24b682..2bca27c33d5f3 100644
+index 4b5cf3a8c539f..c6dfeec963d96 100644
 --- a/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc
 +++ b/chrome/browser/ui/views/side_panel/side_panel_coordinator.cc
-@@ -130,6 +130,17 @@ void SidePanelCoordinator::Show(
+@@ -148,6 +148,17 @@ void SidePanelCoordinator::Show(
  
    SidePanelEntry* entry = GetEntryForUniqueKey(input);
  
@@ -312,10 +348,10 @@ index 201d94283a5c0..0a389c4429d65 100644
    V(kExtension, std::nullopt, "Extension")
  
 diff --git a/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc b/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc
-index 3086e688c3cfe..1095d76a934d0 100644
+index 6282663e55c36..e5742fa988c40 100644
 --- a/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc
 +++ b/chrome/browser/ui/views/side_panel/side_panel_header_controller.cc
-@@ -82,9 +82,12 @@ SidePanelHeaderController::SidePanelHeaderController(
+@@ -81,9 +81,12 @@ SidePanelHeaderController::SidePanelHeaderController(
    CHECK(side_panel_entry_);
    actions::ActionItem* const action_item =
        SidePanelUtil::GetActionItem(browser, side_panel_entry->key());
@@ -331,7 +367,7 @@ index 3086e688c3cfe..1095d76a934d0 100644
    side_panel_toolbar_pinning_controller_observation_.Observe(
        side_panel_toolbar_pinning_controller);
  }
-@@ -267,9 +270,10 @@ void SidePanelHeaderController::UpdatePinButton() {
+@@ -269,9 +272,10 @@ void SidePanelHeaderController::UpdatePinButton() {
        side_panel_toolbar_pinning_controller_->GetPinnedStateFor(
            side_panel_entry_->key());
    pin_button_->SetToggled(current_pinned_state);
@@ -343,7 +379,7 @@ index 3086e688c3cfe..1095d76a934d0 100644
            static_cast<int>(actions::ActionPinnableState::kPinnable));
  
    if (!current_pinned_state) {
-@@ -280,9 +284,13 @@ void SidePanelHeaderController::UpdatePinButton() {
+@@ -282,9 +286,13 @@ void SidePanelHeaderController::UpdatePinButton() {
  
  ui::ImageModel SidePanelHeaderController::GetIconImage() {
    CHECK(side_panel_entry_);
@@ -360,7 +396,7 @@ index 3086e688c3cfe..1095d76a934d0 100644
    if (icon.IsVectorIcon()) {
      icon = ui::ImageModel::FromVectorIcon(*icon.GetVectorIcon().vector_icon(),
                                            kColorSidePanelEntryIcon,
-@@ -293,10 +301,13 @@ ui::ImageModel SidePanelHeaderController::GetIconImage() {
+@@ -295,10 +303,13 @@ ui::ImageModel SidePanelHeaderController::GetIconImage() {
  
  std::u16string_view SidePanelHeaderController::GetTitleText() {
    CHECK(side_panel_entry_);
@@ -379,7 +415,7 @@ index 3086e688c3cfe..1095d76a934d0 100644
  
  void SidePanelHeaderController::UpdatePinState() {
 diff --git a/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc b/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc
-index f38005a7f2f93..ddb42374bb83b 100644
+index 61c26ae94213e..3fcd9c054f995 100644
 --- a/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc
 +++ b/chrome/browser/ui/views/side_panel/side_panel_toolbar_pinning_controller.cc
 @@ -66,7 +66,10 @@ bool SidePanelToolbarPinningController::GetPinnedStateFor(
@@ -424,18 +460,18 @@ index f38005a7f2f93..ddb42374bb83b 100644
    }
  }
 diff --git a/chrome/browser/ui/views/side_panel/side_panel_util.cc b/chrome/browser/ui/views/side_panel/side_panel_util.cc
-index 2dbc320b01891..a24771df3ddba 100644
+index 7450af92ada15..fec60a27f99c0 100644
 --- a/chrome/browser/ui/views/side_panel/side_panel_util.cc
 +++ b/chrome/browser/ui/views/side_panel/side_panel_util.cc
-@@ -9,6 +9,7 @@
- #include "base/metrics/user_metrics_action.h"
+@@ -10,6 +10,7 @@
+ #include "base/notreached.h"
  #include "base/strings/strcat.h"
  #include "base/time/time.h"
 +#include "url/gurl.h"
  #include "chrome/browser/history_clusters/history_clusters_service_factory.h"
  #include "chrome/browser/profiles/profile.h"
  #include "chrome/browser/ui/browser.h"
-@@ -23,6 +24,8 @@
+@@ -24,6 +25,8 @@
  #include "chrome/browser/ui/views/side_panel/reading_list/reading_list_side_panel_coordinator.h"
  #include "chrome/browser/ui/views/side_panel/side_panel_content_proxy.h"
  #include "chrome/browser/ui/views/side_panel/side_panel_coordinator.h"
@@ -444,7 +480,7 @@ index 2dbc320b01891..a24771df3ddba 100644
  #include "chrome/browser/ui/views/side_panel/side_panel_registry.h"
  #include "chrome/browser/ui/views/side_panel/side_panel_ui.h"
  #include "chrome/browser/ui/webui_browser/webui_browser.h"
-@@ -30,8 +33,11 @@
+@@ -31,8 +34,11 @@
  #include "components/history_clusters/core/features.h"
  #include "components/history_clusters/core/history_clusters_service.h"
  #include "components/prefs/pref_service.h"
@@ -456,7 +492,7 @@ index 2dbc320b01891..a24771df3ddba 100644
  
  #if BUILDFLAG(ENABLE_GLIC)
  #include "chrome/browser/glic/public/glic_enabling.h"
-@@ -96,6 +102,23 @@ void SidePanelUtil::PopulateGlobalEntries(Browser* browser,
+@@ -118,6 +124,23 @@ void SidePanelUtil::PopulateGlobalEntries(Browser* browser,
          ->CreateAndRegisterEntry(browser, window_registry);
    }
  #endif
@@ -480,7 +516,7 @@ index 2dbc320b01891..a24771df3ddba 100644
  }
  
  SidePanelContentProxy* SidePanelUtil::GetSidePanelContentProxy(
-@@ -123,6 +146,11 @@ actions::ActionItem* SidePanelUtil::GetActionItem(
+@@ -145,6 +168,11 @@ actions::ActionItem* SidePanelUtil::GetActionItem(
      return action_item;
    }
  
@@ -493,10 +529,10 @@ index 2dbc320b01891..a24771df3ddba 100644
        SidePanelEntryIdToActionId(entry_key.id());
    CHECK(action_id.has_value());
 diff --git a/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc b/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc
-index 4ef3578829404..a1d02e1c3dc4b 100644
+index 84f357ad1e311..89d6249580eaa 100644
 --- a/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc
 +++ b/chrome/browser/ui/views/toolbar/pinned_action_toolbar_button.cc
-@@ -308,6 +308,21 @@ void PinnedActionToolbarButton::OnAnchorCountChanged(size_t anchor_count) {
+@@ -310,6 +310,21 @@ void PinnedActionToolbarButton::OnAnchorCountChanged(size_t anchor_count) {
    }
  }
  
@@ -531,10 +567,10 @@ index 5faebc2c5021d..7352e6df452ae 100644
  
    bool ShouldSkipExecutionForTesting() { return skip_execution_; }
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-index e86eec19bd872..b2166b6249940 100644
+index 74537be6ca655..4e5cc23453199 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-@@ -71,6 +71,9 @@
+@@ -69,6 +69,9 @@
  #include "chrome/browser/ui/views/performance_controls/battery_saver_button.h"
  #include "chrome/browser/ui/views/performance_controls/performance_intervention_button.h"
  #include "chrome/browser/ui/views/side_panel/side_panel.h"
@@ -544,7 +580,7 @@ index e86eec19bd872..b2166b6249940 100644
  #include "chrome/browser/ui/views/tabs/tab_strip.h"
  #include "chrome/browser/ui/views/tabs/tab_strip_controller.h"
  #include "chrome/browser/ui/views/toolbar/app_menu.h"
-@@ -115,6 +118,7 @@
+@@ -113,6 +116,7 @@
  #include "ui/base/window_open_disposition_utils.h"
  #include "ui/color/color_id.h"
  #include "ui/color/color_provider.h"
@@ -552,8 +588,8 @@ index e86eec19bd872..b2166b6249940 100644
  #include "ui/compositor/layer.h"
  #include "ui/gfx/canvas.h"
  #include "ui/gfx/image/canvas_image_source.h"
-@@ -522,6 +526,17 @@ void ToolbarView::Init() {
-       container_view_->AddChildView(std::make_unique<OverflowButton>());
+@@ -441,6 +445,17 @@ void ToolbarView::Init() {
+   overflow_button_ = AddChildView(std::make_unique<OverflowButton>());
    overflow_button_->SetVisible(false);
  
 +  // OpenBrowser Assistant button
@@ -565,12 +601,12 @@ index e86eec19bd872..b2166b6249940 100644
 +  assistant_button->SetImageModel(
 +      views::Button::STATE_NORMAL,
 +      ui::ImageModel::FromResourceId(IDR_PRODUCT_LOGO_16));
-+  assistant_button_ = container_view_->AddChildView(std::move(assistant_button));
++  assistant_button_ = AddChildView(std::move(assistant_button));
 +
    auto app_menu_button = std::make_unique<BrowserAppMenuButton>(this);
    app_menu_button->SetFlipCanvasOnPaintForRTLUI(true);
    app_menu_button->GetViewAccessibility().SetName(
-@@ -895,6 +910,16 @@ void ToolbarView::OnThemeChanged() {
+@@ -794,6 +809,16 @@ void ToolbarView::OnThemeChanged() {
      LoadImages();
    }
  
@@ -587,7 +623,7 @@ index e86eec19bd872..b2166b6249940 100644
    SchedulePaint();
  }
  
-@@ -937,6 +962,19 @@ void ToolbarView::NewTabButtonPressed(const ui::Event& event) {
+@@ -802,6 +827,19 @@ void ToolbarView::NewTabButtonPressed(const ui::Event& event) {
                   NewTabTypes::kNewTabButtonInToolbarForTouch);
  }
  
@@ -608,19 +644,19 @@ index e86eec19bd872..b2166b6249940 100644
    const views::View* focused_view = focus_manager()->GetFocusedView();
    if (focused_view && (focused_view->GetID() == VIEW_ID_OMNIBOX)) {
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
-index d29a28f80fb0c..57872d3be618d 100644
+index a1bb987e9957e..3ee094d76beb9 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.h
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
-@@ -280,6 +280,8 @@ class ToolbarView : public views::AccessiblePaneView,
+@@ -268,6 +268,8 @@ class ToolbarView : public views::AccessiblePaneView,
  
    void NewTabButtonPressed(const ui::Event& event);
  
 +  void OnAssistantButtonPressed();
 +
-   void UpdateRecedingCornerRadius();
- 
    gfx::SlideAnimation size_animation_{this};
-@@ -308,6 +310,7 @@ class ToolbarView : public views::AccessiblePaneView,
+ 
+   // Controls. Most of these can be null, e.g. in popup windows. Only
+@@ -295,6 +297,7 @@ class ToolbarView : public views::AccessiblePaneView,
    raw_ptr<BrowserAppMenuButton> app_menu_button_ = nullptr;
    raw_ptr<views::View> new_tab_button_ = nullptr;
    raw_ptr<PinnedActionToolbarButton> tab_search_button_ = nullptr;

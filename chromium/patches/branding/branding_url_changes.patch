@@ -1,8 +1,9 @@
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index 36f40ae2c5d5c..6287d30250a74 100644
+diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
+index 324103d42acce..41d2adec2fad6 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -2091,6 +2091,7 @@ static_library("browser") {
+@@ -2064,6 +2064,7 @@ static_library("browser") {
      "//chrome/common/notifications",
      "//chrome/installer/util:with_no_strings",
      "//chrome/services/speech/buildflags",
@@ -11,7 +12,7 @@ index 36f40ae2c5d5c..6287d30250a74 100644
      "//components/assist_ranker",
      "//components/autofill/content/browser",
 diff --git a/chrome/browser/chrome_browser_main.cc b/chrome/browser/chrome_browser_main.cc
-index d347c428acc41..b6b393965990c 100644
+index 5c8eeaaf5d9dc..0af034caf121a 100644
 --- a/chrome/browser/chrome_browser_main.cc
 +++ b/chrome/browser/chrome_browser_main.cc
 @@ -47,6 +47,7 @@
@@ -22,7 +23,7 @@ index d347c428acc41..b6b393965990c 100644
  #include "chrome/browser/metrics/chrome_feature_list_creator.h"
  #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
  #include "chrome/browser/metrics/expired_histograms_array.h"
-@@ -780,6 +781,9 @@ std::unique_ptr<content::BrowserMainParts> ChromeBrowserMainParts::Create(
+@@ -781,6 +782,9 @@ std::unique_ptr<content::BrowserMainParts> ChromeBrowserMainParts::Create(
  
    main_parts->AddParts(std::make_unique<ChromeBrowserMainExtraPartsMemory>());
  
@@ -33,10 +34,10 @@ index d347c428acc41..b6b393965990c 100644
  
    main_parts->AddParts(
 diff --git a/chrome/browser/chrome_content_browser_client.cc b/chrome/browser/chrome_content_browser_client.cc
-index 8da969bd542eb..aec983c3b66af 100644
+index d358af3f7b6f2..ae2596d5337b7 100644
 --- a/chrome/browser/chrome_content_browser_client.cc
 +++ b/chrome/browser/chrome_content_browser_client.cc
-@@ -2080,6 +2080,8 @@ void ChromeContentBrowserClient::GetAdditionalWebUISchemes(
+@@ -2072,6 +2072,8 @@ void ChromeContentBrowserClient::GetAdditionalWebUISchemes(
    additional_schemes->emplace_back(chrome::kChromeSearchScheme);
    additional_schemes->emplace_back(dom_distiller::kDomDistillerScheme);
    additional_schemes->emplace_back(content::kChromeDevToolsScheme);
@@ -46,10 +47,10 @@ index 8da969bd542eb..aec983c3b66af 100644
  
  bool ChromeContentBrowserClient::IsInternalScheme(const GURL& url) {
 diff --git a/chrome/browser/ui/BUILD.gn b/chrome/browser/ui/BUILD.gn
-index 28f9bc3e7ece5..e452fefebffec 100644
+index 05f6b17c2205d..2ce0e2f9809ea 100644
 --- a/chrome/browser/ui/BUILD.gn
 +++ b/chrome/browser/ui/BUILD.gn
-@@ -508,6 +508,7 @@ static_library("ui") {
+@@ -514,6 +514,7 @@ static_library("ui") {
      "//components/offline_pages/buildflags",
      "//components/omnibox/browser",
      "//components/omnibox/browser:vector_icons",
@@ -58,11 +59,11 @@ index 28f9bc3e7ece5..e452fefebffec 100644
      "//components/optimization_guide/content/browser",
      "//components/optimization_guide/core",
 diff --git a/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc b/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc
-index 9a0934f9a65c0..944118bb630d0 100644
+index b9874b2c34990..8dd1e174579f5 100644
 --- a/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc
 +++ b/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc
-@@ -28,6 +28,11 @@
- #include "components/page_info/core/pref_names.h"
+@@ -26,6 +26,11 @@
+ #include "components/page_info/core/merchant_trust_service.h"
  #include "components/permissions/permission_decision_auto_blocker.h"
  #include "components/permissions/permission_manager.h"
 +#include "openbrowser/common/buildflags.h"
@@ -72,8 +73,8 @@ index 9a0934f9a65c0..944118bb630d0 100644
 +#endif
  #include "components/permissions/permissions_client.h"
  #include "components/prefs/pref_service.h"
- #include "components/privacy_sandbox/tracking_protection_settings.h"
-@@ -63,7 +68,14 @@
+ #include "components/strings/grit/components_strings.h"
+@@ -60,7 +65,14 @@
  ChromePageInfoUiDelegate::ChromePageInfoUiDelegate(
      content::WebContents* web_contents,
      const GURL& site_url)
@@ -147,7 +148,7 @@ index 0099aba7e3000..5cbd9422238b1 100644
    remote_tab_items_.emplace(command_id, item);
    AddTabFavicon(command_id, containing_model, item.url);
 diff --git a/chrome/browser/ui/views/bookmarks/bookmark_button.cc b/chrome/browser/ui/views/bookmarks/bookmark_button.cc
-index 5078ba0b4493b..2db9baa20cead 100644
+index ca72c436dd05b..bf4e9309a83e5 100644
 --- a/chrome/browser/ui/views/bookmarks/bookmark_button.cc
 +++ b/chrome/browser/ui/views/bookmarks/bookmark_button.cc
 @@ -30,6 +30,11 @@
@@ -212,7 +213,7 @@ index 6c1ba4355c030..addd2c63e0ba9 100644
  
  // MenuButton:
 diff --git a/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc b/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc
-index ec38f473667d6..c1ed9570a7cfb 100644
+index a1fd95cae27a9..122fa4ec4f739 100644
 --- a/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc
 +++ b/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc
 @@ -44,6 +44,7 @@
@@ -223,7 +224,7 @@ index ec38f473667d6..c1ed9570a7cfb 100644
  #include "content/public/browser/page_navigator.h"
  #include "ui/base/accelerators/menu_label_accelerator_util.h"
  #include "ui/base/dragdrop/drag_drop_types.h"
-@@ -372,6 +373,10 @@ void BookmarkMenuDelegate::SetMenuStartIndex(const BookmarkParentFolder& folder,
+@@ -418,6 +419,10 @@ void BookmarkMenuDelegate::SetMenuStartIndex(const BookmarkParentFolder& folder,
  std::u16string BookmarkMenuDelegate::GetTooltipText(
      int id,
      const gfx::Point& screen_loc) const {
@@ -234,7 +235,7 @@ index ec38f473667d6..c1ed9570a7cfb 100644
    auto i = menu_id_to_node_map_.find(id);
    // Ignore queries about unknown items, e.g. the empty menu item.
    if (i != menu_id_to_node_map_.end()) {
-@@ -385,6 +390,7 @@ std::u16string BookmarkMenuDelegate::GetTooltipText(
+@@ -431,6 +436,7 @@ std::u16string BookmarkMenuDelegate::GetTooltipText(
      }
    }
    return std::u16string();
@@ -243,10 +244,10 @@ index ec38f473667d6..c1ed9570a7cfb 100644
  
  bool BookmarkMenuDelegate::IsTriggerableEvent(views::MenuItemView* menu,
 diff --git a/chrome/browser/ui/views/status_bubble_views.cc b/chrome/browser/ui/views/status_bubble_views.cc
-index f8461a764aa85..f3acd022cbda6 100644
+index 01a7b1aca2958..ea39c5f5a1c5d 100644
 --- a/chrome/browser/ui/views/status_bubble_views.cc
 +++ b/chrome/browser/ui/views/status_bubble_views.cc
-@@ -29,7 +29,12 @@
+@@ -28,7 +28,12 @@
  #include "chrome/browser/ui/views/chrome_widget_sublevel.h"
  #include "components/url_formatter/elide_url.h"
  #include "components/url_formatter/url_formatter.h"
@@ -336,10 +337,10 @@ index f8461a764aa85..f3acd022cbda6 100644
            FROM_HERE,
            base::BindOnce(&StatusBubbleViews::ExpandBubble,
 diff --git a/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc b/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
-index b7f8114c698d8..427c46af2af8a 100644
+index 18d0e53e8ae4b..34fc92e4a9b79 100644
 --- a/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
 +++ b/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
-@@ -36,7 +36,12 @@
+@@ -38,7 +38,12 @@
  #include "components/collaboration/public/messaging/message.h"
  #include "components/strings/grit/components_strings.h"
  #include "components/url_formatter/url_formatter.h"
@@ -352,8 +353,8 @@ index b7f8114c698d8..427c46af2af8a 100644
  #include "ui/base/l10n/l10n_util.h"
  #include "ui/base/metadata/metadata_header_macros.h"
  #include "ui/base/metadata/metadata_impl_macros.h"
-@@ -544,13 +549,20 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
-     alert_state_ = Tab::GetAlertStateToShow(tab_data.alert_state);
+@@ -547,14 +552,21 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
+         tabs::TabAlertController::GetAlertStateToShow(tab_data.alert_state);
    }
  
 +  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
@@ -369,23 +370,25 @@ index b7f8114c698d8..427c46af2af8a 100644
 +  if (display_url.SchemeIsFile()) {
      is_filename = true;
      domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_FILE_URL_SOURCE);
+-  } else if (domain_url.SchemeIsBlob()) {
++  } else if (display_url.SchemeIsBlob()) {
+     domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_BLOB_URL_SOURCE);
+-  } else if (domain_url.SchemeIs(url::kViewSourceScheme)) {
++  } else if (display_url.SchemeIs(url::kViewSourceScheme)) {
+     domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_VIEW_SOURCE_URL_SOURCE);
    } else {
--    if (domain_url.SchemeIsBlob()) {
-+    if (display_url.SchemeIsBlob()) {
-       domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_BLOB_URL_SOURCE);
-     } else {
-       if (tab_data.should_display_url) {
-@@ -558,7 +570,7 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
-         // card, but this scenario is very rare. Also, shrinking the card to
-         // remove the space would result in visual noise, so we keep it simple.
-         domain = url_formatter::FormatUrl(
--            domain_url,
-+            display_url,
-             url_formatter::kFormatUrlOmitDefaults |
-                 url_formatter::kFormatUrlOmitHTTPS |
-                 url_formatter::kFormatUrlOmitTrivialSubdomains |
+     if (tab_data.should_display_url) {
+@@ -562,7 +574,7 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
+       // card, but this scenario is very rare. Also, shrinking the card to
+       // remove the space would result in visual noise, so we keep it simple.
+       domain = url_formatter::FormatUrl(
+-          domain_url,
++          display_url,
+           url_formatter::kFormatUrlOmitDefaults |
+               url_formatter::kFormatUrlOmitHTTPS |
+               url_formatter::kFormatUrlOmitTrivialSubdomains |
 diff --git a/chrome/browser/ui/webui/history/browsing_history_handler.cc b/chrome/browser/ui/webui/history/browsing_history_handler.cc
-index c42124925de65..d1446ee97a670 100644
+index c2a2396dd2365..0ad64f14916b0 100644
 --- a/chrome/browser/ui/webui/history/browsing_history_handler.cc
 +++ b/chrome/browser/ui/webui/history/browsing_history_handler.cc
 @@ -48,6 +48,11 @@
@@ -400,7 +403,7 @@ index c42124925de65..d1446ee97a670 100644
  #include "components/history_clusters/core/features.h"
  #include "components/history_clusters/core/history_clusters_prefs.h"
  #include "components/history_embeddings/history_embeddings_features.h"
-@@ -142,11 +147,18 @@ void GetDeviceNameAndType(const syncer::DeviceInfoTracker* tracker,
+@@ -145,11 +150,18 @@ void GetDeviceNameAndType(const syncer::DeviceInfoTracker* tracker,
  // Formats `entry`'s URL and title and adds them to `result`.
  std::pair<std::string, std::string> SetHistoryEntryUrlAndTitle(
      const BrowsingHistoryService::HistoryEntry& entry) {
@@ -420,7 +423,7 @@ index c42124925de65..d1446ee97a670 100644
    }
  
    // Since the title can contain BiDi text, we need to mark the text as either
-@@ -167,7 +179,7 @@ std::pair<std::string, std::string> SetHistoryEntryUrlAndTitle(
+@@ -170,7 +182,7 @@ std::pair<std::string, std::string> SetHistoryEntryUrlAndTitle(
      title_to_set.resize(kShortTitleLength);
    }
  
@@ -430,7 +433,7 @@ index c42124925de65..d1446ee97a670 100644
  
  // Helper function to check if entry is present in local database (local-side
 diff --git a/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc b/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc
-index 6161845cb7b47..b64846c84ab6b 100644
+index 6186da9598132..3ef33a2a76d35 100644
 --- a/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc
 +++ b/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc
 @@ -48,6 +48,11 @@
@@ -445,7 +448,7 @@ index 6161845cb7b47..b64846c84ab6b 100644
  #include "chrome/browser/ui/webui/webui_embedding_context.h"
  #include "chrome/browser/undo/bookmark_undo_service_factory.h"
  #include "chrome/grit/generated_resources.h"
-@@ -365,7 +370,13 @@ side_panel::mojom::BookmarksTreeNodePtr ConstructMojoNode(
+@@ -363,7 +368,13 @@ side_panel::mojom::BookmarksTreeNodePtr ConstructMojoNode(
            bookmark_merged_surface.GetChildren(sub_parent));
      }
    } else {
@@ -459,7 +462,7 @@ index 6161845cb7b47..b64846c84ab6b 100644
    }
  
    return mojo_node;
-@@ -877,9 +888,20 @@ void BookmarksPageHandler::BookmarkNodeMoved(
+@@ -874,9 +885,20 @@ void BookmarksPageHandler::BookmarkNodeMoved(
  
  void BookmarksPageHandler::BookmarkNodeChanged(
      const bookmarks::BookmarkNode* node) {
@@ -482,10 +485,10 @@ index 6161845cb7b47..b64846c84ab6b 100644
  
  std::string GetFolderSidePanelIDForTesting(
 diff --git a/components/omnibox/browser/BUILD.gn b/components/omnibox/browser/BUILD.gn
-index ec274ae97be13..41817245f3062 100644
+index e0f69f0966f0d..b4b86fb8c2567 100644
 --- a/components/omnibox/browser/BUILD.gn
 +++ b/components/omnibox/browser/BUILD.gn
-@@ -345,6 +345,7 @@ static_library("browser") {
+@@ -338,6 +338,7 @@ static_library("browser") {
    deps = [
      "//build:branding_buildflags",
      "//components/bookmarks/browser",
@@ -525,7 +528,6 @@ index 2c9a990b5e4aa..8f79579d20384 100644
    // url_formatter parses everything past blob: as path, not domain, so swap
 diff --git a/openbrowser/BUILD.gn b/openbrowser/BUILD.gn
 new file mode 100644
-index 0000000000000..ccb4384233906
 --- /dev/null
 +++ b/openbrowser/BUILD.gn
 @@ -0,0 +1,10 @@
@@ -541,7 +543,6 @@ index 0000000000000..ccb4384233906
 +}
 diff --git a/openbrowser/browser/BUILD.gn b/openbrowser/browser/BUILD.gn
 new file mode 100644
-index 0000000000000..007f4fe1066d8
 --- /dev/null
 +++ b/openbrowser/browser/BUILD.gn
 @@ -0,0 +1,17 @@
@@ -564,7 +565,6 @@ index 0000000000000..007f4fe1066d8
 +}
 diff --git a/openbrowser/browser/openbrowser_browser_main_extra_parts.cc b/openbrowser/browser/openbrowser_browser_main_extra_parts.cc
 new file mode 100644
-index 0000000000000..172be1b04e717
 --- /dev/null
 +++ b/openbrowser/browser/openbrowser_browser_main_extra_parts.cc
 @@ -0,0 +1,24 @@
@@ -594,7 +594,6 @@ index 0000000000000..172be1b04e717
 +}
 diff --git a/openbrowser/browser/openbrowser_browser_main_extra_parts.h b/openbrowser/browser/openbrowser_browser_main_extra_parts.h
 new file mode 100644
-index 0000000000000..d77015a99b4b6
 --- /dev/null
 +++ b/openbrowser/browser/openbrowser_browser_main_extra_parts.h
 @@ -0,0 +1,22 @@
@@ -622,7 +621,6 @@ index 0000000000000..d77015a99b4b6
 +#endif  // OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
 diff --git a/openbrowser/browser/ui/webui/BUILD.gn b/openbrowser/browser/ui/webui/BUILD.gn
 new file mode 100644
-index 0000000000000..2395dbbcf4054
 --- /dev/null
 +++ b/openbrowser/browser/ui/webui/BUILD.gn
 @@ -0,0 +1,21 @@
@@ -649,7 +647,6 @@ index 0000000000000..2395dbbcf4054
 +}
 diff --git a/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc
 new file mode 100644
-index 0000000000000..d82992fd9bf81
 --- /dev/null
 +++ b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc
 @@ -0,0 +1,77 @@
@@ -732,7 +729,6 @@ index 0000000000000..d82992fd9bf81
 +}
 diff --git a/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h
 new file mode 100644
-index 0000000000000..c315fac329fe3
 --- /dev/null
 +++ b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h
 @@ -0,0 +1,38 @@
@@ -776,7 +772,6 @@ index 0000000000000..c315fac329fe3
 +#endif  // OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
 diff --git a/openbrowser/buildflags.gni b/openbrowser/buildflags.gni
 new file mode 100644
-index 0000000000000..e0649261cd9ce
 --- /dev/null
 +++ b/openbrowser/buildflags.gni
 @@ -0,0 +1,8 @@
@@ -790,7 +785,6 @@ index 0000000000000..e0649261cd9ce
 +}
 diff --git a/openbrowser/common/BUILD.gn b/openbrowser/common/BUILD.gn
 new file mode 100644
-index 0000000000000..73cd0ff9b04fd
 --- /dev/null
 +++ b/openbrowser/common/BUILD.gn
 @@ -0,0 +1,30 @@
@@ -826,7 +820,6 @@ index 0000000000000..73cd0ff9b04fd
 +}
 diff --git a/openbrowser/common/openbrowser_constants.cc b/openbrowser/common/openbrowser_constants.cc
 new file mode 100644
-index 0000000000000..cae14f964717b
 --- /dev/null
 +++ b/openbrowser/common/openbrowser_constants.cc
 @@ -0,0 +1,11 @@
@@ -843,7 +836,6 @@ index 0000000000000..cae14f964717b
 +}  // namespace openbrowser
 diff --git a/openbrowser/common/openbrowser_constants.h b/openbrowser/common/openbrowser_constants.h
 new file mode 100644
-index 0000000000000..6c8cb3c7b039c
 --- /dev/null
 +++ b/openbrowser/common/openbrowser_constants.h
 @@ -0,0 +1,15 @@
@@ -864,7 +856,6 @@ index 0000000000000..6c8cb3c7b039c
 +#endif  // OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
 diff --git a/openbrowser/common/openbrowser_url_rewrite.cc b/openbrowser/common/openbrowser_url_rewrite.cc
 new file mode 100644
-index 0000000000000..2262cd7c71550
 --- /dev/null
 +++ b/openbrowser/common/openbrowser_url_rewrite.cc
 @@ -0,0 +1,26 @@
@@ -896,7 +887,6 @@ index 0000000000000..2262cd7c71550
 +}  // namespace openbrowser
 diff --git a/openbrowser/common/openbrowser_url_rewrite.h b/openbrowser/common/openbrowser_url_rewrite.h
 new file mode 100644
-index 0000000000000..f641d1173fb62
 --- /dev/null
 +++ b/openbrowser/common/openbrowser_url_rewrite.h
 @@ -0,0 +1,19 @@

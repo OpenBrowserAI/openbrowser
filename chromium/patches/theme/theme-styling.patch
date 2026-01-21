@@ -1,8 +1,8 @@
 diff --git a/chrome/app/theme/theme_resources.grd b/chrome/app/theme/theme_resources.grd
-index 87c3c8382e602..d38aa879d082b 100644
+index 79434c5c7e9cc..3e7015eb63c22 100644
 --- a/chrome/app/theme/theme_resources.grd
 +++ b/chrome/app/theme/theme_resources.grd
-@@ -160,6 +160,7 @@
+@@ -163,6 +163,7 @@
        <structure type="chrome_scaled_image" name="IDR_PLUGINS_FAVICON" file="common/favicon_plugins.png" />
        <structure type="chrome_scaled_image" name="IDR_PRERENDER" file="common/prerender_succeed_icon.png" />
        <structure type="chrome_scaled_image" name="IDR_PRODUCT_LOGO_32" file="${branding_path_component}/product_logo_32.png" />
@@ -11,10 +11,10 @@ index 87c3c8382e602..d38aa879d082b 100644
          <then>
            <if expr="is_linux">
 diff --git a/chrome/browser/resources/new_tab_page/app.css b/chrome/browser/resources/new_tab_page/app.css
-index e478fea59f056..7f971831f25b6 100644
+index 0ed7090881c12..259cf0e14e6b5 100644
 --- a/chrome/browser/resources/new_tab_page/app.css
 +++ b/chrome/browser/resources/new_tab_page/app.css
-@@ -57,18 +57,18 @@
+@@ -59,18 +59,18 @@
   */
  :host([realbox-can-show-secondary-side][realbox-had-secondary-side]),
  :host([realbox-can-show-secondary-side]) {
@@ -37,10 +37,10 @@ index e478fea59f056..7f971831f25b6 100644
  }
  
 diff --git a/chrome/browser/resources/new_tab_page/app.ts b/chrome/browser/resources/new_tab_page/app.ts
-index 167ae9b24c89f..b3e65a5d99076 100644
+index 09b755e2a75ca..7577793ca2ebf 100644
 --- a/chrome/browser/resources/new_tab_page/app.ts
 +++ b/chrome/browser/resources/new_tab_page/app.ts
-@@ -1160,10 +1160,8 @@ export class AppElement extends AppElementBase {
+@@ -1233,10 +1233,8 @@ export class AppElement extends AppElementBase {
    }
  
    protected computeShowBrowserPromo_(): boolean {
@@ -54,10 +54,10 @@ index 167ae9b24c89f..b3e65a5d99076 100644
  
    protected recordBrowserPromoMetrics_() {
 diff --git a/chrome/browser/themes/theme_service_factory.cc b/chrome/browser/themes/theme_service_factory.cc
-index 8634cbb4dc17a..ef53ad2540d79 100644
+index c733ac3f31c16..bfd8da3db7a90 100644
 --- a/chrome/browser/themes/theme_service_factory.cc
 +++ b/chrome/browser/themes/theme_service_factory.cc
-@@ -139,6 +139,7 @@ void ThemeServiceFactory::RegisterProfilePrefs(
+@@ -130,6 +130,7 @@ void ThemeServiceFactory::RegisterProfilePrefs(
    registry->RegisterIntegerPref(
        prefs::kDeprecatedUserColorDoNotUse, SK_ColorTRANSPARENT,
        user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
@@ -65,11 +65,37 @@ index 8634cbb4dc17a..ef53ad2540d79 100644
    registry->RegisterIntegerPref(prefs::kUserColor, SK_ColorTRANSPARENT);
    registry->RegisterIntegerPref(
        prefs::kDeprecatedBrowserColorVariantDoNotUse,
+diff --git a/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc b/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
+index c0ed21f0e76bc..680a79a2b6bfa 100644
+--- a/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
++++ b/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
+@@ -213,7 +213,9 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+ 
+   mixer[kColorNewTabPagePromoBackground] = {ui::kColorSysBase};
+   mixer[kColorNewTabPagePrimaryForeground] = {ui::kColorSysOnSurface};
+-  mixer[kColorNewTabPageCommonInputPlaceholder] = {SkColorSetARGB(0x60, 0x1F, 0x1F, 0x1F)};
++  mixer[kColorNewTabPageCommonInputPlaceholder] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : SkColorSetARGB(0x60, 0x1F, 0x1F, 0x1F)};
+   mixer[kColorNewTabPageRealboxNextIconHover] = {kColorSysStateHoverOnSubtle_Light};
+   mixer[kColorNewTabPageSecondaryForeground] = {ui::kColorSysOnSurfaceSubtle};
+ 
 diff --git a/chrome/browser/ui/color/new_tab_page_color_mixer.cc b/chrome/browser/ui/color/new_tab_page_color_mixer.cc
-index 350f052b92aef..36dec424c89f2 100644
+index 2074b0e01b890..b5e8dad39b013 100644
 --- a/chrome/browser/ui/color/new_tab_page_color_mixer.cc
 +++ b/chrome/browser/ui/color/new_tab_page_color_mixer.cc
-@@ -407,7 +407,7 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+@@ -395,7 +395,9 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       gfx::kGoogleGrey100};
+   mixer[kColorNewTabPageSectionBorder] =
+       ui::SetAlpha(kColorNewTabPageHeader, 0x50);
+-  mixer[kColorNewTabPageCommonInputPlaceholder] = {SkColorSetARGB(0x60, 0x1F, 0x1F, 0x1F)};
++  mixer[kColorNewTabPageCommonInputPlaceholder] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : SkColorSetARGB(0x60, 0x1F, 0x1F, 0x1F)};
+   mixer[kColorNewTabPageRealboxNextIconHover] = {kColorSysStateHoverOnSubtle_Light};
+   mixer[kColorNewTabPageTextUnthemed] = {gfx::kGoogleGrey050};
+   mixer[kColorNewTabPageTextLight] =
+@@ -412,7 +414,7 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
                   : ui::ColorTransform(SK_ColorWHITE)};
    mixer[kColorSearchboxForeground] =
@@ -78,7 +104,7 @@ index 350f052b92aef..36dec424c89f2 100644
                   : ui::ColorTransform(SK_ColorBLACK)};
    mixer[kColorSearchboxPlaceholder] =
        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
-@@ -440,7 +440,7 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+@@ -445,7 +447,7 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
        {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
                   : gfx::kGoogleBlue600};
    mixer[kColorSearchboxResultsForeground] =
@@ -88,10 +114,10 @@ index 350f052b92aef..36dec424c89f2 100644
    mixer[kColorSearchboxResultsForegroundDimmed] =
        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
 diff --git a/chrome/browser/ui/views/location_bar/icon_label_bubble_view.cc b/chrome/browser/ui/views/location_bar/icon_label_bubble_view.cc
-index 3544f1b569ee1..760b5a59e82df 100644
+index 0585acc5fc2d8..e3df7f4de9739 100644
 --- a/chrome/browser/ui/views/location_bar/icon_label_bubble_view.cc
 +++ b/chrome/browser/ui/views/location_bar/icon_label_bubble_view.cc
-@@ -626,7 +626,7 @@ gfx::RoundedCornersF IconLabelBubbleView::GetCornerRadii() const {
+@@ -627,7 +627,7 @@ gfx::RoundedCornersF IconLabelBubbleView::GetCornerRadii() const {
    if (radii_.has_value()) {
      return radii_.value();
    }
@@ -101,10 +127,10 @@ index 3544f1b569ee1..760b5a59e82df 100644
  
  void IconLabelBubbleView::SetCornerRadii(const gfx::RoundedCornersF& radii) {
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index 2dbe7d318cd7b..989abffe08143 100644
+index 5194887e1d609..a493c536b90c5 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -245,7 +245,7 @@ LocationBarView::LocationBarView(Browser* browser,
+@@ -257,7 +257,7 @@ LocationBarView::LocationBarView(Browser* browser,
                   !v->GetOmniboxController()->IsPopupOpen();
          }));
      views::FocusRing::Get(this)->SetOutsetFocusRingDisabled(true);
@@ -114,10 +140,10 @@ index 2dbe7d318cd7b..989abffe08143 100644
  #if BUILDFLAG(OS_LEVEL_GEOLOCATION_PERMISSION_SUPPORTED)
      if (features::IsOsLevelGeolocationPermissionSupportEnabled()) {
 diff --git a/chrome/browser/ui/views/tabs/tab.cc b/chrome/browser/ui/views/tabs/tab.cc
-index d5306a85b1e0c..40c9d0ffd3971 100644
+index 87d7eb79b6692..a25f95406bb8b 100644
 --- a/chrome/browser/ui/views/tabs/tab.cc
 +++ b/chrome/browser/ui/views/tabs/tab.cc
-@@ -372,8 +372,20 @@ void Tab::Layout(PassKey) {
+@@ -374,8 +374,20 @@ void Tab::Layout(PassKey) {
  
    // The bounds for the favicon will include extra width for the attention
    // indicator, but visually it will be smaller at kFaviconSize wide.
@@ -139,7 +165,7 @@ index d5306a85b1e0c..40c9d0ffd3971 100644
      if (center_icon_) {
        // When centering the favicon, the favicon is allowed to escape the normal
        // contents rect.
-@@ -389,7 +401,9 @@ void Tab::Layout(PassKey) {
+@@ -391,7 +403,9 @@ void Tab::Layout(PassKey) {
  
      // Add space for insets outside the favicon bounds.
      favicon_bounds.Inset(-icon_->GetInsets());
@@ -151,10 +177,10 @@ index d5306a85b1e0c..40c9d0ffd3971 100644
    icon_->SetBoundsRect(favicon_bounds);
    icon_->SetVisible(showing_icon_);
 diff --git a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
-index 832ca90c1538c..ce053294b3ad0 100644
+index 8af061f4c4af3..652b06fc741b4 100644
 --- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
 +++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
-@@ -616,13 +616,8 @@ void NewTabPageHandler::GetMostVisitedSettings(
+@@ -635,13 +635,8 @@ void NewTabPageHandler::GetMostVisitedSettings(
  }
  
  void NewTabPageHandler::GetDoodle(GetDoodleCallback callback) {
@@ -171,7 +197,7 @@ index 832ca90c1538c..ce053294b3ad0 100644
  
  void NewTabPageHandler::UpdatePromoData() {
 diff --git a/components/search/ntp_features.cc b/components/search/ntp_features.cc
-index 6d2ea1d68430b..406d9402d41e1 100644
+index 272ed08d3f982..348e1d6250322 100644
 --- a/components/search/ntp_features.cc
 +++ b/components/search/ntp_features.cc
 @@ -98,7 +98,7 @@ BASE_FEATURE(kNtpDummyModules, base::FEATURE_DISABLED_BY_DEFAULT);
@@ -193,10 +219,10 @@ index 6d2ea1d68430b..406d9402d41e1 100644
  // Dummy feature to set param "NtpModulesLoadTimeoutMillisecondsParam".
  // This is used for an emergency Finch param. Keep indefinitely.
 diff --git a/ui/native_theme/native_theme.h b/ui/native_theme/native_theme.h
-index d8c168edc6c92..2d8243d947b94 100644
+index 8e2849fc1e17f..04219fa37301b 100644
 --- a/ui/native_theme/native_theme.h
 +++ b/ui/native_theme/native_theme.h
-@@ -602,7 +602,7 @@ class COMPONENT_EXPORT(NATIVE_THEME) NativeTheme {
+@@ -605,7 +605,7 @@ class COMPONENT_EXPORT(NATIVE_THEME) NativeTheme {
    std::optional<SkColor> user_color_;
    std::optional<ColorProviderKey::SchemeVariant> scheme_variant_;
    ColorProviderKey::UserColorSource preferred_color_source_ =
@@ -206,7 +232,7 @@ index d8c168edc6c92..2d8243d947b94 100644
  
    raw_ptr<NativeTheme> associated_web_instance_ = nullptr;
 diff --git a/ui/webui/resources/cr_components/searchbox/searchbox.css b/ui/webui/resources/cr_components/searchbox/searchbox.css
-index dc4fdb93e0fa3..5ca09ff564360 100644
+index b710d34970b25..54fdbdf81295b 100644
 --- a/ui/webui/resources/cr_components/searchbox/searchbox.css
 +++ b/ui/webui/resources/cr_components/searchbox/searchbox.css
 @@ -12,7 +12,7 @@
@@ -218,7 +244,7 @@ index dc4fdb93e0fa3..5ca09ff564360 100644
    --cr-searchbox-icon-width: 26px;
    --cr-searchbox-inner-icon-margin: 8px;
    --cr-searchbox-voice-icon-offset: 16px;
-@@ -274,11 +274,29 @@ cr-searchbox-icon {
+@@ -286,11 +286,29 @@ cr-searchbox-icon {
  }
  
  :host(:not([use-webkit-search-icons_])) #voiceSearchButton {
@@ -250,7 +276,7 @@ index dc4fdb93e0fa3..5ca09ff564360 100644
  }
  
  :host([use-webkit-search-icons_]) #voiceSearchButton {
-@@ -373,7 +391,7 @@ search-animated-glow {
+@@ -355,7 +373,7 @@ cr-searchbox-icon,
  }
  
  :host([ntp-realbox-next-enabled]) {
@@ -259,7 +285,7 @@ index dc4fdb93e0fa3..5ca09ff564360 100644
    --cr-searchbox-dropdown-padding-bottom: 12px;
    /* Cannot touch this searchbox icon size var;
      it's used by the rainbow outline AI button class in
-@@ -540,7 +558,7 @@ search-animated-glow {
+@@ -531,7 +549,7 @@ cr-searchbox-dropdown::part(dropdown-content) {
  }
  
  :host([searchbox-layout-mode='Compact']) {
@@ -269,10 +295,10 @@ index dc4fdb93e0fa3..5ca09ff564360 100644
    --cr-searchbox-dropdown-padding-top: 10px;
    --cr-searchbox-height: 56px;
 diff --git a/ui/webui/resources/cr_components/searchbox/searchbox_match.css b/ui/webui/resources/cr_components/searchbox/searchbox_match.css
-index 514d780649bba..48fe44b9e8788 100644
+index 8a0f5162ec94e..ab1cc246ed7a3 100644
 --- a/ui/webui/resources/cr_components/searchbox/searchbox_match.css
 +++ b/ui/webui/resources/cr_components/searchbox/searchbox_match.css
-@@ -221,13 +221,14 @@
+@@ -228,13 +228,14 @@
  
  .match {
    font-weight: var(--cr-searchbox-match-font-weight, 600);

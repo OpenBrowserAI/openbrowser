@@ -1,18 +1,56 @@
 diff --git a/chrome/browser/extensions/api/BUILD.gn b/chrome/browser/extensions/api/BUILD.gn
-index b38bfb290f59e..b18a083878da6 100644
+index f78a20aa8fbb3..b1984a1107416 100644
 --- a/chrome/browser/extensions/api/BUILD.gn
 +++ b/chrome/browser/extensions/api/BUILD.gn
-@@ -48,6 +48,7 @@ group("api_implementations") {
-     "//chrome/browser/extensions/api/scripting",
+@@ -54,6 +54,7 @@ group("api_implementations") {
      "//chrome/browser/extensions/api/search",
      "//chrome/browser/extensions/api/tab_capture",
+     "//chrome/browser/extensions/api/tab_groups",
 +    "//chrome/browser/extensions/api/theme_colors",
      "//chrome/browser/extensions/api/web_authentication_proxy",
      "//chrome/browser/extensions/api/web_navigation",
      "//chrome/browser/extensions/api/webrtc_audio_private",
+diff --git a/chrome/common/extensions/api/_api_features.json b/chrome/common/extensions/api/_api_features.json
+index d67338647ca4c..71ba2aa165131 100644
+--- a/chrome/common/extensions/api/_api_features.json
++++ b/chrome/common/extensions/api/_api_features.json
+@@ -1125,5 +1125,10 @@
+   "wmDesksPrivate": {
+     "dependencies": ["permission:wmDesksPrivate"],
+     "contexts": ["privileged_extension"]
++  },
++  "themeColors": {
++    "channel": "stable",
++    "extension_types": ["extension", "platform_app", "legacy_packaged_app"],
++    "contexts": ["privileged_extension"]
+   }
+ }
+diff --git a/chrome/common/extensions/api/api_sources.gni b/chrome/common/extensions/api/api_sources.gni
+index 180af57b8aa9e..5b1a2da7bb49e 100644
+--- a/chrome/common/extensions/api/api_sources.gni
++++ b/chrome/common/extensions/api/api_sources.gni
+@@ -38,6 +38,7 @@ schema_sources_ = [
+   "tab_capture.idl",
+   "tab_groups.json",
+   "tabs.json",
++  "theme_colors.json",
+   "web_authentication_proxy.webidl",
+   "web_navigation.json",
+ 
+diff --git a/extensions/browser/extension_function_histogram_value.h b/extensions/browser/extension_function_histogram_value.h
+index ec2c4a01b7f87..051e437fbe402 100644
+--- a/extensions/browser/extension_function_histogram_value.h
++++ b/extensions/browser/extension_function_histogram_value.h
+@@ -2018,6 +2018,7 @@ enum HistogramValue {
+   WEBSTOREPRIVATE_LOGENTERPRISEPROMOSHOWN = 1955,
+   WEBSTOREPRIVATE_ONENTERPRISEPROMOCLICK = 1956,
+   AUTOFILLPRIVATE_AUTHENTICATEUSERBEFOREVIEWINGENTITYDATA = 1957,
++  THEMECOLORS_GET = 1958,
+   // Last entry: Add new entries above, then run:
+   // tools/metrics/histograms/update_extension_histograms.py
+   ENUM_BOUNDARY
 diff --git a/chrome/browser/extensions/api/theme_colors/BUILD.gn b/chrome/browser/extensions/api/theme_colors/BUILD.gn
 new file mode 100644
-index 0000000000000..bbe1420bcb337
 --- /dev/null
 +++ b/chrome/browser/extensions/api/theme_colors/BUILD.gn
 @@ -0,0 +1,28 @@
@@ -46,7 +84,6 @@ index 0000000000000..bbe1420bcb337
 +}
 diff --git a/chrome/browser/extensions/api/theme_colors/theme_colors_api.cc b/chrome/browser/extensions/api/theme_colors/theme_colors_api.cc
 new file mode 100644
-index 0000000000000..8c384a85a649d
 --- /dev/null
 +++ b/chrome/browser/extensions/api/theme_colors/theme_colors_api.cc
 @@ -0,0 +1,283 @@
@@ -335,7 +372,6 @@ index 0000000000000..8c384a85a649d
 +}  // namespace extensions
 diff --git a/chrome/browser/extensions/api/theme_colors/theme_colors_api.h b/chrome/browser/extensions/api/theme_colors/theme_colors_api.h
 new file mode 100644
-index 0000000000000..a4374a3ce94c2
 --- /dev/null
 +++ b/chrome/browser/extensions/api/theme_colors/theme_colors_api.h
 @@ -0,0 +1,43 @@
@@ -382,36 +418,8 @@ index 0000000000000..a4374a3ce94c2
 +}  // namespace extensions
 +
 +#endif  // CHROME_BROWSER_EXTENSIONS_API_THEME_COLORS_THEME_COLORS_API_H_
-diff --git a/chrome/common/extensions/api/_api_features.json b/chrome/common/extensions/api/_api_features.json
-index d67338647ca4c..71ba2aa165131 100644
---- a/chrome/common/extensions/api/_api_features.json
-+++ b/chrome/common/extensions/api/_api_features.json
-@@ -1125,5 +1125,10 @@
-   "wmDesksPrivate": {
-     "dependencies": ["permission:wmDesksPrivate"],
-     "contexts": ["privileged_extension"]
-+  },
-+  "themeColors": {
-+    "channel": "stable",
-+    "extension_types": ["extension", "platform_app", "legacy_packaged_app"],
-+    "contexts": ["privileged_extension"]
-   }
- }
-diff --git a/chrome/common/extensions/api/api_sources.gni b/chrome/common/extensions/api/api_sources.gni
-index 3e30dd60fac8a..7ea40891ccbc8 100644
---- a/chrome/common/extensions/api/api_sources.gni
-+++ b/chrome/common/extensions/api/api_sources.gni
-@@ -35,6 +35,7 @@ schema_sources_ = [
-   "scripting.idl",
-   "tab_capture.idl",
-   "tabs.json",
-+  "theme_colors.json",
-   "web_authentication_proxy.webidl",
-   "web_navigation.json",
- 
 diff --git a/chrome/common/extensions/api/theme_colors.json b/chrome/common/extensions/api/theme_colors.json
 new file mode 100644
-index 0000000000000..bb5339f4b2049
 --- /dev/null
 +++ b/chrome/common/extensions/api/theme_colors.json
 @@ -0,0 +1,67 @@
@@ -482,15 +490,3 @@ index 0000000000000..bb5339f4b2049
 +    ]
 +  }
 +]
-diff --git a/extensions/browser/extension_function_histogram_value.h b/extensions/browser/extension_function_histogram_value.h
-index 5b19cff05b9c3..4dbc2097d565a 100644
---- a/extensions/browser/extension_function_histogram_value.h
-+++ b/extensions/browser/extension_function_histogram_value.h
-@@ -2013,6 +2013,7 @@ enum HistogramValue {
-   ACCESSIBILITY_PRIVATE_ENABLESPOKENFEEDBACKMV3KEYHANDLING = 1950,
-   AUTOFILLPRIVATE_GETWALLETABLEPASSDETECTIONOPTINSTATUS = 1951,
-   AUTOFILLPRIVATE_SETWALLETABLEPASSDETECTIONOPTINSTATUS = 1952,
-+  THEMECOLORS_GET = 1953,
-   // Last entry: Add new entries above, then run:
-   // tools/metrics/histograms/update_extension_histograms.py
-   ENUM_BOUNDARY

@@ -1,5 +1,5 @@
 diff --git a/chrome/app/settings_chromium_strings.grdp b/chrome/app/settings_chromium_strings.grdp
-index f5659b08ca0ed..9e3df4e5858d3 100644
+index 11e18892e1336..e2f3862cfaa0f 100644
 --- a/chrome/app/settings_chromium_strings.grdp
 +++ b/chrome/app/settings_chromium_strings.grdp
 @@ -1,10 +1,10 @@
@@ -53,7 +53,7 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
      </message>
    </if>
    <if expr="is_chromeos">
-@@ -51,76 +51,76 @@
+@@ -51,79 +51,79 @@
  
    <!-- Autofill Page -->
    <message name="IDS_SETTINGS_CHECK_PASSWORDS_ERROR_OFFLINE" desc="Error message when the password check can't be completed because the user is offline.">
@@ -121,6 +121,10 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
 +  <message name="IDS_SETTINGS_AUTOFILL_AI_TOGGLE_SUB_LABEL" desc="The description of the setting. By 'understand forms better', we mean that when a user submits a form on a website, and if they're using enhanced autofill, this feature can offer to save the user's submitted info. When OpenBrowser saves that info, we save the submitted values and consider the page context.">
 +    OpenBrowser understands forms better and can autofill them faster for you
    </message>
+   <message name="IDS_SETTINGS_AUTOFILL_AI_WHEN_ON_CAN_FILL_DIFFICULT_FIELDS" desc="Bullet point that appears beneath the 'When on' title when seeing the Enhanced Autofill description page. This string explains one of the advantages users will get from enabling the feature and serves as a way to incentivize the user to do so.">
+-    Chromium can autofill difficult fields that standard autofill might miss
++    OpenBrowser can autofill difficult fields that standard autofill might miss
+   </message>
 -  <message name="IDS_SETTINGS_AUTOFILL_AI_WHEN_ON_USE_TO_FILL"  desc="Bullet 2 of 2 that appears beneath the “When on” title. “Later”: this is a two-step feature. 1) data is saved, 2) it becomes valuable to the user later when they want to fill in a form with similar data. “Chromium can ask”: the user has a choice, every time, whether their data is saved and also whether they want to autofill their saved info into forms.">
 -    Later, Chromium can ask if you want to use saved info to autofill forms for you
 +  <message name="IDS_SETTINGS_AUTOFILL_AI_WHEN_ON_USE_TO_FILL"  desc="Bullet 2 of 2 that appears beneath the “When on” title. “Later”: this is a two-step feature. 1) data is saved, 2) it becomes valuable to the user later when they want to fill in a form with similar data. “OpenBrowser can ask”: the user has a choice, every time, whether their data is saved and also whether they want to autofill their saved info into forms.">
@@ -158,7 +162,7 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
      </message>
      <if expr="_is_chrome_for_testing_branded">
        <then>
-@@ -129,8 +129,8 @@ Chromium understands forms better and can autofill them faster for you. This set
+@@ -132,8 +132,8 @@ Chromium understands forms better and can autofill them faster for you. This set
          </message>
        </then>
        <else>
@@ -169,7 +173,7 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
          </message>
        </else>
      </if>
-@@ -138,342 +138,342 @@ Chromium understands forms better and can autofill them faster for you. This set
+@@ -141,350 +141,350 @@ Chromium understands forms better and can autofill them faster for you. This set
  
    <!-- Preloading Page-->
    <message name="IDS_SETTINGS_PRELOAD_PAGES_STANDARD_PRELOADING_WHEN_ON_BULLET_TWO" desc="Bullet point in the standard preloading and when on column. Informs the user about what the standard preloading setting does.">
@@ -454,8 +458,8 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
 +    OpenBrowser data in your account
    </message>
    <message name="IDS_SETTINGS_ENCRYPT_ACCOUNT_DATA_WITH_PASSPHRASE_LABEL" desc="Label for the radio button which, when selected, causes synced settings to be encrypted with a user-provided password.">
--    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the Chromium data in your Google Account. Addresses and any data saved in Google Wallet won’t be encrypted by your passphrase. Browsing history from Chromium won’t sync.
-+    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the OpenBrowser data in your Google Account. Addresses and any data saved in Google Wallet won’t be encrypted by your passphrase. Browsing history from OpenBrowser won’t sync.
+-    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the Chromium data in your Google Account. Payment methods and addresses from Google Pay won’t be encrypted. Browsing history from Chromium won’t sync.
++    Use your <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>own passphrase<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph> to encrypt all the OpenBrowser data in your Google Account. Payment methods and addresses from Google Pay won’t be encrypted. Browsing history from OpenBrowser won’t sync.
    </message>
    <message name="IDS_SETTINGS_ENCRYPT_ACCOUNT_DATA_WITH_PASSPHRASE_EXPLANATION_TEXT" desc="Message shown when explicit passphrase is selected.">
 -    Only someone with your passphrase can read your encrypted data. The passphrase is not sent to or stored by Google. If you forget your passphrase or want to change this setting, you’ll need to <ph name="BEGIN_LINK">&lt;a href="$1" target=&quot;_blank&quot;&gt;<ex>&lt;a href="$1" target=&quot;_blank&quot;&gt;</ex></ph>delete the Chromium data in your account<ph name="END_LINK">&lt;/a&gt;<ex>&lt;/a&gt;</ex></ph>.
@@ -599,6 +603,16 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
 +    Dangerous site. OpenBrowser removed notifications.
    </message>
  
+   <!-- Bundled Security Settings (chrome://settings/security) -->
+   <message name="IDS_SETTINGS_SECURITY_PASSWORDS_LEAK_DETECTION_DESC" desc="Text that briefly describes the 'Password Leak Detection' feature.">
+-    Get warned if Chromium finds one of your passwords in a public data breach
++    Get warned if OpenBrowser finds one of your passwords in a public data breach
+   </message>
+   <message name="IDS_SETTINGS_SECURITY_SAFE_BROWSING_STANDARD_HOW_IT_WORKS_CONTENT" desc="Content of the Safe Browsing standard protection column describing how it works">
+-    When you visit a site, Chromium sends an obfuscated portion of the URL to <ph name="BEGIN_LINK">&lt;a target="_blank" href="https://safebrowsing.google.com/"&gt;</ph>Google Safe Browsing<ph name="END_LINK">&lt;/a&gt;</ph> through a privacy server that hides your IP address. If a site does something suspicious, full URLs and bits of page content are also sent.
++    When you visit a site, OpenBrowser sends an obfuscated portion of the URL to <ph name="BEGIN_LINK">&lt;a target="_blank" href="https://safebrowsing.google.com/"&gt;</ph>Google Safe Browsing<ph name="END_LINK">&lt;/a&gt;</ph> through a privacy server that hides your IP address. If a site does something suspicious, full URLs and bits of page content are also sent.
+   </message>
+ 
    <!-- Secure connections -->
    <message name="IDS_SETTINGS_SECURE_CONNECTIONS_SECTION_DESCRIPTION" desc="Description for the Secure Connections section in Security settings, explaining the baseline behavior of the browser even if the 'Always use secure connections' toggle is disabled.">
 -    Chromium upgrades insecure connections to HTTPS automatically when possible
@@ -622,10 +636,10 @@ index f5659b08ca0ed..9e3df4e5858d3 100644
    </message>
  </grit-part>
 diff --git a/chrome/app/settings_strings.grdp b/chrome/app/settings_strings.grdp
-index 7edfde1f4fd6c..e72339448cda0 100644
+index 37b5f9f7f6acc..3bd9bda52d656 100644
 --- a/chrome/app/settings_strings.grdp
 +++ b/chrome/app/settings_strings.grdp
-@@ -331,7 +331,7 @@
+@@ -340,7 +340,7 @@
      Settings
    </message>
    <message name="IDS_SETTINGS_ALT_PAGE_TITLE" desc="The settings page title for the about page.">
@@ -634,7 +648,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
    </message>
    <message name="IDS_SETTINGS_SUBPAGE_BUTTON" desc="Accessibility description for a button navigating the user from a settings page to one of the settings subpages.">
      Subpage button
-@@ -750,7 +750,7 @@
+@@ -782,7 +782,7 @@
      <message name="IDS_AUTOFILL_MANAGE_PASSKEYS_DELETE_CONFIRMATION_DESCRIPTION" desc="The body of a dialog that asks the user to confirm the deletion of a passkey. For consistency, the word 'passkey' is in the glossary with translations already suggested.">
        Are you sure you want to delete this passkey?
      </message>
@@ -643,7 +657,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
        Can't delete passkey
      </message>
      <message name="IDS_AUTOFILL_MANAGE_PASSKEYS_CANNOT_DELETE_BODY" desc="The body of a dialog that explains that we cannot delete certain passkeys on Windows which are involved when the user signs into the Windows computer itself. For consistency, the word 'passkey' is in the glossary with translations already suggested.">
-@@ -1747,7 +1747,7 @@
+@@ -1779,7 +1779,7 @@
      Passwords
    </message>
    <message name="IDS_SETTINGS_SAFETY_CHECK_PASSWORDS_FEATURE_UNAVAILABLE" desc="Explains that the password check feature is not available in this version of the browser.">
@@ -652,7 +666,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
    </message>
    <message name="IDS_SETTINGS_SAFETY_CHECK_SAFE_BROWSING_ENABLED" desc="This text points out that Safe Browsing is enabled and that the user is protected.">
      Safe Browsing is on and protecting you from harmful sites and downloads
-@@ -3635,8 +3635,8 @@
+@@ -3757,8 +3757,8 @@
    </message>
  
    <!-- Sync / People Page -->
@@ -663,7 +677,7 @@ index 7edfde1f4fd6c..e72339448cda0 100644
    </message>
    <message name="IDS_SETTINGS_CHANGE_PICTURE_PROFILE_PHOTO" desc="The text on the Google profile photo of the user.">
      Google Profile photo
-@@ -3645,7 +3645,7 @@
+@@ -3767,7 +3767,7 @@
    <message name="IDS_SETTINGS_PEOPLE_SIGN_IN" desc="The label of the button that lets user sign-in to chrome.">
      Sign in
    </message>
@@ -813,7 +827,7 @@ index 8f109b4d2320d..ebfe0b970e790 100644
  
  #endif  // CHROME_BROWSER_UI_WEBUI_CURRENT_CHANNEL_LOGO_H_
 diff --git a/chrome/browser/ui/webui/theme_source.cc b/chrome/browser/ui/webui/theme_source.cc
-index 933bb620d795d..0545dff89469b 100644
+index 74512212a61d3..a8b7a4b26a4f1 100644
 --- a/chrome/browser/ui/webui/theme_source.cc
 +++ b/chrome/browser/ui/webui/theme_source.cc
 @@ -128,6 +128,8 @@ void ThemeSource::StartDataRequest(

@@ -1,33 +1,33 @@
 diff --git a/chrome/browser/ui/layout_constants.cc b/chrome/browser/ui/layout_constants.cc
-index 4e5901f95885b..8617e0e7afe91 100644
+index c7424d55cfef1..bb5e3e094453a 100644
 --- a/chrome/browser/ui/layout_constants.cc
 +++ b/chrome/browser/ui/layout_constants.cc
 @@ -29,7 +29,7 @@ int GetLayoutConstant(LayoutConstant constant) {
-     case BOOKMARK_BAR_HEIGHT: {
+     case LayoutConstant::kBookmarkBarHeight: {
        // The fixed margin ensures the bookmark buttons appear centered relative
        // to the white space above and below.
 -      const int bookmark_bar_attached_vertical_margin = 6;
 +      const int bookmark_bar_attached_vertical_margin = 10;
-       return GetLayoutConstant(BOOKMARK_BAR_BUTTON_HEIGHT) +
+       return GetLayoutConstant(LayoutConstant::kBookmarkBarButtonHeight) +
               bookmark_bar_attached_vertical_margin;
      }
 @@ -93,12 +93,12 @@ int GetLayoutConstant(LayoutConstant constant) {
-     case TAB_CLOSE_BUTTON_SIZE:
+     case LayoutConstant::kTabCloseButtonSize:
        return touch_ui ? 24 : 16;
-     case TAB_HEIGHT:
--      return 34 + GetLayoutConstant(TABSTRIP_TOOLBAR_OVERLAP);
-+      return 36 + GetLayoutConstant(TABSTRIP_TOOLBAR_OVERLAP);
-     case TAB_STRIP_HEIGHT:
-       return GetLayoutConstant(TAB_HEIGHT) +
-              GetLayoutConstant(TAB_STRIP_PADDING);
-     case TAB_STRIP_PADDING:
+     case LayoutConstant::kTabHeight:
+-      return 34 + GetLayoutConstant(LayoutConstant::kTabstripToolbarOverlap);
++      return 36 + GetLayoutConstant(LayoutConstant::kTabstripToolbarOverlap);
+     case LayoutConstant::kTabStripHeight:
+       return GetLayoutConstant(LayoutConstant::kTabHeight) +
+              GetLayoutConstant(LayoutConstant::kTabStripPadding);
+     case LayoutConstant::kTabStripPadding:
 -      return 6;
 +      return 4;
-     case TAB_SEPARATOR_HEIGHT:
+     case LayoutConstant::kTabSeparatorHeight:
        return touch_ui ? 24 : 20;
-     case TAB_PRE_TITLE_PADDING:
+     case LayoutConstant::kTabPreTitlePadding:
 diff --git a/chrome/browser/ui/tabs/tab_style.cc b/chrome/browser/ui/tabs/tab_style.cc
-index eb6789e6212b6..a3894efb96e6a 100644
+index 7f1003ce0789f..f12e74878019e 100644
 --- a/chrome/browser/ui/tabs/tab_style.cc
 +++ b/chrome/browser/ui/tabs/tab_style.cc
 @@ -27,8 +27,8 @@ constexpr int kChromeRefreshSeparatorHeight = 16;
@@ -42,10 +42,10 @@ index eb6789e6212b6..a3894efb96e6a 100644
  }  // namespace
  
 diff --git a/chrome/browser/ui/toolbar/app_menu_model.cc b/chrome/browser/ui/toolbar/app_menu_model.cc
-index 2934bdcab48bb..9aa1eaf769176 100644
+index a688f71a4090c..dd69b114e3de4 100644
 --- a/chrome/browser/ui/toolbar/app_menu_model.cc
 +++ b/chrome/browser/ui/toolbar/app_menu_model.cc
-@@ -2241,7 +2241,7 @@ bool AppMenuModel::AddDefaultBrowserMenuItems() {
+@@ -2236,7 +2236,7 @@ bool AppMenuModel::AddDefaultBrowserMenuItems() {
          IDC_SET_BROWSER_AS_DEFAULT,
          l10n_util::GetStringUTF16(IDS_SET_BROWSER_AS_DEFAULT_MENU_ITEM),
          ui::ImageModel::FromVectorIcon(omnibox::kProductChromeRefreshIcon,
@@ -55,12 +55,12 @@ index 2934bdcab48bb..9aa1eaf769176 100644
                             AppMenuModel::kSetBrowserAsDefaultMenuItem);
      return true;
 diff --git a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
-index a00e5c202067f..ba59857e8378a 100644
+index 75c266ea05d6f..a99f034e7c3da 100644
 --- a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
 +++ b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
-@@ -708,26 +708,7 @@ void BookmarkBarView::Layout(PassKey) {
- 
-   const int button_height = GetLayoutConstant(BOOKMARK_BAR_BUTTON_HEIGHT);
+@@ -724,25 +724,7 @@ void BookmarkBarView::Layout(PassKey) {
+   const int button_height =
+       GetLayoutConstant(LayoutConstant::kBookmarkBarButtonHeight);
  
 -  // Bookmark bar buttons should be centered between the bottom of the location
 -  // bar and the bottom of the bookmarks bar, which requires factoring in the
@@ -68,9 +68,8 @@ index a00e5c202067f..ba59857e8378a 100644
 -  int toolbar_bottom_margin = 0;
 -  // Note: |browser_view_| may be null during tests.
 -  if (browser_view_ && !browser_view_->IsFullscreen()) {
--    toolbar_bottom_margin =
--        browser_view_->toolbar()->height() -
--        browser_view_->GetLocationBarView()->bounds().bottom();
+-    toolbar_bottom_margin = browser_view_->toolbar()->height() -
+-                            browser_view_->GetLocationBar()->Bounds().bottom();
 -  }
 -  // Center the buttons in the total available space.
 -  const int total_height = GetContentsBounds().height() + toolbar_bottom_margin;
@@ -86,7 +85,7 @@ index a00e5c202067f..ba59857e8378a 100644
  
    gfx::Size all_bookmarks_pref = all_bookmarks_button_->GetVisible()
                                       ? all_bookmarks_button_->GetPreferredSize()
-@@ -835,7 +816,7 @@ void BookmarkBarView::Layout(PassKey) {
+@@ -850,7 +832,7 @@ void BookmarkBarView::Layout(PassKey) {
        gfx::Size saved_tab_groups_separator_view_pref =
            saved_tab_groups_separator_view_->GetPreferredSize();
        saved_tab_groups_separator_view_->SetBounds(
@@ -95,7 +94,7 @@ index a00e5c202067f..ba59857e8378a 100644
            saved_tab_groups_separator_view_pref.width(),
            saved_tab_groups_separator_view_pref.height());
  
-@@ -905,7 +886,7 @@ void BookmarkBarView::Layout(PassKey) {
+@@ -920,7 +902,7 @@ void BookmarkBarView::Layout(PassKey) {
    // Bookmarks Separator.
    if (bookmarks_separator_view_->GetVisible()) {
      bookmarks_separator_view_->SetBounds(
@@ -104,7 +103,7 @@ index a00e5c202067f..ba59857e8378a 100644
          bookmarks_separator_pref.width(), bookmarks_separator_pref.height());
  
      x += bookmarks_separator_pref.width();
-@@ -1107,6 +1088,11 @@ views::View::DropCallback BookmarkBarView::GetDropCallback(
+@@ -1122,6 +1104,11 @@ views::View::DropCallback BookmarkBarView::GetDropCallback(
  
  void BookmarkBarView::OnThemeChanged() {
    views::AccessiblePaneView::OnThemeChanged();
@@ -117,18 +116,18 @@ index a00e5c202067f..ba59857e8378a 100644
  }
  
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-index da82293cba539..2dbe7d318cd7b 100644
+index 2a2b0db646311..5194887e1d609 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
-@@ -20,7 +20,6 @@
- #include "build/build_config.h"
+@@ -21,7 +21,6 @@
  #include "chrome/app/chrome_command_ids.h"
  #include "chrome/app/vector_icons/vector_icons.h"
+ #include "chrome/browser/actor/ui/actor_ui_window_controller.h"
 -#include "chrome/browser/autocomplete/aim_eligibility_service_factory.h"
  #include "chrome/browser/browser_process.h"
  #include "chrome/browser/command_updater.h"
  #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
-@@ -41,6 +40,7 @@
+@@ -42,6 +41,7 @@
  #include "chrome/browser/ui/autofill/payments/save_card_bubble_controller_impl.h"
  #include "chrome/browser/ui/browser.h"
  #include "chrome/browser/ui/browser_actions.h"
@@ -136,7 +135,7 @@ index da82293cba539..2dbe7d318cd7b 100644
  #include "chrome/browser/ui/browser_element_identifiers.h"
  #include "chrome/browser/ui/browser_finder.h"
  #include "chrome/browser/ui/browser_window.h"
-@@ -465,21 +465,7 @@ void LocationBarView::Init() {
+@@ -491,21 +491,7 @@ void LocationBarView::Init() {
    // |browser_| may be null when LocationBarView is used for non-Browser windows
    // such as PresentationReceiverWindowView, which do not support page actions.
    if (browser_) {
@@ -159,7 +158,7 @@ index da82293cba539..2dbe7d318cd7b 100644
      params.types_enabled.push_back(PageActionIconType::kClickToCall);
      params.types_enabled.push_back(PageActionIconType::kAutofillAddress);
      params.types_enabled.push_back(PageActionIconType::kManagePasswords);
-@@ -491,7 +477,6 @@ void LocationBarView::Init() {
+@@ -517,7 +503,6 @@ void LocationBarView::Init() {
      params.types_enabled.push_back(PageActionIconType::kTranslate);
      params.types_enabled.push_back(PageActionIconType::kZoom);
      params.types_enabled.push_back(PageActionIconType::kFileSystemAccess);
@@ -167,7 +166,7 @@ index da82293cba539..2dbe7d318cd7b 100644
      params.types_enabled.push_back(PageActionIconType::kCookieControls);
      params.types_enabled.push_back(
          PageActionIconType::kPaymentsOfferNotification);
-@@ -503,54 +488,6 @@ void LocationBarView::Init() {
+@@ -529,46 +514,6 @@ void LocationBarView::Init() {
    params.types_enabled.push_back(PageActionIconType::kVirtualCardEnroll);
    params.types_enabled.push_back(PageActionIconType::kMandatoryReauth);
  
@@ -194,18 +193,10 @@ index da82293cba539..2dbe7d318cd7b 100644
 -                                PageActionIconType::kLensOverlayHomework);
 -  }
 -
--  // Because the AIM eligibility service might not be ready on startup,
--  // the AI Mode page action type is always added. Unless the main AIM
--  // omnibox entrypoint Feature is explicitly disabled, which can be used
--  // as a kill switch in case of any unanticipated issues with this
--  // approach.
--  auto* feature_list = base::FeatureList::GetInstance();
--  bool aim_omnibox_entrypoint_explicitly_disabled =
--      feature_list &&
--      feature_list->IsFeatureOverridden(
--          omnibox::kAiModeOmniboxEntryPoint.name) &&
--      !base::FeatureList::IsEnabled(omnibox::kAiModeOmniboxEntryPoint);
--  if (!aim_omnibox_entrypoint_explicitly_disabled) {
+-  // Because AIM eligibility can change during the lifecycle of the
+-  // `LocationBarView`, the AI Mode page action is added regardless of
+-  // eligibility, but its visibility is toggled to match eligibility.
+-  if (base::FeatureList::IsEnabled(omnibox::kAiModeOmniboxEntryPoint)) {
 -    // Position in the leading position, like the entrypoint for
 -    // kLensOverlayHomework above. While both chips may be enabled, they will
 -    // not appear at the same time due to different focus behavior. The
@@ -222,12 +213,12 @@ index da82293cba539..2dbe7d318cd7b 100644
    if (browser_ && !is_popup_mode_) {
      params.types_enabled.push_back(PageActionIconType::kBookmarkStar);
    }
-@@ -566,17 +503,6 @@ void LocationBarView::Init() {
+@@ -584,17 +529,6 @@ void LocationBarView::Init() {
        AddChildView(std::make_unique<PageActionIconContainerView>(params));
    page_action_icon_controller_ = page_action_icon_container_->controller();
  
 -  if (!page_action_icon_container_->children().empty() &&
--      !aim_omnibox_entrypoint_explicitly_disabled &&
+-      base::FeatureList::IsEnabled(omnibox::kAiModeOmniboxEntryPoint) &&
 -      !IsPageActionMigrated(PageActionIconType::kAiMode)) {
 -    auto* first_page_action_icon_view = static_cast<PageActionIconView*>(
 -        page_action_icon_container_->children().front());
@@ -240,7 +231,7 @@ index da82293cba539..2dbe7d318cd7b 100644
    auto clear_all_button = views::CreateVectorImageButton(base::BindRepeating(
        static_cast<void (OmniboxView::*)(const std::u16string&)>(
            &OmniboxView::SetUserText),
-@@ -586,6 +512,22 @@ void LocationBarView::Init() {
+@@ -604,6 +538,22 @@ void LocationBarView::Init() {
    clear_all_button_ = AddChildView(std::move(clear_all_button));
    RefreshClearAllButtonIcon();
  
@@ -257,13 +248,13 @@ index da82293cba539..2dbe7d318cd7b 100644
 +  copy_url_button->SetImageModel(
 +      views::Button::STATE_NORMAL,
 +      ui::ImageModel::FromVectorIcon(kLinkChromeRefreshIcon, kColorOmniboxResultsIcon,
-+                                     GetLayoutConstant(LOCATION_BAR_ICON_SIZE)));
++                                     GetLayoutConstant(LayoutConstant::kLocationBarIconSize)));
 +  copy_url_button_ = AddChildView(std::move(copy_url_button));
 +
    // Initialize the location entry. We do this to avoid a black flash which is
    // visible when the location entry has just been initialized.
    Update(nullptr);
-@@ -963,25 +905,9 @@ void LocationBarView::Layout(PassKey) {
+@@ -984,30 +934,9 @@ void LocationBarView::Layout(PassKey) {
      }
    };
  
@@ -280,17 +271,22 @@ index da82293cba539..2dbe7d318cd7b 100644
 -              !all_page_actions_migrated
 -          ? -3
 -          : 5;
+-  const PageActionInfo info = GetPageActionInfo();
+-  const int kTrailingEdgePaddingForNonAim =
+-      (info.num_legacy_page_actions_shown == 0) && !all_page_actions_migrated
+-          ? 4
+-          : trailing_decorations_edge_padding;
    add_trailing_decoration(page_action_icon_container_,
                            /*intra_item_padding=*/0,
 -                          /*edge_padding=*/
--                          IsAimLastVisiblePageAction()
+-                          info.is_aim_last_visible_page_action
 -                              ? kTrailingEdgePaddingForAim
--                              : trailing_decorations_edge_padding);
+-                              : kTrailingEdgePaddingForNonAim);
 +                          /*edge_padding=*/trailing_decorations_edge_padding);
    add_trailing_decoration(page_action_container_,
                            /*intra_item_padding=*/0,
                            /*edge_padding=*/trailing_decorations_edge_padding);
-@@ -1000,6 +926,9 @@ void LocationBarView::Layout(PassKey) {
+@@ -1026,6 +955,9 @@ void LocationBarView::Layout(PassKey) {
    add_trailing_decoration(clear_all_button_, /*intra_item_padding=*/0,
                            /*edge_padding=*/trailing_decorations_edge_padding);
  
@@ -300,10 +296,10 @@ index da82293cba539..2dbe7d318cd7b 100644
    // Perform layout.
    int entry_width = width();
  
-@@ -1272,6 +1201,11 @@ bool LocationBarView::ShouldHidePageActionIcons() const {
+@@ -1310,6 +1242,11 @@ bool LocationBarView::ShouldHidePageActionIcons() const {
  
  bool LocationBarView::ShouldHidePageActionIcon(
-     PageActionIconView* icon_view) const {
+     const PageActionIconView* icon_view) const {
 +  // Bookmark star should always be visible
 +  if (page_action_icon_controller_->GetIconType(icon_view) == PageActionIconType::kBookmarkStar) {
 +    return false;
@@ -312,79 +308,48 @@ index da82293cba539..2dbe7d318cd7b 100644
    if (ShouldHidePageActionIcons()) {
      return true;
    }
-@@ -1294,25 +1228,8 @@ bool LocationBarView::ShouldHidePageActionIcon(
+@@ -1396,38 +1333,21 @@ LocationBarView::PageActionInfo LocationBarView::GetPageActionInfo() const {
+   PageActionInfo info;
  
- bool LocationBarView::ShouldHidePageActionIconsForContext(
-     metrics::OmniboxEventProto::PageClassification page_context) const {
--  switch (page_context) {
--    case metrics::OmniboxEventProto::
--        INSTANT_NTP_WITH_OMNIBOX_AS_STARTING_FOCUS: {
--      // When the user is on the NTP and the AIM page action is eligible to be
--      // shown, suppress all other page actions in order to minimize UI
--      // instability when going from the steady-state to the on-focus Omnibox.
--      const auto* aim_eligibility_service =
--          AimEligibilityServiceFactory::GetForProfile(profile_);
--      const bool is_aim_page_action_enabled =
--          OmniboxFieldTrial::IsAimOmniboxEntrypointEnabled(
--              aim_eligibility_service);
--      const bool hide_other_page_actions_on_ntp =
--          omnibox_feature_configs::AiModeOmniboxEntryPoint::Get()
--              .hide_other_page_actions_on_ntp;
--      return is_aim_page_action_enabled && hide_other_page_actions_on_ntp;
--    }
--    default:
--      return false;
--  }
-+  // AI Mode removed - no special hiding logic needed
-+  return false;
- }
- 
- /*
-@@ -1361,42 +1278,7 @@ bool LocationBarView::ShouldHidePageActionIconsForContext(
-  * of how many migrated page actions are visible).
-  */
- bool LocationBarView::IsAimLastVisiblePageAction() const {
--  int visible_migrated_page_action_count = 0;
+   // Check PageActionContainerView (migrated page actions).
 -  bool migrated_aim_page_action_is_visible = false;
--
--  // Check PageActionContainerView (migrated page actions).
--  for (views::View* view : page_action_container_->children()) {
--    if (view->GetVisible()) {
--      visible_migrated_page_action_count++;
+   for (views::View* view : page_action_container_->children()) {
+     if (view->GetVisible()) {
+       info.num_migrated_page_actions_shown++;
 -      page_actions::PageActionView* page_action_view =
 -          static_cast<page_actions::PageActionView*>(view);
 -      if (page_action_view->GetActionId() == kActionAiMode) {
 -        migrated_aim_page_action_is_visible = true;
 -      }
--    }
--  }
--
--  int visible_page_action_count = 0;
+     }
+   }
+ 
+   // Check PageActionIconContainerView (legacy page actions).
 -  bool aim_page_action_is_visible = false;
--
--  // Check PageActionIconContainerView (legacy page actions).
--  for (views::View* view : page_action_icon_container_->children()) {
--    if (view->GetVisible()) {
--      visible_page_action_count++;
+   for (views::View* view : page_action_icon_container_->children()) {
+     if (view->GetVisible()) {
+       info.num_legacy_page_actions_shown++;
 -      PageActionIconView* icon_view = static_cast<PageActionIconView*>(view);
 -      if (icon_view->action_id() == kActionAiMode) {
 -        aim_page_action_is_visible = true;
 -      }
--    }
--  }
--
--  if (migrated_aim_page_action_is_visible &&
--      (visible_migrated_page_action_count + visible_page_action_count) == 1) {
--    return true;
--  } else if (aim_page_action_is_visible && visible_page_action_count == 1) {
--    return true;
--  }
--
-+  // AI Mode removed - always return false
-   return false;
- }
+     }
+   }
  
-@@ -1466,9 +1348,9 @@ void LocationBarView::RefreshBackground() {
+-  if (migrated_aim_page_action_is_visible &&
+-      (info.num_migrated_page_actions_shown +
+-       info.num_legacy_page_actions_shown) == 1) {
+-    info.is_aim_last_visible_page_action = true;
+-  } else if (aim_page_action_is_visible &&
+-             info.num_legacy_page_actions_shown == 1) {
+-    info.is_aim_last_visible_page_action = true;
+-  }
++  // AI Mode removed - is_aim_last_visible_page_action always false
++  info.is_aim_last_visible_page_action = false;
+ 
+   return info;
+ }
+@@ -1499,9 +1419,9 @@ void LocationBarView::RefreshBackground() {
                               ui::NativeTheme::PreferredContrast::kMore;
  
    const auto* const color_provider = GetColorProvider();
@@ -396,7 +361,7 @@ index da82293cba539..2dbe7d318cd7b 100644
  
    background_color_ = gfx::Tween::ColorValueBetween(opacity, normal, hovered);
    if (is_caret_visible) {
-@@ -1565,20 +1447,7 @@ void LocationBarView::RefreshPageActionIconViews() {
+@@ -1598,20 +1518,7 @@ void LocationBarView::RefreshPageActionIconViews() {
  }
  
  void LocationBarView::RefreshAiModePageActionIconView() {
@@ -418,7 +383,7 @@ index da82293cba539..2dbe7d318cd7b 100644
  }
  
  void LocationBarView::RefreshPageActionContainerViewAndIconsVisibility(
-@@ -1912,13 +1781,12 @@ void LocationBarView::OnChanged() {
+@@ -1952,13 +1859,12 @@ void LocationBarView::OnChanged() {
        !omnibox_view_->GetText().empty() &&
        IsVirtualKeyboardVisible(GetWidget()));
  
@@ -435,7 +400,7 @@ index da82293cba539..2dbe7d318cd7b 100644
  }
  
  const LocationBarModel* LocationBarView::GetLocationBarModel() const {
-@@ -1934,10 +1802,6 @@ void LocationBarView::OnOmniboxFocused() {
+@@ -1974,10 +1880,6 @@ void LocationBarView::OnOmniboxFocused() {
    // the omnibox is intentional, snapping is better than transitioning here.
    hover_animation_.Reset();
    RefreshBackground();
@@ -446,7 +411,7 @@ index da82293cba539..2dbe7d318cd7b 100644
  }
  
  void LocationBarView::OnOmniboxBlurred() {
-@@ -1946,10 +1810,6 @@ void LocationBarView::OnOmniboxBlurred() {
+@@ -1986,10 +1888,6 @@ void LocationBarView::OnOmniboxBlurred() {
    }
    RefreshBackground();
  
@@ -458,10 +423,10 @@ index da82293cba539..2dbe7d318cd7b 100644
  }
  
 diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.h b/chrome/browser/ui/views/location_bar/location_bar_view.h
-index 507ca6272a7b1..7993f100b5281 100644
+index 48d8538415b5e..478d6136f7d59 100644
 --- a/chrome/browser/ui/views/location_bar/location_bar_view.h
 +++ b/chrome/browser/ui/views/location_bar/location_bar_view.h
-@@ -570,6 +570,9 @@ class LocationBarView
+@@ -576,6 +576,9 @@ class LocationBarView
    // user to clear all text.
    raw_ptr<views::ImageButton> clear_all_button_ = nullptr;
  
@@ -472,10 +437,10 @@ index 507ca6272a7b1..7993f100b5281 100644
    gfx::SlideAnimation hover_animation_{this};
  
 diff --git a/chrome/browser/ui/views/tabs/tab.cc b/chrome/browser/ui/views/tabs/tab.cc
-index 93a656042af50..d5306a85b1e0c 100644
+index a90d2ba6fd468..87d7eb79b6692 100644
 --- a/chrome/browser/ui/views/tabs/tab.cc
 +++ b/chrome/browser/ui/views/tabs/tab.cc
-@@ -1167,10 +1167,10 @@ void Tab::UpdateIconVisibility() {
+@@ -1177,10 +1177,10 @@ void Tab::UpdateIconVisibility() {
  #if BUILDFLAG(IS_CHROMEOS)
      // Hide tab close button for OnTask if locked. Only applicable for non-web
      // browser scenarios.
@@ -489,7 +454,7 @@ index 93a656042af50..d5306a85b1e0c 100644
  #endif  // BUILDFLAG(IS_CHROMEOS)
      available_width -= close_button_width;
  
-@@ -1196,11 +1196,12 @@ void Tab::UpdateIconVisibility() {
+@@ -1206,11 +1206,12 @@ void Tab::UpdateIconVisibility() {
        available_width -= favicon_width;
      }
  
@@ -504,10 +469,10 @@ index 93a656042af50..d5306a85b1e0c 100644
        available_width -= close_button_width;
      }
 diff --git a/chrome/browser/ui/views/tabs/tab_style_views.cc b/chrome/browser/ui/views/tabs/tab_style_views.cc
-index fe66c423ab248..1346e9de8e2e5 100644
+index aacd3e86550da..89b6a98bd7730 100644
 --- a/chrome/browser/ui/views/tabs/tab_style_views.cc
 +++ b/chrome/browser/ui/views/tabs/tab_style_views.cc
-@@ -210,8 +210,6 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
+@@ -198,8 +198,6 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
    CHECK(tab());
    const int stroke_thickness = GetStrokeThickness(flags.force_active);
  
@@ -516,7 +481,7 @@ index fe66c423ab248..1346e9de8e2e5 100644
    // We'll do the entire path calculation in aligned pixels.
    // TODO(dfried): determine if we actually want to use `stroke_thickness` as
    // the inset in this case.
-@@ -229,8 +227,8 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
+@@ -217,8 +215,8 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
                                    scale;
  
    // Selected, hover, and inactive tab fills are a detached squarcle tab.
@@ -527,7 +492,7 @@ index fe66c423ab248..1346e9de8e2e5 100644
        path_type == TabStyle::PathType::kHighlight ||
        path_type == TabStyle::PathType::kInteriorClip ||
        path_type == TabStyle::PathType::kHitTest) {
-@@ -1031,8 +1029,8 @@ void TabStyleViewsImpl::PaintBackgroundStroke(
+@@ -993,8 +991,8 @@ void TabStyleViewsImpl::PaintBackgroundStroke(
    }
  
    SkPath outer_path =
@@ -538,7 +503,7 @@ index fe66c423ab248..1346e9de8e2e5 100644
    gfx::ScopedCanvas scoped_canvas(canvas);
    float scale = canvas->UndoDeviceScaleFactor();
    cc::PaintFlags flags;
-@@ -1063,12 +1061,19 @@ void TabStyleViewsImpl::PaintSeparators(gfx::Canvas* canvas) const {
+@@ -1025,12 +1023,19 @@ void TabStyleViewsImpl::PaintSeparators(gfx::Canvas* canvas) const {
  
    cc::PaintFlags flags;
    flags.setAntiAlias(true);
@@ -563,10 +528,10 @@ index fe66c423ab248..1346e9de8e2e5 100644
  
  bool TabStyleViewsImpl::IsLeftSplitTab(const Tab* tab) const {
 diff --git a/chrome/browser/ui/views/toolbar/app_menu.cc b/chrome/browser/ui/views/toolbar/app_menu.cc
-index d10401dad12b2..da0cca83c497f 100644
+index d54e9e00b3532..59f154ba1f3da 100644
 --- a/chrome/browser/ui/views/toolbar/app_menu.cc
 +++ b/chrome/browser/ui/views/toolbar/app_menu.cc
-@@ -1597,6 +1597,7 @@ void AppMenu::PopulateMenu(MenuItemView* parent, MenuModel* model) {
+@@ -1599,6 +1599,7 @@ void AppMenu::PopulateMenu(MenuItemView* parent, MenuModel* model) {
                views::LayoutProvider::Get()->GetDistanceMetric(
                    views::DISTANCE_CONTROL_VERTICAL_TEXT_PADDING),
                ui::kColorAppMenuUpgradeRowBackground);
@@ -575,56 +540,56 @@ index d10401dad12b2..da0cca83c497f 100644
          break;
        }
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-index 0a324e3999d7a..e86eec19bd872 100644
+index 86086cdea4364..ea00e9db8dbea 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-@@ -413,6 +413,16 @@ void ToolbarView::Init() {
- 
-   location_bar_ = container_view_->AddChildView(std::move(location_bar));
+@@ -342,6 +342,16 @@ void ToolbarView::Init() {
+   location_bar_view_ = AddChildView(std::move(location_bar));
+   location_bar_ = location_bar_view_;
  
 +  // Add a divider after the location bar
 +  auto location_bar_divider = std::make_unique<views::View>();
-+  location_bar_divider_ = container_view_->AddChildView(std::move(location_bar_divider));
++  location_bar_divider_ = AddChildView(std::move(location_bar_divider));
 +  location_bar_divider_->SetPreferredSize(
-+      gfx::Size(GetLayoutConstant(TOOLBAR_DIVIDER_WIDTH),
-+                GetLayoutConstant(TOOLBAR_DIVIDER_HEIGHT)));
++      gfx::Size(GetLayoutConstant(LayoutConstant::kToolbarDividerWidth),
++                GetLayoutConstant(LayoutConstant::kToolbarDividerHeight)));
 +  location_bar_divider_->SetBackground(views::CreateRoundedRectBackground(
-+    kColorToolbarSeparator,
-+      GetLayoutConstant(TOOLBAR_DIVIDER_CORNER_RADIUS)));
++    kColorToolbarExtensionSeparatorEnabled,
++      GetLayoutConstant(LayoutConstant::kToolbarDividerCornerRadius)));
 +
    if (extensions_container) {
-     extensions_container_ =
-         container_view_->AddChildView(std::move(extensions_container));
-@@ -1008,6 +1018,12 @@ void ToolbarView::InitLayout() {
-         gfx::Insets::VH(0, GetLayoutConstant(TOOLBAR_DIVIDER_SPACING)));
+     extensions_container_ = AddChildView(std::move(extensions_container));
+     extensions_toolbar_coordinator_ =
+@@ -884,6 +894,12 @@ void ToolbarView::InitLayout() {
+             0, GetLayoutConstant(LayoutConstant::kToolbarDividerSpacing)));
    }
  
 +  if (location_bar_divider_) {
 +    location_bar_divider_->SetProperty(
 +        views::kMarginsKey,
-+        gfx::Insets::VH(0, GetLayoutConstant(TOOLBAR_DIVIDER_SPACING)));
++        gfx::Insets::VH(0, GetLayoutConstant(LayoutConstant::kToolbarDividerSpacing)));
 +  }
 +
    constexpr int kToolbarFlexOrderStart = 1;
  
    // TODO(crbug.com/40929989): Ignore containers till issue addressed.
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
-index 415970aadb0ed..d29a28f80fb0c 100644
+index 6c14d4d158e14..6ce1b27dd048e 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.h
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
-@@ -295,6 +295,7 @@ class ToolbarView : public views::AccessiblePaneView,
-   raw_ptr<SplitTabsToolbarButton> split_tabs_ = nullptr;
+@@ -281,6 +281,7 @@ class ToolbarView : public views::AccessiblePaneView,
    raw_ptr<CustomTabBarView> custom_tab_bar_ = nullptr;
-   raw_ptr<LocationBarView> location_bar_ = nullptr;
+   raw_ptr<LocationBarView> location_bar_view_ = nullptr;
+   raw_ptr<LocationBar> location_bar_ = nullptr;
 +  raw_ptr<views::View> location_bar_divider_ = nullptr;
-   raw_ptr<ExtensionsToolbarContainer> extensions_container_ = nullptr;
+   raw_ptr<ExtensionsToolbarDesktop> extensions_container_ = nullptr;
    raw_ptr<views::View> toolbar_divider_ = nullptr;
    raw_ptr<BatterySaverButton> battery_saver_button_ = nullptr;
 diff --git a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
-index 202099eee781e..832ca90c1538c 100644
+index 872a7001252b8..8af061f4c4af3 100644
 --- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
 +++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
-@@ -583,7 +583,7 @@ void NewTabPageHandler::RegisterProfilePrefs(PrefRegistrySimple* registry) {
+@@ -602,7 +602,7 @@ void NewTabPageHandler::RegisterProfilePrefs(PrefRegistrySimple* registry) {
    registry->RegisterIntegerPref(
        prefs::kNtpCustomizeChromeSidePanelAutoOpeningsCount, 0);
    registry->RegisterBooleanPref(prefs::kNtpCustomizeChromeExplicitlyClosed,
@@ -634,7 +599,7 @@ index 202099eee781e..832ca90c1538c 100644
  }
  
 diff --git a/components/search/ntp_features.cc b/components/search/ntp_features.cc
-index 406d9402d41e1..6d2ea1d68430b 100644
+index 348e1d6250322..272ed08d3f982 100644
 --- a/components/search/ntp_features.cc
 +++ b/components/search/ntp_features.cc
 @@ -98,7 +98,7 @@ BASE_FEATURE(kNtpDummyModules, base::FEATURE_DISABLED_BY_DEFAULT);
@@ -682,10 +647,10 @@ index cd70752a23e34..6725f520d89c2 100644
    // `vertical_margin_` is not set.
    int GetVerticalMargin() const;
 diff --git a/ui/webui/resources/cr_components/searchbox/searchbox.css b/ui/webui/resources/cr_components/searchbox/searchbox.css
-index 34e70f33711a1..dc4fdb93e0fa3 100644
+index fe62b8bf6bf28..49ff2f41917c8 100644
 --- a/ui/webui/resources/cr_components/searchbox/searchbox.css
 +++ b/ui/webui/resources/cr_components/searchbox/searchbox.css
-@@ -299,7 +299,7 @@ cr-searchbox-icon {
+@@ -311,7 +311,7 @@ cr-searchbox-icon {
  
  :host([use-webkit-search-icons_][compose-button-enabled]) #voiceSearchButton,
  :host([use-webkit-search-icons_][compose-button-enabled]) #lensSearchButton {

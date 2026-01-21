@@ -1,5 +1,5 @@
 diff --git a/chrome/app/chromium_strings.grd b/chrome/app/chromium_strings.grd
-index 824563af91ce5..5aa88b8112b94 100644
+index 873e03b62051e..09475789aea13 100644
 --- a/chrome/app/chromium_strings.grd
 +++ b/chrome/app/chromium_strings.grd
 @@ -278,7 +278,7 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
@@ -11,7 +11,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          a few select overrides for the most prominent end-user strings.
  
          Rationale: https://goo.gle/chrome-for-testing#bookmark=id.n1rat320av91
-@@ -294,45 +294,45 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -294,30 +294,30 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
          </then>
          <else>
            <message name="IDS_PRODUCT_NAME" desc="The Chrome application name" translateable="false">
@@ -49,6 +49,19 @@ index 824563af91ce5..5aa88b8112b94 100644
 +          Welcome to OpenBrowser
          </message>
        </if>
+       <if expr="is_linux">
+@@ -328,25 +328,25 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+           Cancel
+         </message>
+         <message name="IDS_TERMS_DIALOG_TITLE" desc="Window title for the Terms of Service dialog">
+-          Chromium Additional Terms of Service
++          OpenBrowser Additional Terms of Service
+         </message>
+         <message name="IDS_TERMS_DIALOG_ACCESSIBILITY_LABEL" desc="Accessibility label for the Terms of Service in the dialog. The actual terms text is just a placeholder for branded builds.">
+-          Chromium Additional Terms of Service
++          OpenBrowser Additional Terms of Service
+         </message>
+       </if>
        <if expr="is_chromeos">
          <message name="IDS_PRODUCT_OS_NAME" desc="The ChromeOS application name">
 -          ChromiumOS
@@ -70,7 +83,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <if expr="is_win">
          <message name="IDS_SHORTCUT_NEW_WINDOW" desc="The text label of the New window shortcut context menu entry as of Windows 8">
-@@ -346,7 +346,7 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -360,7 +360,7 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
        </if>
        <if expr="not is_macosx and not is_chromeos">
          <message name="IDS_TASK_MANAGER_TITLE" desc="The title of the Task Manager window">
@@ -79,13 +92,29 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
        <message name="IDS_TASK_MANAGER_SEARCH_PLACEHOLDER" desc="The placeholder text for the Search bar in the Task Manager window">
-@@ -380,12 +380,12 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -394,18 +394,18 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
          All tasks
        </message>
        <message name="IDS_SESSION_CRASHED_VIEW_UMA_OPTIN" desc="Text besides the checkbox to let users optin to UMA in the restore from previous crash bubble.">
 -        Help make Chromium better by sending crash reports and <ph name="UMA_LINK">$1<ex>usage statistics</ex></ph> to Google
 +        Help make OpenBrowser better by sending crash reports and <ph name="UMA_LINK">$1<ex>usage statistics</ex></ph> to Google
        </message>
+       <if expr="not is_android">
+         <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_TOO_MANY_BOOKMARKS_BODY" desc="Body of the signout confirmation dialog when the user has too many bookmarks.">
+-        You reached Chromium’s limit of <ph name="BOOKMARK_LIMIT">$1<ex>100,000</ex></ph> bookmarks, so some of your bookmarks haven’t been saved in your Google Account yet.
++        You reached OpenBrowser’s limit of <ph name="BOOKMARK_LIMIT">$1<ex>100,000</ex></ph> bookmarks, so some of your bookmarks haven’t been saved in your Google Account yet.
+ 
+ New bookmarks can’t be saved in your account until you delete some. If you sign out now, unsaved bookmarks will be deleted.
+         </message>
+       </if>
+       <if expr="is_android">
+         <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_TOO_MANY_BOOKMARKS_BODY" desc="Body of the signout confirmation dialog when the user has too many bookmarks." formatter_data="android_java">
+-        You reached Chromium’s limit of <ph name="BOOKMARK_LIMIT">%1$s<ex>100,000</ex></ph> bookmarks, so some of your bookmarks haven’t been saved in your Google Account yet.
++        You reached OpenBrowser’s limit of <ph name="BOOKMARK_LIMIT">%1$s<ex>100,000</ex></ph> bookmarks, so some of your bookmarks haven’t been saved in your Google Account yet.
+ 
+ New bookmarks can’t be saved in your account until you delete some. If you sign out now, unsaved bookmarks will be deleted.
+         </message>
+@@ -413,7 +413,7 @@ New bookmarks can’t be saved in your account until you delete some. If you sig
        <message name="IDS_RESET_PROFILE_SETTINGS_EXPLANATION_IN_BULLET_POINTS" desc="A label formatted with bullet points describing the consequences of the 'reset profile settings' feature">
          This action will:
          <ph name="LINE_BREAKS">&lt;br&gt;&lt;br&gt;</ph>
@@ -94,7 +123,7 @@ index 824563af91ce5..5aa88b8112b94 100644
            <ph name="LINE_BREAK">&lt;br&gt;</ph>
            • Disable extensions
            <ph name="LINE_BREAK">&lt;br&gt;</ph>
-@@ -403,7 +403,7 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -431,7 +431,7 @@ New bookmarks can’t be saved in your account until you delete some. If you sig
            </then>
            <else>
              <message name="IDS_BROWSER_WINDOW_TITLE_FORMAT" desc="The format for titles displayed in tabs and popup windows">
@@ -103,7 +132,7 @@ index 824563af91ce5..5aa88b8112b94 100644
              </message>
            </else>
          </if>
-@@ -411,19 +411,19 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -439,19 +439,19 @@ New bookmarks can’t be saved in your account until you delete some. If you sig
        <if expr="is_chromeos">
          <!-- Browser Window Title Format -->
          <message name="IDS_BROWSER_WINDOW_TITLE_FORMAT" desc="The format for titles displayed in tabbed browser windows">
@@ -126,7 +155,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
        <if expr="is_macosx">
-@@ -442,18 +442,18 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -470,18 +470,18 @@ New bookmarks can’t be saved in your account until you delete some. If you sig
          </then>
          <else>
            <message name="IDS_ACCESSIBLE_BROWSER_WINDOW_TITLE_FORMAT" desc="The format for the accessible name of a tabbed browser window">
@@ -149,7 +178,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <if expr="_is_chrome_for_testing_branded">
          <then>
-@@ -466,22 +466,22 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -494,22 +494,22 @@ New bookmarks can’t be saved in your account until you delete some. If you sig
          </then>
          <else>
            <message name="IDS_ABOUT_VERSION_COMPANY_NAME" desc="Company name on the about pages">
@@ -179,7 +208,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
        <if expr="_is_chrome_for_testing_branded">
-@@ -492,108 +492,108 @@ If you update this file, be sure also to update google_chrome_strings.grd. -->
+@@ -520,117 +520,117 @@ New bookmarks can’t be saved in your account until you delete some. If you sig
          </then>
          <else>
            <message name="IDS_ABOUT_TERMS_OF_SERVICE" desc="The terms of service label in the About box." translateable="false">
@@ -190,8 +219,8 @@ index 824563af91ce5..5aa88b8112b94 100644
        </if>
        <if expr="is_macosx">
          <message name="IDS_MACOS_OBSOLETE" desc="A message displayed on an at-launch infobar and About (Help) page warning the user that the OS version they are using will soon be or is already unsupported.">
--          To get future Chromium updates, you'll need macOS 12 or later. This computer is using macOS 11.
-+          To get future OpenBrowser updates, you'll need macOS 12 or later. This computer is using macOS 11.
+-          To get future Chromium updates, you'll need macOS 13 or later. This computer is using macOS 12.
++          To get future OpenBrowser updates, you'll need macOS 13 or later. This computer is using macOS 12.
          </message>
        </if>
        <if expr="is_win">
@@ -226,13 +255,21 @@ index 824563af91ce5..5aa88b8112b94 100644
        </if>
        <message name="IDS_ACCNAME_APP" desc="The accessible name for the app menu." translateable="false">
 -        Chromium
-+        OpenBrowser
-       </message>
+-      </message>
++      OpenBrowser
++    </message>
        <!-- Hung Browser Detector -->
        <if expr="is_win">
          <message name="IDS_BROWSER_HUNGBROWSER_MESSAGE" desc="Content of the dialog box shown when the browser is hung">
 -          Chromium is unresponsive. Relaunch now?
 +          OpenBrowser is unresponsive. Relaunch now?
+         </message>
+       </if>
+       <!-- General app failure messages -->
+       <if expr="not is_chromeos and not is_android">
+         <message name="IDS_COULDNT_STARTUP_PROFILE_ERROR" desc="Error displayed when Chrome cannot start because profiles were not opened correctly.">
+-          Cannot start Chromium because something went wrong when opening your profile. Try to restart Chromium.
++          Cannot start OpenBrowser because something went wrong when opening your profile. Try to restart OpenBrowser.
          </message>
        </if>
        <!-- Sharing messages -->
@@ -267,6 +304,10 @@ index 824563af91ce5..5aa88b8112b94 100644
        <message name="IDS_FR_CUSTOMIZE_DEFAULT_BROWSER" desc="Default browser checkbox label">
 -        Make Chromium the default browser
 +        Make OpenBrowser the default browser
+       </message>
+       <message name="IDS_DEFAULT_BROWSER_CHANGED_MESSAGE" desc="Body of the notification shown when Chrome is no longer the default browser.">
+-        Chromium is no longer your default browser. Make Chromium the default browser?
++        OpenBrowser is no longer your default browser. Make OpenBrowser the default browser?
        </message>
        <if expr="use_titlecase">
          <message name="IDS_STATUS_TRAY_KEEP_CHROME_RUNNING_IN_BACKGROUND" desc="In Title Case: The checkbox in the status tray context menu that controls whether chrome keeps running in the background after the last window is closed">
@@ -313,7 +354,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <message name="IDS_PREFERENCES_UNREADABLE_ERROR" desc="Error displayed on startup when user preferences file can not be read">
  Your preferences can not be read.
-@@ -603,21 +603,21 @@ Some features may be unavailable and changes to preferences won't be saved.
+@@ -640,21 +640,21 @@ Some features may be unavailable and changes to preferences won't be saved.
        <message name="IDS_PREFERENCES_CORRUPT_ERROR" desc="Error displayed on startup when user preferences file can not be read">
  Your preferences file is corrupt or invalid.
  
@@ -339,7 +380,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <message name="IDS_PASSWORD_BUBBLES_PASSWORD_MANAGER_LINK_TEXT_SAVING_ON_DEVICE" desc="The text of the Google Password Manager links displayed on Password Manager bubbles footer when the credentials are stored only locally.">
          Password Manager
-@@ -630,81 +630,81 @@ Chromium is unable to recover your settings.
+@@ -667,81 +667,81 @@ Chromium is unable to recover your settings.
        </message>
        <if expr="is_macosx">
        <message name="IDS_PASSWORDS_AUTHENTICATION_PROMPT_PREFIX" desc="Text shown in the beginning of the OS-level user authentication prompt before performing a seneitive operation such as show passwords in plain text.">
@@ -442,7 +483,7 @@ index 824563af91ce5..5aa88b8112b94 100644
            Access the Internet
          </message>
          <message name="IDS_UNINSTALL_DELETE_PROFILE" desc="Text to show user to ask whether to delete all the profile data also during uninstallation.">
-@@ -713,252 +713,252 @@ Chromium is unable to recover your settings.
+@@ -750,252 +750,252 @@ Chromium is unable to recover your settings.
          <message name="IDS_UNINSTALL_BUTTON_TEXT" desc="Label for uninstall button on Uninstall confirmation dialog.">
            Uninstall
          </message>
@@ -764,7 +805,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
  
        <if expr="use_titlecase and not is_chromeos">
-@@ -970,12 +970,12 @@ Chromium is unable to recover your settings.
+@@ -1007,12 +1007,12 @@ Chromium is unable to recover your settings.
            </then>
            <else>
              <message name="IDS_ABOUT" desc="In Title Case: The text label of the About Chrome menu item">
@@ -779,7 +820,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
        <if expr="not use_titlecase and not is_chromeos">
-@@ -987,32 +987,32 @@ Chromium is unable to recover your settings.
+@@ -1024,32 +1024,32 @@ Chromium is unable to recover your settings.
            </then>
            <else>
              <message name="IDS_ABOUT" desc="The text label of the About Chrome menu item">
@@ -819,7 +860,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
  
-@@ -1021,24 +1021,24 @@ Chromium is unable to recover your settings.
+@@ -1058,24 +1058,24 @@ Chromium is unable to recover your settings.
          <if expr="use_titlecase">
            <then>
              <message name="IDS_CUSTOMIZE_CHROME" desc="In Title Case: The text label of the Customize Chrome menu item">
@@ -850,7 +891,7 @@ index 824563af91ce5..5aa88b8112b94 100644
              </message>
            </else>
          </if>
-@@ -1050,33 +1050,33 @@ Chromium is unable to recover your settings.
+@@ -1087,33 +1087,33 @@ Chromium is unable to recover your settings.
  
        <!-- Chrome sign-in page -->
        <message name="IDS_CHROME_SIGNIN_TITLE" desc="Title on the about:chrome-signin page" translateable="false">
@@ -891,7 +932,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <message name="IDS_SESSION_RESTORE_LINK" desc="Text for the link in the session restore infobar to open the Settings page.">
           Settings.
-@@ -1085,28 +1085,28 @@ Chromium is unable to recover your settings.
+@@ -1122,28 +1122,28 @@ Chromium is unable to recover your settings.
          Settings, opens in new tab.
        </message>
        <!-- Enterprise sign-in dialog -->
@@ -930,7 +971,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_ONE_CLICK_SIGNIN_DIALOG_MESSAGE_NEW" desc="The message of the one click sign-in dialog.">
            You're signed in as <ph name="USER_EMAIL_ADDRESS">$1<ex>foo@gmail.com</ex></ph>. Now you can access your bookmarks, history, and other settings on all your signed in devices.
-@@ -1115,40 +1115,40 @@ Chromium is unable to recover your settings.
+@@ -1152,46 +1152,46 @@ Chromium is unable to recover your settings.
  
        <!-- Management bubble -->
        <message name="IDS_MANAGEMENT_DIALOG_BROWSER_MANAGED" desc="Disclosure that an unnamed organization is managing the browser.">
@@ -980,7 +1021,14 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
  
-@@ -1160,21 +1160,21 @@ Chromium is unable to recover your settings.
+       <!-- NTP strings -->
+       <message name="IDS_NTP_CUSTOMIZE_TOOLBAR_CATEGORY_YOUR_CHROME" desc="The label for the category of actions that involve your Chrome data, such as opening the password manager or clearing browsing data.">
+-        Your Chromium
++        Your OpenBrowser
+       </message>
+       <if expr="_is_chrome_for_testing_branded">
+         <then>
+@@ -1200,34 +1200,34 @@ Chromium is unable to recover your settings.
            </message>
          </then>
          <else>
@@ -995,6 +1043,22 @@ index 824563af91ce5..5aa88b8112b94 100644
 -        Make Chromium Yours
 +        Make OpenBrowser Yours
        </message>
+       <message name="IDS_NTP_CUSTOMIZE_CHROME_RESET_TO_CLASSIC_CHROME_LABEL" desc="The label for the button for resetting theme back to default chrome in the New Tab Page customize chrome side panel.">
+-        Reset to Default Chromium
++        Reset to Default OpenBrowser
+       </message>
+ 
+       <!-- New Tab Page browser feature promotions. -->
+       <if expr="not is_android">
+         <message name="IDS_NTP_CUSTOMIZATION_PROMO" desc="The text shown in the body of the New Tab Page browser customization promotion">
+-          Customize Chromium to give your browser a new look
++          Customize OpenBrowser to give your browser a new look
+         </message>
+         <message name="IDS_NTP_SIGN_IN_PROMO_WITH_BOOKMARKS" desc="The text shown in the body of the New Tab Page sign in promotion">
+-          Sign in to Chromium to get your passwords, bookmarks, and more on all your devices
++          Sign in to OpenBrowser to get your passwords, bookmarks, and more on all your devices
+         </message>
+       </if>
  
        <!-- Customize Chrome Auto Promo Strings -->
 -      <message name="IDS_IPH_CUSTOMIZE_CHROME_AUTO_OPEN_BODY" desc="The description of the IPH to auto open Customize Chromium">
@@ -1009,7 +1073,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
  
        <!-- Realbox Strings -->
-@@ -1188,263 +1188,263 @@ Chromium is unable to recover your settings.
+@@ -1241,269 +1241,269 @@ Chromium is unable to recover your settings.
        <!-- Signin Email Confirmation tab modal dialog -->
        <if expr="not is_chromeos">
          <message name="IDS_SIGNIN_EMAIL_CONFIRMATION_TITLE" desc="Title of the signin email confirmation tab modal dialog.">
@@ -1125,7 +1189,12 @@ index 824563af91ce5..5aa88b8112b94 100644
 +          Your passwords and other OpenBrowser data that you saved in your Google Account will be removed from this device. To use them again in OpenBrowser, sign back in.
          </message>
 -        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_VERIFY_BODY" desc="This is the subtitle of an error message dialog that appears when the user opens the Chromium Profile Menu and chooses 'Sign out of Chromium'. The error message appears when the user has saved some data (like a password or payment method) to Chromium, but Chromium wasn't able to save the data to the user's Google Account due to a sign-in error; we want to set expectations by clarifying that the data will be removed from the device. This subtitle is after the 'Some data isn’t saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved and will be deleted if they sign out. This string provides a path to resolution because it explains how the user can properly save their data before they sign out of Chromium.">
+-          Chromium needs to verify it’s you before some data can be saved in your Google Account and used on all your devices. If you sign out now, this data will be deleted.
 +        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_VERIFY_BODY" desc="This is the subtitle of an error message dialog that appears when the user opens the OpenBrowser Profile Menu and chooses 'Sign out of OpenBrowser'. The error message appears when the user has saved some data (like a password or payment method) to OpenBrowser, but OpenBrowser wasn't able to save the data to the user's Google Account due to a sign-in error; we want to set expectations by clarifying that the data will be removed from the device. This subtitle is after the 'Some data isn’t saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved and will be deleted if they sign out. This string provides a path to resolution because it explains how the user can properly save their data before they sign out of OpenBrowser.">
++          OpenBrowser needs to verify it’s you before some data can be saved in your Google Account and used on all your devices. If you sign out now, this data will be deleted.
+         </message>
+-        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_VERIFY_BODY_WITH_COUNT" desc="This is the subtitle of an error message dialog that appears when the user opens the Chromium Profile Menu and chooses 'Sign out of Chromium'. The error message appears when the user has saved some data (like a password or payment method) to Chromium, but Chromium wasn't able to save the data to the user's Google Account due to a sign-in error; we want to set expectations by clarifying that the data will be removed from the device. This subtitle is after the 'Some data isn’t saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved and will be deleted if they sign out. This string provides a path to resolution because it explains how the user can properly save their data before they sign out of Chromium.">
++        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_VERIFY_BODY_WITH_COUNT" desc="This is the subtitle of an error message dialog that appears when the user opens the OpenBrowser Profile Menu and chooses 'Sign out of OpenBrowser'. The error message appears when the user has saved some data (like a password or payment method) to OpenBrowser, but OpenBrowser wasn't able to save the data to the user's Google Account due to a sign-in error; we want to set expectations by clarifying that the data will be removed from the device. This subtitle is after the 'Some data isn’t saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved and will be deleted if they sign out. This string provides a path to resolution because it explains how the user can properly save their data before they sign out of OpenBrowser.">
            {count, plural,
 -              =1 {Chromium needs to verify it’s you before some data can be saved in your Google Account and used on all your devices. If you sign out now, this data (1 item) will be deleted.}
 -              other {Chromium needs to verify it’s you before some data can be saved in your Google Account and used on all your devices. If you sign out now, this data ({count} items) will be deleted.}}
@@ -1133,7 +1202,12 @@ index 824563af91ce5..5aa88b8112b94 100644
 +              other {OpenBrowser needs to verify it’s you before some data can be saved in your Google Account and used on all your devices. If you sign out now, this data ({count} items) will be deleted.}}
          </message>
 -        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_UNSYNCED_BODY"  desc="This is the subtitle of an error message dialog that appears when the user opens the Chromium Profile Menu and chooses 'Sign out of Chromium'. The error message appears when the user tries to sign out immediately after having saved saved some data (like a password or payment method) to Chromium and Chromium hasn't had time to save that data to the user's Google Account yet. This subtitle is after the 'Some data isn't saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved to their Google Account. This string asks the user to wait a few minutes before trying to sign out again.">
+-          Some of your Chromium data hasn't been saved in your Google Account yet. Try waiting a few minutes before signing out. If you sign out now, this data will be deleted.
 +        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_UNSYNCED_BODY"  desc="This is the subtitle of an error message dialog that appears when the user opens the OpenBrowser Profile Menu and chooses 'Sign out of OpenBrowser'. The error message appears when the user tries to sign out immediately after having saved saved some data (like a password or payment method) to OpenBrowser and OpenBrowser hasn't had time to save that data to the user's Google Account yet. This subtitle is after the 'Some data isn't saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved to their Google Account. This string asks the user to wait a few minutes before trying to sign out again.">
++          Some of your OpenBrowser data hasn't been saved in your Google Account yet. Try waiting a few minutes before signing out. If you sign out now, this data will be deleted.
+         </message>
+-        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_UNSYNCED_BODY_WITH_COUNT"  desc="This is the subtitle of an error message dialog that appears when the user opens the Chromium Profile Menu and chooses 'Sign out of Chromium'. The error message appears when the user tries to sign out immediately after having saved saved some data (like a password or payment method) to Chromium and Chromium hasn't had time to save that data to the user's Google Account yet. This subtitle is after the 'Some data isn't saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved to their Google Account. This string asks the user to wait a few minutes before trying to sign out again.">
++        <message name="IDS_CHROME_SIGNOUT_CONFIRMATION_PROMPT_UNSYNCED_BODY_WITH_COUNT"  desc="This is the subtitle of an error message dialog that appears when the user opens the OpenBrowser Profile Menu and chooses 'Sign out of OpenBrowser'. The error message appears when the user tries to sign out immediately after having saved saved some data (like a password or payment method) to OpenBrowser and OpenBrowser hasn't had time to save that data to the user's Google Account yet. This subtitle is after the 'Some data isn't saved yet' string. The tone should be cautionary, because we want to explain to the user that their data is not saved to their Google Account. This string asks the user to wait a few minutes before trying to sign out again.">
            {count, plural,
 -              =1 {Some of your Chromium data hasn't been saved in your Google Account yet. Try waiting a few minutes before signing out. If you sign out now, this data (1 item) will be deleted.}
 -              other {Some of your Chromium data hasn't been saved in your Google Account yet. Try waiting a few minutes before signing out. If you sign out now, this data ({count} items) will be deleted.}}
@@ -1196,9 +1270,8 @@ index 824563af91ce5..5aa88b8112b94 100644
  
        <!-- Sync/sign-in error messages -->
        <if expr="is_chromeos">
--        <message name="IDS_SIGNIN_ERROR_SECONDARY_ACCOUNT_DISPLAY_SOURCE" desc="Context title shown in the notification header of sign-in error notification for ChromiumOS Secondary Accounts.">
+         <message name="IDS_SIGNIN_ERROR_SECONDARY_ACCOUNT_DISPLAY_SOURCE" desc="Context title shown in the notification header of sign-in error notification for ChromiumOS Secondary Accounts.">
 -          ChromiumOS System
-+        <message name="IDS_SIGNIN_ERROR_SECONDARY_ACCOUNT_DISPLAY_SOURCE" desc="Context title shown in the notification header of sign-in error notification for OpenBrowserOS Secondary Accounts.">
 +          OpenBrowserOS System
          </message>
          <message name="IDS_SYNC_SIGN_IN_ERROR_BUBBLE_VIEW_MESSAGE" desc="Message in the sign-in error notification when the user's sign-in credentials are out of date.">
@@ -1216,7 +1289,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </if>
  
        <!-- Profile Menu -->
-       <message name="IDS_PROFILE_MENU_SIGNIN_PROMO_BUTTON" desc="Text for the button in the sign-in promo in the profile menu when the used is signed out.">
+       <message name="IDS_PROFILE_MENU_SIGNIN_PROMO_BUTTON" meaning="Button" desc="Text for the button in the sign-in promo in the profile menu when the used is signed out.">
 -        Sign in to Chromium
 +        Sign in to OpenBrowser
        </message>
@@ -1373,7 +1446,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
  
-@@ -1452,40 +1452,40 @@ Chromium is unable to recover your settings.
+@@ -1511,40 +1511,40 @@ Chromium is unable to recover your settings.
        <if expr="not is_android and not is_chromeos">
          <!-- User pod remove sync warning text -->
          <message name="IDS_LOGIN_POD_USER_REMOVE_WARNING_SYNC" desc="Main text shown as a warning when attempting to remove an user.">
@@ -1424,7 +1497,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_TUTORIAL_PASSWORD_MANAGER_CLICK_PASSWORD_MANAGER" desc="The description of the 'click password manager' step in password manager tutorial">
            Click “Password Manager”
-@@ -1500,82 +1500,82 @@ Chromium is unable to recover your settings.
+@@ -1559,82 +1559,82 @@ Chromium is unable to recover your settings.
  
        <!-- Settings API bubble -->
        <message name="IDS_EXTENSIONS_SETTINGS_API_SECOND_LINE_START_PAGES" desc="Second line in the Settings API bubble. Only shown if the secondary change by the extension was just the start pages. The triple single quotes are needed to preserve the space before and after the sentence which is needed when the language (Chrome is being translated to) uses space as word separator. Please preserve them, unless the language being translated to does not use space as word separator.">
@@ -1531,7 +1604,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_RELAUNCH_AND_UPDATE" desc="The button in the Update Recommended dialog which updates and relaunches Chrome.">
            Relaunch
-@@ -1583,10 +1583,10 @@ Chromium is unable to recover your settings.
+@@ -1642,10 +1642,10 @@ Chromium is unable to recover your settings.
        </if>
        <if expr="is_chromeos">
          <message name="IDS_UPDATE_RECOMMENDED_DIALOG_TITLE" desc="The window title for the Update Recommended dialog.">
@@ -1544,7 +1617,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_RELAUNCH_AND_UPDATE" desc="The button in the Update Recommended dialog which updates and restarts ChromeOS.">
            Restart
-@@ -1595,71 +1595,71 @@ Chromium is unable to recover your settings.
+@@ -1654,71 +1654,71 @@ Chromium is unable to recover your settings.
  
        <if expr="is_win or is_macosx or is_linux">
          <message name="IDS_UPDATE_RECOMMENDED_DIALOG_TITLE_ALT" desc="Alternate window title for the Update Recommended dialog." translateable="false">
@@ -1633,7 +1706,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
        <message name="IDS_RECOVERY_BUBBLE_TEXT" desc="Text for the chrome recovery bubble view full description.">
-@@ -1667,92 +1667,92 @@ Chromium is unable to recover your settings.
+@@ -1726,92 +1726,92 @@ Chromium is unable to recover your settings.
        </message>
  
        <!-- Critical Notification bubble -->
@@ -1755,7 +1828,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_LOCAL_NETWORK_ACCESS_PERMISSION_DESC" desc="Text shown in the macOS permission dialog, describing why Chrome needs the permission to access local network.">
            This will allow you to select from available devices and display content on them.
-@@ -1761,12 +1761,12 @@ Chromium is unable to recover your settings.
+@@ -1820,12 +1820,12 @@ Chromium is unable to recover your settings.
  
        <!-- Side panel strings -->
        <message name="IDS_SIDE_PANEL_CUSTOMIZE_CHROME_TITLE" desc="The name of the Customize Chrome feature in the side panel combo box.">
@@ -1770,7 +1843,16 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
  
        <!-- Lens Overlay Strings -->
-@@ -2175,17 +2175,17 @@ Chromium is unable to recover your settings.
+@@ -2179,7 +2179,7 @@ Chromium is unable to recover your settings.
+         </message>
+         <message name="IDS_LENS_PERMISSION_BUBBLE_DIALOG_LEARN_MORE_ABOUT_GOOGLE_LENS_LINK"
+           desc="Accessibility label for text link that is shown to users to learn more about privacy in relation to Google Lens.">
+-          Learn more about searching with Image Search in Chromium
++          Learn more about searching with Image Search in OpenBrowser
+         </message>
+         <message name="IDS_LENS_PERMISSION_BUBBLE_DIALOG_TITLE"
+           desc="The title of the lens permission search bubble dialog, introducing Lens as a way to search what's on their screen.">
+@@ -2279,17 +2279,17 @@ Chromium is unable to recover your settings.
        <!-- OOBE -->
        <if expr="is_chromeos">
          <message name="IDS_INSTALLING_UPDATE" desc="Label shown on the updates installation screen during OOBE">
@@ -1791,7 +1873,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
        <!-- Relaunch notification bubble and dialog. -->
-@@ -2193,115 +2193,115 @@ Chromium is unable to recover your settings.
+@@ -2297,115 +2297,115 @@ Chromium is unable to recover your settings.
          <if expr="not is_chromeos">
            <message name="IDS_RELAUNCH_RECOMMENDED_TITLE" desc="The title of a dialog that tells users that a browser relaunch is recommended for an update available for some number of days.">
              {0, plural,
@@ -1957,7 +2039,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
  
-@@ -2315,129 +2315,129 @@ Chromium is unable to recover your settings.
+@@ -2419,129 +2419,129 @@ Chromium is unable to recover your settings.
        <!-- Chrome parent extension/app install blocking dialog. -->
        <if expr="enable_extensions_core">
          <message name="IDS_EXTENSION_PERMISSIONS_BLOCKED_BY_PARENT_PROMPT_MESSAGE" desc="Text for the dialog indicating that a parent has blocked extensions and apps.">
@@ -2057,7 +2139,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
  
          <!-- First Run Experience -->
-         <message name="IDS_FRE_SIGN_IN_TITLE_0"
+         <message name="IDS_FRE_SIGN_IN_TITLE_0" meaning="Title"
 -          desc="This string appears as a heading on a full-page screen that asks the user to sign in to Chromium with their Google Account. It appears when the user launches Chromium for the first time. When they sign in, they can personalize and customize Chromium and remember their settings in their Google Account. The tone should be inviting and alluring.">
 -          Sign in to Chromium
 +          desc="This string appears as a heading on a full-page screen that asks the user to sign in to OpenBrowser with their Google Account. It appears when the user launches OpenBrowser for the first time. When they sign in, they can personalize and customize OpenBrowser and remember their settings in their Google Account. The tone should be inviting and alluring.">
@@ -2131,7 +2213,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
  
-@@ -2451,20 +2451,20 @@ Chromium is unable to recover your settings.
+@@ -2555,20 +2555,20 @@ Chromium is unable to recover your settings.
  
        <!-- ChromeLabs bubble -->
        <message name="IDS_CHROMELABS_RELAUNCH_FOOTER_MESSAGE" desc="Text that shows in the footer of the Chrome Labs bubble when relaunch is needed for changes to take effect.">
@@ -2156,7 +2238,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <message name="IDS_TAILORED_SECURITY_UNCONSENTED_PROMOTION_MESSAGE_DESCRIPTION" desc="Description shown in the message shown when a user changes their account-level tailored security setting encouraging them to enable Enhanced Safe Browsing">
          Enhanced protection does more to block phishing and malware
-@@ -2478,24 +2478,24 @@ Chromium is unable to recover your settings.
+@@ -2582,24 +2582,24 @@ Chromium is unable to recover your settings.
  
        <!-- Advanced security settings -->
        <message name="IDS_SETTINGS_SECURITY_JAVASCRIPT_OPTIMIZATION_LINK_ROW_ENABLED" desc="Description for the link row of the Javascript-optimization page when javascript-optimization is enabled.">
@@ -2188,7 +2270,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_NO_UPDATE_RESPONSE" desc="Updater response for no updates when handling install result.">
            No update is available.
-@@ -2504,7 +2504,7 @@ Chromium is unable to recover your settings.
+@@ -2608,7 +2608,7 @@ Chromium is unable to recover your settings.
            Installation failed. Please try again.
          </message>
          <message name="IDS_INSTALLER_DISPLAY_NAME" desc="Name for the updater metainstaller.">
@@ -2197,7 +2279,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_CLOSE_BUTTON" desc="Close button tooltip">
            Close
-@@ -2543,13 +2543,13 @@ Chromium is unable to recover your settings.
+@@ -2647,13 +2647,13 @@ Chromium is unable to recover your settings.
            Canceling...
          </message>
          <message name="IDS_TEXT_RESTART_BROWSER" desc="For when a browser must be restarted to complete the installation.">
@@ -2214,7 +2296,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_UPDATER_CLOSE" desc="For close button on the UI post install completion.">
            Close
-@@ -2609,7 +2609,7 @@ Chromium is unable to recover your settings.
+@@ -2713,7 +2713,7 @@ Chromium is unable to recover your settings.
          <!--Network errors.-->
          <message name="IDS_NO_NETWORK_PRESENT_ERROR"
                   desc="Error message displayed in the main dialog when the Updater is unable to connect to the network.">
@@ -2223,7 +2305,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_ERROR_HTTPSTATUS_UNAUTHORIZED"
                   desc="Error message displayed in the main dialog when an update check or download fails due to unauthorized access, usually due to proxy problems.">
-@@ -2735,22 +2735,22 @@ Chromium is unable to recover your settings.
+@@ -2839,22 +2839,22 @@ Chromium is unable to recover your settings.
          <!--Windows service strings.-->
          <message name="IDS_UPDATER_SERVICE_DISPLAY_NAME"
                   desc="The name of the Windows service. Displayed in the Windows Services management console.">
@@ -2250,7 +2332,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
        </if>
  
-@@ -2758,12 +2758,12 @@ Chromium is unable to recover your settings.
+@@ -2862,12 +2862,12 @@ Chromium is unable to recover your settings.
        <if expr="not is_android">
          <if expr="use_titlecase">
            <message name="IDS_MEMORY_SAVER_MODE_PROMO_TITLE" desc="In Title Case: The title for the Memory Saver mode in-product promo bubble">
@@ -2265,7 +2347,7 @@ index 824563af91ce5..5aa88b8112b94 100644
            </message>
          </if>
        </if>
-@@ -2771,70 +2771,70 @@ Chromium is unable to recover your settings.
+@@ -2875,70 +2875,70 @@ Chromium is unable to recover your settings.
        <!-- Performance Intervention Dialog strings -->
        <if expr="not is_android">
          <message name="IDS_PERFORMANCE_INTERVENTION_DIALOG_BODY_V1" desc="Body text for a dialog suggesting users to deactivate certain tabs to improve performance.">
@@ -2326,7 +2408,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </if>
  
        <!-- Glic Strings -->
-       <if expr="enable_glic">
+       <if expr="enable_glic or enable_glic_android">
          <message name="IDS_GLIC_PROMO_TITLE" desc="Glic promo title." translateable="false">
 -          Try Gemini in Chromium
 +          Try Gemini in OpenBrowser
@@ -2352,7 +2434,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_GLIC_STATUS_ICON_TOOLTIP_CANARY" translateable="false" desc="This is the tooltip that is shown when the glic status icon is hovered and the Glic window is closed. It indicates that this is the Canary version of the browser.">
            Open Gemini (Canary)
-@@ -2846,7 +2846,7 @@ Chromium is unable to recover your settings.
+@@ -2950,7 +2950,7 @@ Chromium is unable to recover your settings.
            Open Gemini (Beta)
          </message>
          <message name="IDS_GLIC_STATUS_ICON_TOOLTIP_CLOSE" translateable="false" desc="This is the tooltip that is shown when the glic status icon is hovered and the Glic window is open.">
@@ -2361,7 +2443,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_GLIC_STATUS_ICON_TOOLTIP_CLOSE_CANARY" translateable="false" desc="This is the tooltip that is shown when the glic status icon is hovered and the Glic window is open. It indicates that this is the Canary version of the browser.">
            Close Gemini (Canary)
-@@ -2858,7 +2858,7 @@ Chromium is unable to recover your settings.
+@@ -2962,7 +2962,7 @@ Chromium is unable to recover your settings.
            Close Gemini (Beta)
          </message>
          <message name="IDS_GLIC_STATUS_ICON_TOOLTIP_TOGGLE" translateable="false" desc="This is the tooltip that is shown when the glic status icon is hovered.">
@@ -2370,7 +2452,7 @@ index 824563af91ce5..5aa88b8112b94 100644
          </message>
          <message name="IDS_GLIC_STATUS_ICON_TOOLTIP_TOGGLE_CANARY" translateable="false" desc="This is the tooltip that is shown when the glic status icon is hovered. It indicates that this is the Canary version of the browser.">
            Toggle Gemini (Canary)
-@@ -2870,76 +2870,76 @@ Chromium is unable to recover your settings.
+@@ -2974,89 +2974,89 @@ Chromium is unable to recover your settings.
            Toggle Gemini (Beta)
          </message>
          <message name="IDS_GLIC_STATUS_ICON_MENU_SHOW" translateable="false" desc="This is the menu item for showing the glic UI.">
@@ -2403,6 +2485,14 @@ index 824563af91ce5..5aa88b8112b94 100644
 -          Gemini in Chromium
 +          Gemini in OpenBrowser
          </message>
+         <message name="IDS_SETTINGS_GLIC_PERMISSIONS_WEB_ACTUATION_TOGGLE" desc="Title for the Gemini feature introduction screen">
+-          Let Chromium browse for you
++          Let OpenBrowser browse for you
+         </message>
+         <message name="IDS_SETTINGS_GLIC_PERMISSIONS_WEB_ACTUATION_TOGGLE_SUBLABEL" desc="Subheader explaining what the Gemini feature does">
+-          Gemini in Chromium uses auto browse to work in your tabs and complete tasks you give it. <ph name="LINK_BEGIN">&lt;a href="#"&gt;</ph>Learn more<ph name="LINK_END">&lt;/a&gt;</ph>
++          Gemini in OpenBrowser uses auto browse to work in your tabs and complete tasks you give it. <ph name="LINK_BEGIN">&lt;a href="#"&gt;</ph>Learn more<ph name="LINK_END">&lt;/a&gt;</ph>
+         </message>
  
          <!-- Profile Picker Glic version-->
          <message name="IDS_PROFILE_PICKER_MAIN_VIEW_TITLE_GLIC" desc="Profile picker main view title for Glic version. 'Glic' has a special styling." translateable="false">
@@ -2431,6 +2521,12 @@ index 824563af91ce5..5aa88b8112b94 100644
 -          To open Gemini in Chromium, press <ph name="GLOBAL_HOTKEY">$1<ex>⌘+G</ex></ph>
 +          To open Gemini in OpenBrowser, press <ph name="GLOBAL_HOTKEY">$1<ex>⌘+G</ex></ph>
          </message>
+         <!-- Variant of the label on the Gemini button in the tabstrip-->
+-        <message name="IDS_GLIC_BUTTON_ENTRYPOINT_ASK_BROWSER_LABEL" desc="Label on the button used to open Gemini in Chromium.">
+-          Ask Chromium
++        <message name="IDS_GLIC_BUTTON_ENTRYPOINT_ASK_BROWSER_LABEL" desc="Label on the button used to open Gemini in OpenBrowser.">
++          Ask OpenBrowser
+         </message>
        </if>
  
        <!-- UNO Promo strings for extensions -->
@@ -2446,14 +2542,19 @@ index 824563af91ce5..5aa88b8112b94 100644
 -        To get this bookmark and more on all your devices, sign in to Chromium
 +        To get this bookmark and more on all your devices, sign in to OpenBrowser
        </message>
+       <message name="IDS_BOOKMARK_INSTALLED_BUBBLE_PROMO_EXPLICIT_SIGNIN_MESSAGE" desc="Text of the promo displayed after the bookmark bubble asking the user to enable UNO.">
+-        To get your bookmarks and more on all your devices, sign in to Chromium. This bookmark will be saved in your Google Account after you sign in.
++        To get your bookmarks and more on all your devices, sign in to OpenBrowser. This bookmark will be saved in your Google Account after you sign in.
+       </message>
  
        <!-- Dice Migration strings -->
        <message name="IDS_DICE_MIGRATION_DIALOG_TITLE" desc="The title in the Dice Migration dialog advertising the sign-in benefit.">
 -        Get more when you’re signed in to Chromium
 +        Get more when you’re signed in to OpenBrowser
        </message>
-       <message name="IDS_DICE_MIGRATION_DIALOG_DESCRIPTION" desc="The content of the Dice Migration dialog advertising the benefits of signing in to Chrome.">
+-      <message name="IDS_DICE_MIGRATION_DIALOG_DESCRIPTION" desc="The content of the Dice Migration dialog advertising the benefits of signing in to Chrome.">
 -        You’ll save and use passwords and more in your Google Account whenever you’re signed in to Chromium. <ph name="LEARN_MORE">$1<ex>Learn more</ex></ph>
++      <message name="IDS_DICE_MIGRATION_DIALOG_DESCRIPTION" desc="The content of the Dice Migration dialog advertising the benefits of signing in to OpenBrowser.">
 +        You’ll save and use passwords and more in your Google Account whenever you’re signed in to OpenBrowser. <ph name="LEARN_MORE">$1<ex>Learn more</ex></ph>
        </message>
        <message name="IDS_DICE_MIGRATION_DIALOG_OK_BUTTON" desc="The primary button label in the Dice Migration dialog, letting the user acknowledge signing in to Chrome.">
@@ -2465,7 +2566,7 @@ index 824563af91ce5..5aa88b8112b94 100644
        </message>
        <message name="IDS_DICE_MIGRATION_CONFIRMATION_TOAST_BUTTON" desc="The text on the button of the confirmation toast shown after the user clicks the accept button on the Dice Migration dialog, that allows the users to control the sync settings or sign out of Chrome.">
          Manage
-@@ -2949,12 +2949,12 @@ Chromium is unable to recover your settings.
+@@ -3066,12 +3066,12 @@ Chromium is unable to recover your settings.
        <if expr="not is_android">
          <if expr="use_titlecase">
            <message name="IDS_PROFILE_MENU_ACCOUNT_SETTINGS_BUTTON" desc="Button in the avatar menu bubble view for opening Chrome account settings.">
@@ -2480,20 +2581,28 @@ index 824563af91ce5..5aa88b8112b94 100644
            </message>
          </if>
        </if>
-@@ -2962,30 +2962,30 @@ Chromium is unable to recover your settings.
+@@ -3079,60 +3079,60 @@ Chromium is unable to recover your settings.
        <!--Desktop to iOS promo strings-->
        <if expr="not is_android">
-         <message name="IDS_IOS_DESKTOP_ESB_PROMO_BUBBLE_DESCRIPTION_QR" desc="The description for the iOS desktop ESB promo bubble with a QR code.">
--          Download Chromium on your phone to add an extra layer of protection when you're on the go
-+          Download OpenBrowser on your phone to add an extra layer of protection when you're on the go
-         </message>
          <message name="IDS_IOS_DESKTOP_ESB_PROMO_BUBBLE_DESCRIPTION_REMINDER" desc="The description for the iOS desktop ESB promo bubble with a reminder button.">
 -          Stay safer on the go with Enhanced Safe Browsing on Chromium for iOS
 +          Stay safer on the go with Enhanced Safe Browsing on OpenBrowser for iOS
          </message>
+         <message name="IDS_IOS_DESKTOP_ESB_PROMO_BUBBLE_TITLE_QR" desc="The title for the iOS desktop ESB promo bubble with a QR code.">
+-          Extend Enhanced Safe Browsing with Chromium on your phone
++          Extend Enhanced Safe Browsing with OpenBrowser on your phone
+         </message>
          <message name="IDS_IOS_DESKTOP_PASSWORD_PROMO_BUBBLE_FOOTER_DESCRIPTION_REMINDER" desc="The description for the footer of the iOS desktop password promo bubble.">
 -          Sign in faster to sites using saved passwords for Chromium on iOS
 +          Sign in faster to sites using saved passwords for OpenBrowser on iOS
+         </message>
+         <message name="IDS_IOS_DESKTOP_PASSWORD_PROMO_BUBBLE_FOOTER_TITLE" desc="The title for the footer of the iOS desktop password promo bubble suggesting to users that they can use their passwords on their iOS devices.">
+-          Use your passwords with Chromium on your phone
++          Use your passwords with OpenBrowser on your phone
+         </message>
+         <message name="IDS_IOS_DESKTOP_PROMO_BUBBLE_BUTTON_ACCEPT_QR" desc="The text inside the iOS promo bubble button allowing the user to accept by getting the app via QR code.">
+-          Get the Chromium app
++          Get the OpenBrowser app
          </message>
          <message name="IDS_IOS_DESKTOP_PROMO_REMINDER_CONFIRMATION" desc="Body text of the promo bubble that appears after uses choose to be reminded of the feature on their iOS device. The placeholder will be replaced by the name of the feature.">
 -          You'll see a prompt to try <ph name="FEATURE_NAME">$1<ex>Google Lens</ex></ph> next time you open Chromium iOS.
@@ -2502,6 +2611,38 @@ index 824563af91ce5..5aa88b8112b94 100644
          <message name="IDS_IOS_DESKTOP_PASSWORD_PROMO_REMINDER_CONFIRMATION" desc="Body text of the promo bubble that appears after uses choose to be reminded of the Password Manager on their iOS device.">
 -          Next time you open Chromium on your <ph name="DEVICE_TYPE">$1<ex>iPhone</ex></ph>, you'll see a prompt to use Google Password Manager.
 +          Next time you open OpenBrowser on your <ph name="DEVICE_TYPE">$1<ex>iPhone</ex></ph>, you'll see a prompt to use Google Password Manager.
+         </message>
+         <message name="IDS_IOS_DESKTOP_LENS_PROMO_BUBBLE_DESCRIPTION_REMINDER" desc="The description for the iOS desktop Lens promo bubble.">
+-          Shop, translate and identify what you see with your camera on the Chromium iOS app
++          Shop, translate and identify what you see with your camera on the OpenBrowser iOS app
+         </message>
+         <message name="IDS_IOS_DESKTOP_LENS_PROMO_BUBBLE_TITLE_QR" desc="The title for the iOS desktop Lens promo bubble with a QR code.">
+-          Try Google Lens with Chromium on your phone
++          Try Google Lens with OpenBrowser on your phone
+         </message>
+         <message name="IDS_IOS_DESKTOP_PASSWORD_PROMO_BUBBLE_FOOTER_DESCRIPTION_QR" desc="The description for the iOS desktop password promo bubble footer which lets the user know how to use their saved passwords on their phone: follow the QR code, download Chrome for iOS and sign in to their account.">
+-          To use your saved passwords, follow the QR code, download Chromium for iOS and sign in to your Google Account
++          To use your saved passwords, follow the QR code, download OpenBrowser for iOS and sign in to your Google Account
+         </message>
+         <message name="IDS_IOS_DESKTOP_LENS_PROMO_NOTIFICATION_TITLE" desc="The title for the iOS desktop Lens promo notification.">
+-          Chromium Tip: Search With Lens
++          OpenBrowser Tip: Search With Lens
+         </message>
+         <message name="IDS_IOS_DESKTOP_PASSWORD_PROMO_NOTIFICATION_TITLE" desc="The title for the iOS desktop Password promo notification.">
+-          Chromium Tip: Save Passwords
++          OpenBrowser Tip: Save Passwords
+         </message>
+         <message name="IDS_IOS_DESKTOP_TAB_GROUPS_PRICE_TRACKING_DESCRIPTION_QR" desc="The description for the iOS desktop price tracking promo bubble with a QR code.">
+-          Download Chromium on your phone to track prices and get alerts when the price drops on any site
++          Download OpenBrowser on your phone to track prices and get alerts when the price drops on any site
+         </message>
+         <message name="IDS_IOS_DESKTOP_SAFE_BROWSING_PROMO_NOTIFICATION_TITLE" desc="The title for the iOS desktop Enhanced Safe Browsing promo notification.">
+-          Chromium Tip: Enhanced Safe Browsing
++          OpenBrowser Tip: Enhanced Safe Browsing
+         </message>
+         <message name="IDS_IOS_DESKTOP_TAB_GROUPS_PROMO_BUBBLE_DESCRIPTION_QR" desc="The description for the iOS desktop Tab Groups promo bubble with a QR code.">
+-          Download Chromium on your phone to open or create new tab groups on the go.
++          Download OpenBrowser on your phone to open or create new tab groups on the go.
          </message>
        </if>
  
@@ -2520,10 +2661,10 @@ index 824563af91ce5..5aa88b8112b94 100644
        <message name="IDS_DEFAULT_SEARCH_ENGINE_RESET_NOTIFICATION_GOT_IT_BUTTON"
           desc="Label for the 'Got it' button in the default search engine reset notification, which dismisses the UI.">
 diff --git a/chrome/app/generated_resources.grd b/chrome/app/generated_resources.grd
-index 87032bcf74573..46e0a70ccd789 100644
+index 17961b80c8d8b..69db54a8e9355 100644
 --- a/chrome/app/generated_resources.grd
 +++ b/chrome/app/generated_resources.grd
-@@ -1644,7 +1644,7 @@ are declared in tools/grit/grit_args.gni.
+@@ -1659,7 +1659,7 @@ are declared in tools/grit/grit_args.gni.
            Name &amp;window...
          </message>
          <message name="IDS_CHROMELABS" desc="The text label of the Chrome Labs menu item">
@@ -2532,7 +2673,7 @@ index 87032bcf74573..46e0a70ccd789 100644
          </message>
        </if>
        <if expr="use_titlecase">
-@@ -1694,7 +1694,7 @@ are declared in tools/grit/grit_args.gni.
+@@ -1709,7 +1709,7 @@ are declared in tools/grit/grit_args.gni.
            Name &amp;Window...
          </message>
          <message name="IDS_CHROMELABS" desc="In Title Case: The text label of the Chrome Labs menu item">
@@ -2541,7 +2682,7 @@ index 87032bcf74573..46e0a70ccd789 100644
          </message>
        </if>
  
-@@ -1782,7 +1782,7 @@ are declared in tools/grit/grit_args.gni.
+@@ -1797,7 +1797,7 @@ are declared in tools/grit/grit_args.gni.
            Manage Extensions
          </message>
          <message name="IDS_EXTENSIONS_SUBMENU_CHROME_WEBSTORE_ITEM" desc="The text for the link in the extensions menu, in the app menu, to visit the Chrome Web Store to get more extensions (title case).">
@@ -2550,7 +2691,7 @@ index 87032bcf74573..46e0a70ccd789 100644
          </message>
          <message name="IDS_SHOW_PERFORMANCE" desc="The text label of the Performance menu item">
            Performance
-@@ -1841,7 +1841,7 @@ are declared in tools/grit/grit_args.gni.
+@@ -1856,7 +1856,7 @@ are declared in tools/grit/grit_args.gni.
            Manage Extensions
          </message>
          <message name="IDS_EXTENSIONS_SUBMENU_CHROME_WEBSTORE_ITEM" desc="In Title Case: The text for the link in the extensions menu, in the app menu, to visit the Chrome Web Store to get more extensions.">
@@ -2559,7 +2700,7 @@ index 87032bcf74573..46e0a70ccd789 100644
          </message>
          <message name="IDS_SHOW_PERFORMANCE" desc="In Title Case: The text label of the Performance menu item">
            Performance
-@@ -7852,7 +7852,7 @@ Keep your key file in a safe place. You will need it to create new versions of y
+@@ -7904,7 +7904,7 @@ Keep your key file in a safe place. You will need it to create new versions of y
          Cards
        </message>
        <message name="IDS_NTP_CUSTOMIZE_NO_BACKGROUND_LABEL" desc="The label for the 'Default Chrome' tile in the customization menu on the New Tab Page">
@@ -2568,7 +2709,7 @@ index 87032bcf74573..46e0a70ccd789 100644
        </message>
        <message name="IDS_NTP_CUSTOMIZE_CHROME_CHANGE_THEME_LABEL" desc="The label for the action button for changing Chrome theme in the New Tab Page customize chrome side panel.">
          Change theme
-@@ -7860,7 +7860,7 @@ Keep your key file in a safe place. You will need it to create new versions of y
+@@ -7912,7 +7912,7 @@ Keep your key file in a safe place. You will need it to create new versions of y
        <message name="IDS_NTP_CUSTOMIZE_FOOTER_HEADER" desc="The toggle for the Footer title in the customization menu on the New Tab Page." meaning="The footer which shows at the bottom of the New Tab page.">
          Footer
        </message>
@@ -2577,12 +2718,8 @@ index 87032bcf74573..46e0a70ccd789 100644
          Search tools
        </message>
        <message name="IDS_NTP_MANAGED_BY_SEARCH_ENGINE" desc="The string that shows on the customize chrome UI when a 3rd party manages the new tab page.">
-@@ -7873,10 +7873,10 @@ Keep your key file in a safe place. You will need it to create new versions of y
+@@ -7925,7 +7925,7 @@ Keep your key file in a safe place. You will need it to create new versions of y
          <ph name="THIRD_PARTY_NTP_MANAGER">$1<ex>ZomboCom</ex></ph> is managing your new tab page, opens in a new tab
-       </message>
-       <message name="IDS_NTP_CUSTOMIZE_CHROME_RESET_TO_CLASSIC_CHROME_LABEL" desc="The label for the button for resetting theme back to default chrome in the New Tab Page customize chrome side panel.">
--        Reset to Default Chrome
-+        Reset to Default OpenBrowser
        </message>
        <message name="IDS_NTP_CUSTOMIZE_CHROME_RESET_TO_CLASSIC_CHROME_COMPLETE" desc="Text for a screenreader to read aloud when the user's theme has finished changing to classic chrome in the Customize Chrome side panel.">
 -        Theme updated to Default Chrome
@@ -2591,10 +2728,10 @@ index 87032bcf74573..46e0a70ccd789 100644
        <message name="IDS_NTP_CUSTOMIZE_CHROME_RESET_TO_UPLOADED_IMAGE_COMPLETE" desc="Text for a screenreader to read aloud when the user's theme has finished changing to an uploaded image in the Customize Chrome side panel.">
          Theme updated to uploaded image
 diff --git a/chrome/browser/favicon/favicon_utils.cc b/chrome/browser/favicon/favicon_utils.cc
-index eff6b7ccc596b..774d653bdcc98 100644
+index c674695868767..b68151babbedd 100644
 --- a/chrome/browser/favicon/favicon_utils.cc
 +++ b/chrome/browser/favicon/favicon_utils.cc
-@@ -213,34 +213,16 @@ gfx::ImageSkia ThemeFavicon(const gfx::ImageSkia& source,
+@@ -214,34 +214,16 @@ gfx::ImageSkia ThemeFavicon(const gfx::ImageSkia& source,
                              SkColor alternate_color,
                              SkColor active_background,
                              SkColor inactive_background) {
@@ -2634,7 +2771,7 @@ index eff6b7ccc596b..774d653bdcc98 100644
  }
  
 diff --git a/chrome/browser/resources/new_tab_page/icons/BUILD.gn b/chrome/browser/resources/new_tab_page/icons/BUILD.gn
-index 3ebefc4d55512..a21d09c60109d 100644
+index ea20ed75d146f..c3204d1d4fcc1 100644
 --- a/chrome/browser/resources/new_tab_page/icons/BUILD.gn
 +++ b/chrome/browser/resources/new_tab_page/icons/BUILD.gn
 @@ -16,7 +16,8 @@ generate_grd("build_grdp") {
@@ -2795,13 +2932,13 @@ index 83221a8e6f90f..ea3bc8cf4b002 100644
 +  </defs>
 +</svg>
 diff --git a/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc b/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
-index 12651b3c1e9b0..ff46a3238a763 100644
+index 628400e037528..b11efa5aed5ba 100644
 --- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
 +++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_ui.cc
-@@ -211,9 +211,8 @@ content::WebUIDataSource* CreateAndAddNewTabPageUiHtmlSource(Profile* profile) {
-   source->AddBoolean(
-       "ntpNextFeaturesEnabled",
-       base::FeatureList::IsEnabled(ntp_features::kNtpNextFeatures));
+@@ -223,9 +223,8 @@ content::WebUIDataSource* CreateAndAddNewTabPageUiHtmlSource(Profile* profile) {
+                      ntp_features::kNtpNextShowSimplificationUIParam.Get());
+   source->AddBoolean("ntpNextShowDismissalUIEnabled",
+                      ntp_features::kNtpNextShowDismissalUIParam.Get());
 -  source->AddBoolean(
 -      "oneGoogleBarEnabled",
 -      base::FeatureList::IsEnabled(ntp_features::kNtpOneGoogleBar));
@@ -2810,14 +2947,16 @@ index 12651b3c1e9b0..ff46a3238a763 100644
    source->AddBoolean("shortcutsEnabled",
                       base::FeatureList::IsEnabled(ntp_features::kNtpShortcuts));
    source->AddBoolean("logoEnabled",
-@@ -577,10 +576,8 @@ content::WebUIDataSource* CreateAndAddNewTabPageUiHtmlSource(Profile* profile) {
+@@ -606,12 +605,8 @@ content::WebUIDataSource* CreateAndAddNewTabPageUiHtmlSource(Profile* profile) {
            ContextualSearchSourceToString(
                contextual_search::ContextualSearchSource::kNewTabPage));
  
+-  auto* service = AimEligibilityServiceFactory::GetForProfile(profile);
+-  bool aim_eligible = service && service->IsAimEligible();
+-
 -  source->AddBoolean(
 -      "searchboxShowComposeEntrypoint",
--      (ntp_composebox::IsNtpSearchboxComposeEntrypointEnabled(profile) ||
--       ntp_composebox::IsNtpComposeboxEnabled(profile)));
+-      (aim_eligible || ntp_composebox::IsNtpComposeboxEnabled(profile)));
 +  // Disable AI Mode button
 +  source->AddBoolean("searchboxShowComposeEntrypoint", false);
  
