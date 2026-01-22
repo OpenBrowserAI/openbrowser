@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 interface ThemeColors {
   kColorSysBase?: string;
@@ -19,7 +19,7 @@ export function useThemeColors() {
 
   useEffect(() => {
     // Check if chrome.themeColors API is available
-    if (typeof chrome !== "undefined" && chrome.themeColors) {
+    if (typeof chrome !== 'undefined' && chrome.themeColors) {
       chrome.themeColors.get((themeColors: ThemeColors) => {
         if (themeColors) {
           setColors(themeColors);

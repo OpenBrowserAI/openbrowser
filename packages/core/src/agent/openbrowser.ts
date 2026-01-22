@@ -100,8 +100,8 @@ export class OpenBrowser {
           typeof e == "string"
             ? e
             : e instanceof Error
-            ? e.name + ": " + e.message
-            : String(e || "Unknown error"),
+              ? e.name + ": " + e.message
+              : String(e || "Unknown error"),
         error: e
       };
     }
@@ -153,10 +153,13 @@ export class OpenBrowser {
     if (!workflow || workflow.agents.length == 0) {
       throw new Error("Workflow error");
     }
-    const agentNameMap = agents.reduce((map, item) => {
-      map[item.Name] = item;
-      return map;
-    }, {} as { [key: string]: Agent });
+    const agentNameMap = agents.reduce(
+      (map, item) => {
+        map[item.Name] = item;
+        return map;
+      },
+      {} as { [key: string]: Agent }
+    );
     let agentTree = buildAgentTree(workflow.agents);
     const results: string[] = [];
     while (true) {

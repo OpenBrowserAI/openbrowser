@@ -234,13 +234,9 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
       };
     } finally {
       try {
-        await this.execute_script(
-          agentContext,
-          () => {
-            return (window as any).remove_highlight();
-          },
-          []
-        );
+        await this.execute_script(agentContext, () => {
+          return (window as any).remove_highlight();
+        }, []);
       } catch (e) {}
     }
   }

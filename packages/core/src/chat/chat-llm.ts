@@ -88,19 +88,19 @@ export function convertToolResults(
         output.type == "text" || output.type == "error-text"
           ? output.value
           : output.type == "json" || output.type == "error-json"
-          ? (output.value as any)
-          : output.value
-              .map((s) => {
-                if (s.type == "text") {
-                  return s.text;
-                } else if (s.type == "media") {
-                  return JSON.stringify({
-                    data: s.data,
-                    mimeType: s.mediaType
-                  });
-                }
-              })
-              .join("\n")
+            ? (output.value as any)
+            : output.value
+                .map((s) => {
+                  if (s.type == "text") {
+                    return s.text;
+                  } else if (s.type == "media") {
+                    return JSON.stringify({
+                      data: s.data,
+                      mimeType: s.mediaType
+                    });
+                  }
+                })
+                .join("\n")
     };
   });
 }

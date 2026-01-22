@@ -80,7 +80,7 @@ export function buildAgentTree(agents: WorkflowAgent[]): AgentNode {
             type: "normal",
             agent: agent,
             nextAgent: undefined
-          } as NormalAgentNode)
+          }) as NormalAgentNode
       );
       return {
         type: "parallel",

@@ -43,13 +43,9 @@ export default abstract class BaseBrowserAgent extends Agent {
 
   protected async go_back(agentContext: AgentContext): Promise<void> {
     try {
-      await this.execute_script(
-        agentContext,
-        () => {
-          (window as any).navigation.back();
-        },
-        []
-      );
+      await this.execute_script(agentContext, () => {
+        (window as any).navigation.back();
+      }, []);
       await sleep(100);
     } catch (e) {}
   }
@@ -167,16 +163,12 @@ export default abstract class BaseBrowserAgent extends Agent {
     title?: string;
     tabId?: number;
   }> {
-    return await this.execute_script(
-      agentContext,
-      () => {
-        return {
-          url: (window as any).location.href,
-          title: (window as any).document.title
-        };
-      },
-      []
-    );
+    return await this.execute_script(agentContext, () => {
+      return {
+        url: (window as any).location.href,
+        title: (window as any).document.title
+      };
+    }, []);
   }
 
   protected lastToolResult(messages: LanguageModelV2Prompt): {

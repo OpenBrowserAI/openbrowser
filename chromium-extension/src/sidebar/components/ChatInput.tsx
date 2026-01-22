@@ -7,7 +7,7 @@ import {
   PaperClipOutlined,
   PlusOutlined,
   HistoryOutlined,
-  SettingOutlined
+  SettingOutlined,
 } from "@ant-design/icons";
 import type { UploadedFile } from "../types";
 import { Button, Space, Image, Typography } from "antd";
@@ -90,10 +90,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Floating Chat Input Box */}
-      <div
-        className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px"
-        style={{ borderWidth: "1px", borderStyle: "solid", overflow: "hidden" }}
-      >
+      <div className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px" style={{borderWidth: '1px', borderStyle: 'solid', overflow: 'hidden'}}>
         <input
           ref={fileInputRef}
           type="file"

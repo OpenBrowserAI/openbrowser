@@ -302,10 +302,13 @@ export function mergeTools<
   T extends Tool | DialogueTool | LanguageModelV2FunctionTool
 >(tools1: T[], tools2: T[]): T[] {
   let tools: T[] = [];
-  let toolMap2 = tools2.reduce((map, tool) => {
-    map[tool.name] = tool;
-    return map;
-  }, {} as Record<string, T>);
+  let toolMap2 = tools2.reduce(
+    (map, tool) => {
+      map[tool.name] = tool;
+      return map;
+    },
+    {} as Record<string, T>
+  );
   let names = [];
   for (let i = 0; i < tools1.length; i++) {
     let tool1 = tools1[i];
@@ -329,10 +332,13 @@ export function mergeTools<
 
 export function mergeAgents(agents1: Agent[], agents2: Agent[]): Agent[] {
   let agents: Agent[] = [];
-  let agentMap2 = agents2.reduce((map, agent) => {
-    map[agent.Name] = agent;
-    return map;
-  }, {} as Record<string, Agent>);
+  let agentMap2 = agents2.reduce(
+    (map, agent) => {
+      map[agent.Name] = agent;
+      return map;
+    },
+    {} as Record<string, Agent>
+  );
   for (let i = 0; i < agents1.length; i++) {
     let agent1 = agents1[i];
     let agent2 = agentMap2[agent1.Name];

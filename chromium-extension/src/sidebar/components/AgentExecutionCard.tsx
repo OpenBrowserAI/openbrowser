@@ -88,9 +88,7 @@ export const AgentExecutionCard: React.FC<AgentExecutionCardProps> = ({
           label: (
             <div className="flex items-center gap-2 w-full overflow-hidden">
               <div
-                className={`flex-1 min-w-0 ${
-                  isCollapsed ? "truncate" : "whitespace-normal"
-                }`}
+                className={`flex-1 min-w-0 ${isCollapsed ? "truncate" : "whitespace-normal"}`}
               >
                 <Text strong className="text-sm text-theme-primary">
                   {agentNode.task || agentNode.name}

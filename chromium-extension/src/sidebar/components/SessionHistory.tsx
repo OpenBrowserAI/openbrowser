@@ -106,7 +106,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
             className={`cursor-pointer transition-colors hover:bg-selected radius-8px ${
               session.id === currentSessionId ? "bg-selected" : ""
             }`}
-            style={{ paddingLeft: "8px", marginLeft: "4px" }}
+            style={{paddingLeft: '8px', marginLeft: '4px'}}
             onClick={() => handleSelectSession(session.id)}
             actions={[
               <Button
@@ -121,12 +121,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
             ]}
           >
             <List.Item.Meta
-              avatar={
-                <MessageOutlined
-                  className="fill-theme-icon"
-                  style={{ marginLeft: "4px" }}
-                />
-              }
+              avatar={<MessageOutlined className="fill-theme-icon" style={{marginLeft: '4px'}} />}
               title={
                 <Text
                   strong={session.id === currentSessionId}
@@ -136,11 +131,7 @@ export const SessionHistory: React.FC<SessionHistoryProps> = ({
                 </Text>
               }
               description={
-                <Text
-                  type="secondary"
-                  className="text-xs text-theme-primary"
-                  style={{ opacity: 0.7 }}
-                >
+                <Text type="secondary" className="text-xs text-theme-primary" style={{opacity: 0.7}}>
                   {formatDate(session.updatedAt)}
                 </Text>
               }

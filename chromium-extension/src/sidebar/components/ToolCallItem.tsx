@@ -101,17 +101,11 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                     {item.result.content.map((part, index) => {
                       if (part.type === "text") {
                         return isJsonStr(part.text) ? (
-                          <pre
-                            key={index}
-                            className="tool-json-pre text-xs text-theme-primary"
-                          >
+                          <pre key={index} className="tool-json-pre text-xs text-theme-primary">
                             {JSON.stringify(JSON.parse(part.text), null, 2)}
                           </pre>
                         ) : (
-                          <div
-                            key={index}
-                            className="text-sm text-theme-primary"
-                          >
+                          <div key={index} className="text-sm text-theme-primary">
                             <MarkdownRenderer content={part.text} />
                           </div>
                         );
@@ -122,9 +116,9 @@ export const ToolCallItem: React.FC<ToolCallItemProps> = ({ item }) => {
                             src={
                               part.data.startsWith("http")
                                 ? part.data
-                                : `data:${
-                                    part.mimeType || "image/png"
-                                  };base64,${part.data}`
+                                : `data:${part.mimeType || "image/png"};base64,${
+                                    part.data
+                                  }`
                             }
                             alt="Tool result"
                             className="max-w-full mt-2 rounded border-theme-input"

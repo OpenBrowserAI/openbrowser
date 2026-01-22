@@ -108,8 +108,8 @@ const AppRun = () => {
           level === "error"
             ? AntdMessage.error
             : level === "success"
-            ? AntdMessage.success
-            : AntdMessage.info;
+              ? AntdMessage.success
+              : AntdMessage.info;
         showMessage({
           content: msg,
           className: "toast-text-black"

@@ -387,26 +387,24 @@ const eventHandlers: Record<
 };
 
 // Message listener
-chrome.runtime.onMessage.addListener(async function (
-  request,
-  sender,
-  sendResponse
-) {
-  const requestId = request.requestId;
-  const type = request.type;
-  const data = request.data;
+chrome.runtime.onMessage.addListener(
+  async function (request, sender, sendResponse) {
+    const requestId = request.requestId;
+    const type = request.type;
+    const data = request.data;
 
-  if (!chatAgent) {
-    await init();
-  }
+    if (!chatAgent) {
+      await init();
+    }
 
-  const handler = eventHandlers[type];
-  if (handler) {
-    handler(requestId, data).catch((error) => {
-      printLog(`Error handling ${type}: ${error}`, "error");
-    });
+    const handler = eventHandlers[type];
+    if (handler) {
+      handler(requestId, data).catch((error) => {
+        printLog(`Error handling ${type}: ${error}`, "error");
+      });
+    }
   }
-});
+);
 
 function printLog(message: string, level?: "info" | "success" | "error") {
   chrome.runtime.sendMessage({
