@@ -73,7 +73,7 @@ cd ../chromium/src
 autoninja -C out/fast chrome
 
 # 10. Run OpenBrowser
-./out/fast/Chromium.app/Contents/MacOS/Chromium
+./out/fast/OpenBrowser.app/Contents/MacOS/OpenBrowser 
 ```
 
 ## Detailed Setup
@@ -221,7 +221,7 @@ After successful build:
 
 ```bash
 # macOS
-./out/fast/Chromium.app/Contents/MacOS/Chromium
+./out/fast/OpenBrowser.app/Contents/MacOS/OpenBrowser
 
 # Linux
 ./out/fast/chrome

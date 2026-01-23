@@ -1,0 +1,48 @@
+diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
+index f8d29b704ab49..a7521f4fce215 100644
+--- a/chrome/BUILD.gn
++++ b/chrome/BUILD.gn
+@@ -149,9 +149,9 @@ if (!is_android && !is_mac) {
+   }
+ 
+   if (is_win) {
+-    _chrome_output_name = "initialexe/chrome"
++    _chrome_output_name = "initialexe/openbrowser"
+   } else {
+-    _chrome_output_name = "chrome"
++    _chrome_output_name = "openbrowser"
+   }
+ 
+   executable("chrome_initial") {
+@@ -409,7 +409,7 @@ if (is_win) {
+       "app/startup_timestamps.h",
+     ]
+ 
+-    output_name = "chrome"
++    output_name = "openbrowser"
+ 
+     deps = [
+       ":chrome_dll_manifest",
+diff --git a/chrome/app/theme/chromium/BRANDING b/chrome/app/theme/chromium/BRANDING
+index f8363d5b294fe..3e6f4ac032685 100644
+--- a/chrome/app/theme/chromium/BRANDING
++++ b/chrome/app/theme/chromium/BRANDING
+@@ -1,10 +1,10 @@
+-COMPANY_FULLNAME=The Chromium Authors
+-COMPANY_SHORTNAME=The Chromium Authors
+-PRODUCT_FULLNAME=Chromium
+-PRODUCT_SHORTNAME=Chromium
+-PRODUCT_INSTALLER_FULLNAME=Chromium Installer
+-PRODUCT_INSTALLER_SHORTNAME=Chromium Installer
+-COPYRIGHT=Copyright @LASTCHANGE_YEAR@ The Chromium Authors. All rights reserved.
+-MAC_BUNDLE_ID=org.chromium.Chromium
++COMPANY_FULLNAME=OpenBrowser Authors
++COMPANY_SHORTNAME=OpenBrowser Authors
++PRODUCT_FULLNAME=OpenBrowser
++PRODUCT_SHORTNAME=OpenBrowser
++PRODUCT_INSTALLER_FULLNAME=OpenBrowser Installer
++PRODUCT_INSTALLER_SHORTNAME=OpenBrowser Installer
++COPYRIGHT=Copyright @LASTCHANGE_YEAR@ OpenBrowser Authors. All rights reserved.
++MAC_BUNDLE_ID=com.openbrowser.OpenBrowser
+ MAC_CREATOR_CODE=Cr24
+ MAC_TEAM_ID=
