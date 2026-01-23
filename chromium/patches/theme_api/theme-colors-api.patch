@@ -1,0 +1,492 @@
+diff --git a/chrome/browser/extensions/api/BUILD.gn b/chrome/browser/extensions/api/BUILD.gn
+index f78a20aa8fbb3..b1984a1107416 100644
+--- a/chrome/browser/extensions/api/BUILD.gn
++++ b/chrome/browser/extensions/api/BUILD.gn
+@@ -54,6 +54,7 @@ group("api_implementations") {
+     "//chrome/browser/extensions/api/search",
+     "//chrome/browser/extensions/api/tab_capture",
+     "//chrome/browser/extensions/api/tab_groups",
++    "//chrome/browser/extensions/api/theme_colors",
+     "//chrome/browser/extensions/api/web_authentication_proxy",
+     "//chrome/browser/extensions/api/web_navigation",
+     "//chrome/browser/extensions/api/webrtc_audio_private",
+diff --git a/chrome/common/extensions/api/_api_features.json b/chrome/common/extensions/api/_api_features.json
+index d67338647ca4c..71ba2aa165131 100644
+--- a/chrome/common/extensions/api/_api_features.json
++++ b/chrome/common/extensions/api/_api_features.json
+@@ -1125,5 +1125,10 @@
+   "wmDesksPrivate": {
+     "dependencies": ["permission:wmDesksPrivate"],
+     "contexts": ["privileged_extension"]
++  },
++  "themeColors": {
++    "channel": "stable",
++    "extension_types": ["extension", "platform_app", "legacy_packaged_app"],
++    "contexts": ["privileged_extension"]
+   }
+ }
+diff --git a/chrome/common/extensions/api/api_sources.gni b/chrome/common/extensions/api/api_sources.gni
+index 180af57b8aa9e..5b1a2da7bb49e 100644
+--- a/chrome/common/extensions/api/api_sources.gni
++++ b/chrome/common/extensions/api/api_sources.gni
+@@ -38,6 +38,7 @@ schema_sources_ = [
+   "tab_capture.idl",
+   "tab_groups.json",
+   "tabs.json",
++  "theme_colors.json",
+   "web_authentication_proxy.webidl",
+   "web_navigation.json",
+ 
+diff --git a/extensions/browser/extension_function_histogram_value.h b/extensions/browser/extension_function_histogram_value.h
+index ec2c4a01b7f87..051e437fbe402 100644
+--- a/extensions/browser/extension_function_histogram_value.h
++++ b/extensions/browser/extension_function_histogram_value.h
+@@ -2018,6 +2018,7 @@ enum HistogramValue {
+   WEBSTOREPRIVATE_LOGENTERPRISEPROMOSHOWN = 1955,
+   WEBSTOREPRIVATE_ONENTERPRISEPROMOCLICK = 1956,
+   AUTOFILLPRIVATE_AUTHENTICATEUSERBEFOREVIEWINGENTITYDATA = 1957,
++  THEMECOLORS_GET = 1958,
+   // Last entry: Add new entries above, then run:
+   // tools/metrics/histograms/update_extension_histograms.py
+   ENUM_BOUNDARY
+diff --git a/chrome/browser/extensions/api/theme_colors/BUILD.gn b/chrome/browser/extensions/api/theme_colors/BUILD.gn
+new file mode 100644
+--- /dev/null
++++ b/chrome/browser/extensions/api/theme_colors/BUILD.gn
+@@ -0,0 +1,28 @@
++# Copyright 2024 The Chromium Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++import("//extensions/buildflags/buildflags.gni")
++
++assert(enable_extensions)
++
++source_set("theme_colors") {
++  sources = [
++    "theme_colors_api.cc",
++    "theme_colors_api.h",
++  ]
++
++  deps = [
++    "//base",
++    "//chrome/browser/profiles:profile",
++    "//chrome/browser/themes",
++    "//chrome/browser/ui",
++    "//chrome/common/extensions/api",
++    "//content/public/browser",
++    "//extensions/browser",
++    "//extensions/common",
++    "//skia",
++    "//ui/color",
++    "//ui/native_theme",
++  ]
++}
+diff --git a/chrome/browser/extensions/api/theme_colors/theme_colors_api.cc b/chrome/browser/extensions/api/theme_colors/theme_colors_api.cc
+new file mode 100644
+--- /dev/null
++++ b/chrome/browser/extensions/api/theme_colors/theme_colors_api.cc
+@@ -0,0 +1,283 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "chrome/browser/extensions/api/theme_colors/theme_colors_api.h"
++
++#include "base/logging.h"
++#include "base/strings/stringprintf.h"
++#include "base/values.h"
++#include "chrome/browser/profiles/profile.h"
++#include "chrome/browser/themes/theme_service.h"
++#include "chrome/browser/themes/theme_service_factory.h"
++#include "chrome/browser/ui/browser.h"
++#include "chrome/browser/ui/browser_finder.h"
++#include "chrome/browser/ui/browser_window.h"
++#include "chrome/common/extensions/api/theme_colors.h"
++#include "content/public/browser/web_contents.h"
++#include "extensions/common/extension.h"
++#include "third_party/skia/include/core/SkColor.h"
++#include "ui/color/color_id.h"
++#include "ui/color/color_provider.h"
++#include "ui/native_theme/native_theme.h"
++
++namespace extensions {
++
++ThemeColorsGetFunction::~ThemeColorsGetFunction() = default;
++
++ExtensionFunction::ResponseAction ThemeColorsGetFunction::Run() {
++  const ui::ColorProvider* provider = GetColorProvider();
++  if (!provider) {
++    return RespondNow(Error("ColorProvider not available. Browser window may not be ready."));
++  }
++
++  base::Value::Dict colors = GetAllThemeColors(provider);
++
++  return RespondNow(WithArguments(std::move(colors)));
++}
++
++base::Value::Dict ThemeColorsGetFunction::GetAllThemeColors(
++    const ui::ColorProvider* provider) {
++  base::Value::Dict colors;
++
++  // Macro to add a color to the dictionary
++  #define ADD_COLOR(color_id) \
++    colors.Set(#color_id, ColorToHexString(provider->GetColor(ui::color_id)))
++
++  // Reference colors - Primary palette
++  ADD_COLOR(kColorRefPrimary0);
++  ADD_COLOR(kColorRefPrimary10);
++  ADD_COLOR(kColorRefPrimary20);
++  ADD_COLOR(kColorRefPrimary25);
++  ADD_COLOR(kColorRefPrimary30);
++  ADD_COLOR(kColorRefPrimary40);
++  ADD_COLOR(kColorRefPrimary50);
++  ADD_COLOR(kColorRefPrimary60);
++  ADD_COLOR(kColorRefPrimary70);
++  ADD_COLOR(kColorRefPrimary80);
++  ADD_COLOR(kColorRefPrimary90);
++  ADD_COLOR(kColorRefPrimary95);
++  ADD_COLOR(kColorRefPrimary99);
++  ADD_COLOR(kColorRefPrimary100);
++
++  // Reference colors - Secondary palette
++  ADD_COLOR(kColorRefSecondary0);
++  ADD_COLOR(kColorRefSecondary10);
++  ADD_COLOR(kColorRefSecondary12);
++  ADD_COLOR(kColorRefSecondary15);
++  ADD_COLOR(kColorRefSecondary20);
++  ADD_COLOR(kColorRefSecondary25);
++  ADD_COLOR(kColorRefSecondary30);
++  ADD_COLOR(kColorRefSecondary35);
++  ADD_COLOR(kColorRefSecondary40);
++  ADD_COLOR(kColorRefSecondary50);
++  ADD_COLOR(kColorRefSecondary60);
++  ADD_COLOR(kColorRefSecondary70);
++  ADD_COLOR(kColorRefSecondary80);
++  ADD_COLOR(kColorRefSecondary90);
++  ADD_COLOR(kColorRefSecondary95);
++  ADD_COLOR(kColorRefSecondary99);
++  ADD_COLOR(kColorRefSecondary100);
++
++  // Reference colors - Tertiary palette
++  ADD_COLOR(kColorRefTertiary0);
++  ADD_COLOR(kColorRefTertiary10);
++  ADD_COLOR(kColorRefTertiary20);
++  ADD_COLOR(kColorRefTertiary30);
++  ADD_COLOR(kColorRefTertiary40);
++  ADD_COLOR(kColorRefTertiary50);
++  ADD_COLOR(kColorRefTertiary60);
++  ADD_COLOR(kColorRefTertiary70);
++  ADD_COLOR(kColorRefTertiary80);
++  ADD_COLOR(kColorRefTertiary90);
++  ADD_COLOR(kColorRefTertiary95);
++  ADD_COLOR(kColorRefTertiary99);
++  ADD_COLOR(kColorRefTertiary100);
++
++  // Reference colors - Error palette
++  ADD_COLOR(kColorRefError0);
++  ADD_COLOR(kColorRefError10);
++  ADD_COLOR(kColorRefError20);
++  ADD_COLOR(kColorRefError30);
++  ADD_COLOR(kColorRefError40);
++  ADD_COLOR(kColorRefError50);
++  ADD_COLOR(kColorRefError60);
++  ADD_COLOR(kColorRefError70);
++  ADD_COLOR(kColorRefError80);
++  ADD_COLOR(kColorRefError90);
++  ADD_COLOR(kColorRefError95);
++  ADD_COLOR(kColorRefError99);
++  ADD_COLOR(kColorRefError100);
++
++  // Reference colors - Neutral palette
++  ADD_COLOR(kColorRefNeutral0);
++  ADD_COLOR(kColorRefNeutral4);
++  ADD_COLOR(kColorRefNeutral6);
++  ADD_COLOR(kColorRefNeutral8);
++  ADD_COLOR(kColorRefNeutral10);
++  ADD_COLOR(kColorRefNeutral12);
++  ADD_COLOR(kColorRefNeutral15);
++  ADD_COLOR(kColorRefNeutral17);
++  ADD_COLOR(kColorRefNeutral20);
++  ADD_COLOR(kColorRefNeutral22);
++  ADD_COLOR(kColorRefNeutral24);
++  ADD_COLOR(kColorRefNeutral25);
++  ADD_COLOR(kColorRefNeutral30);
++  ADD_COLOR(kColorRefNeutral40);
++  ADD_COLOR(kColorRefNeutral50);
++  ADD_COLOR(kColorRefNeutral60);
++  ADD_COLOR(kColorRefNeutral70);
++  ADD_COLOR(kColorRefNeutral80);
++  ADD_COLOR(kColorRefNeutral87);
++  ADD_COLOR(kColorRefNeutral90);
++  ADD_COLOR(kColorRefNeutral92);
++  ADD_COLOR(kColorRefNeutral94);
++  ADD_COLOR(kColorRefNeutral95);
++  ADD_COLOR(kColorRefNeutral96);
++  ADD_COLOR(kColorRefNeutral98);
++  ADD_COLOR(kColorRefNeutral99);
++  ADD_COLOR(kColorRefNeutral100);
++
++  // Reference colors - Neutral Variant palette
++  ADD_COLOR(kColorRefNeutralVariant0);
++  ADD_COLOR(kColorRefNeutralVariant10);
++  ADD_COLOR(kColorRefNeutralVariant20);
++  ADD_COLOR(kColorRefNeutralVariant30);
++  ADD_COLOR(kColorRefNeutralVariant40);
++  ADD_COLOR(kColorRefNeutralVariant50);
++  ADD_COLOR(kColorRefNeutralVariant60);
++  ADD_COLOR(kColorRefNeutralVariant70);
++  ADD_COLOR(kColorRefNeutralVariant80);
++  ADD_COLOR(kColorRefNeutralVariant90);
++  ADD_COLOR(kColorRefNeutralVariant95);
++  ADD_COLOR(kColorRefNeutralVariant99);
++  ADD_COLOR(kColorRefNeutralVariant100);
++
++  // System colors - Primary
++  ADD_COLOR(kColorSysPrimary);
++  ADD_COLOR(kColorSysOnPrimary);
++  ADD_COLOR(kColorSysPrimaryContainer);
++  ADD_COLOR(kColorSysOnPrimaryContainer);
++
++  // System colors - Secondary
++  ADD_COLOR(kColorSysSecondary);
++  ADD_COLOR(kColorSysOnSecondary);
++  ADD_COLOR(kColorSysSecondaryContainer);
++  ADD_COLOR(kColorSysOnSecondaryContainer);
++
++  // System colors - Tertiary
++  ADD_COLOR(kColorSysTertiary);
++  ADD_COLOR(kColorSysOnTertiary);
++  ADD_COLOR(kColorSysTertiaryContainer);
++  ADD_COLOR(kColorSysOnTertiaryContainer);
++
++  // System colors - Error
++  ADD_COLOR(kColorSysError);
++  ADD_COLOR(kColorSysOnError);
++  ADD_COLOR(kColorSysErrorContainer);
++  ADD_COLOR(kColorSysOnErrorContainer);
++
++  // System colors - Surface
++  ADD_COLOR(kColorSysSurface);
++  ADD_COLOR(kColorSysOnSurface);
++  ADD_COLOR(kColorSysSurfaceVariant);
++  ADD_COLOR(kColorSysOnSurfaceVariant);
++  ADD_COLOR(kColorSysSurface1);
++  ADD_COLOR(kColorSysSurface2);
++  ADD_COLOR(kColorSysSurface3);
++  ADD_COLOR(kColorSysSurface4);
++  ADD_COLOR(kColorSysSurface5);
++
++  // System colors - Background
++  ADD_COLOR(kColorSysOnSurfaceSecondary);
++  ADD_COLOR(kColorSysOnSurfaceSubtle);
++  ADD_COLOR(kColorSysOnSurfacePrimary);
++
++  // System colors - Tonal Container (YOUR EXAMPLE!)
++  ADD_COLOR(kColorSysTonalContainer);
++  ADD_COLOR(kColorSysOnTonalContainer);
++  ADD_COLOR(kColorSysBaseTonalContainer);
++  ADD_COLOR(kColorSysOnBaseTonalContainer);
++
++  // System colors - Outline
++  ADD_COLOR(kColorSysTonalOutline);
++  ADD_COLOR(kColorSysNeutralOutline);
++  ADD_COLOR(kColorSysNeutralContainer);
++  ADD_COLOR(kColorSysDivider);
++
++  // System colors - Chrome surfaces
++  ADD_COLOR(kColorSysBase);
++  ADD_COLOR(kColorSysBaseContainer);
++  ADD_COLOR(kColorSysBaseContainerElevated);
++  ADD_COLOR(kColorSysHeader);
++  ADD_COLOR(kColorSysHeaderContainer);
++
++  // System colors - State
++  ADD_COLOR(kColorSysStateHoverOnProminent);
++  ADD_COLOR(kColorSysStateHoverOnSubtle);
++  ADD_COLOR(kColorSysStateFocusRing);
++  ADD_COLOR(kColorSysStateDisabled);
++  ADD_COLOR(kColorSysStateDisabledContainer);
++
++  // Additional essential colors that were missing
++  ADD_COLOR(kColorPrimaryBackground);
++  ADD_COLOR(kColorPrimaryForeground);
++  ADD_COLOR(kColorSecondaryForeground);
++  ADD_COLOR(kColorDialogBackground);
++  ADD_COLOR(kColorDialogForeground);
++  ADD_COLOR(kColorBubbleBackground);
++  ADD_COLOR(kColorBubbleBorder);
++  ADD_COLOR(kColorButtonBackground);
++  ADD_COLOR(kColorButtonForeground);
++  ADD_COLOR(kColorButtonBackgroundProminent);
++  ADD_COLOR(kColorButtonForegroundProminent);
++  ADD_COLOR(kColorLabelForeground);
++  ADD_COLOR(kColorLabelForegroundSecondary);
++  ADD_COLOR(kColorLabelForegroundDisabled);
++  ADD_COLOR(kColorLinkForeground);
++  ADD_COLOR(kColorLinkForegroundPressed);
++  ADD_COLOR(kColorMenuBackground);
++  ADD_COLOR(kColorMenuBorder);
++  ADD_COLOR(kColorMenuItemForeground);
++  ADD_COLOR(kColorMenuItemBackgroundSelected);
++  ADD_COLOR(kColorMenuSeparator);
++  ADD_COLOR(kColorSeparator);
++  ADD_COLOR(kColorTextfieldBackground);
++  ADD_COLOR(kColorTextfieldForeground);
++  ADD_COLOR(kColorTooltipBackground);
++  ADD_COLOR(kColorTooltipForeground);
++  ADD_COLOR(kColorIcon);
++  ADD_COLOR(kColorIconSecondary);
++  ADD_COLOR(kColorIconDisabled);
++  ADD_COLOR(kColorSliderThumb);
++  ADD_COLOR(kColorSliderTrack);
++  ADD_COLOR(kColorAccent);
++  ADD_COLOR(kColorDisabledForeground);
++
++  #undef ADD_COLOR
++
++  return colors;
++}
++
++std::string ThemeColorsGetFunction::ColorToHexString(SkColor color) {
++  return base::StringPrintf("#%02X%02X%02X",
++                           SkColorGetR(color),
++                           SkColorGetG(color),
++                           SkColorGetB(color));
++}
++
++const ui::ColorProvider* ThemeColorsGetFunction::GetColorProvider() {
++  Profile* profile = Profile::FromBrowserContext(browser_context());
++  if (!profile) {
++    return nullptr;
++  }
++
++  Browser* browser = chrome::FindBrowserWithProfile(profile);
++  if (!browser || !browser->window()) {
++    return nullptr;
++  }
++
++  return browser->window()->GetColorProvider();
++}
++
++}  // namespace extensions
+diff --git a/chrome/browser/extensions/api/theme_colors/theme_colors_api.h b/chrome/browser/extensions/api/theme_colors/theme_colors_api.h
+new file mode 100644
+--- /dev/null
++++ b/chrome/browser/extensions/api/theme_colors/theme_colors_api.h
+@@ -0,0 +1,43 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef CHROME_BROWSER_EXTENSIONS_API_THEME_COLORS_THEME_COLORS_API_H_
++#define CHROME_BROWSER_EXTENSIONS_API_THEME_COLORS_THEME_COLORS_API_H_
++
++#include "base/values.h"
++#include "extensions/browser/extension_function.h"
++#include "third_party/skia/include/core/SkColor.h"
++#include "ui/color/color_id.h"
++
++namespace ui {
++class ColorProvider;
++}
++
++namespace extensions {
++
++// Implementation of the chrome.themeColors.get API.
++class ThemeColorsGetFunction : public ExtensionFunction {
++ public:
++  DECLARE_EXTENSION_FUNCTION("themeColors.get", THEMECOLORS_GET)
++
++ protected:
++  ~ThemeColorsGetFunction() override;
++
++  // ExtensionFunction:
++  ResponseAction Run() override;
++
++ private:
++  // Gets all theme colors from the ColorProvider
++  base::Value::Dict GetAllThemeColors(const ui::ColorProvider* provider);
++
++  // Converts SkColor to hex string (e.g., 0xFFAABBCC -> "#AABBCC")
++  std::string ColorToHexString(SkColor color);
++
++  // Gets the ColorProvider for the current browser context
++  const ui::ColorProvider* GetColorProvider();
++};
++
++}  // namespace extensions
++
++#endif  // CHROME_BROWSER_EXTENSIONS_API_THEME_COLORS_THEME_COLORS_API_H_
+diff --git a/chrome/common/extensions/api/theme_colors.json b/chrome/common/extensions/api/theme_colors.json
+new file mode 100644
+--- /dev/null
++++ b/chrome/common/extensions/api/theme_colors.json
+@@ -0,0 +1,67 @@
++// Copyright 2024 The Chromium Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++[
++  {
++    "namespace": "themeColors",
++    "description": "Use the <code>chrome.themeColors</code> API to access Chrome's Material Design 3 theme colors. All colors automatically update when the theme changes (light/dark mode).",
++    "unprivileged": true,
++    "types": [
++      {
++        "id": "ThemeColors",
++        "type": "object",
++        "description": "Object containing all available theme colors as hex strings (e.g., '#FF5733'). Includes both reference colors (kColorRef*) for Material 3 tonal palettes and system colors (kColorSys*) for semantic meanings.",
++        "properties": {},
++        "additionalProperties": {
++          "type": "string",
++          "description": "Color value in hex format"
++        }
++      },
++      {
++        "id": "ColorChangeInfo",
++        "type": "object",
++        "description": "Information about theme color changes",
++        "properties": {
++          "colors": {
++            "$ref": "ThemeColors",
++            "description": "The new theme colors after the change"
++          }
++        }
++      }
++    ],
++    "functions": [
++      {
++        "name": "get",
++        "type": "function",
++        "description": "Gets all theme colors for the current theme (light or dark mode).",
++        "parameters": [],
++        "returns_async": {
++          "name": "callback",
++          "description": "Called with the theme colors",
++          "parameters": [
++            {
++              "name": "colors",
++              "$ref": "ThemeColors",
++              "description": "Object containing all theme colors with color ID names as keys (e.g., colors.kColorRefPrimary90, colors.kColorSysTonalContainer)"
++            }
++          ]
++        }
++      }
++    ],
++    "events": [
++      {
++        "name": "onChanged",
++        "type": "function",
++        "description": "Fired when the theme colors change (e.g., switching between light and dark mode).",
++        "parameters": [
++          {
++            "name": "changeInfo",
++            "$ref": "ColorChangeInfo",
++            "description": "Information about the color changes"
++          }
++        ]
++      }
++    ]
++  }
++]

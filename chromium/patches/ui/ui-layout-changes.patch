@@ -1,0 +1,661 @@
+diff --git a/chrome/browser/ui/layout_constants.cc b/chrome/browser/ui/layout_constants.cc
+index c7424d55cfef1..bb5e3e094453a 100644
+--- a/chrome/browser/ui/layout_constants.cc
++++ b/chrome/browser/ui/layout_constants.cc
+@@ -29,7 +29,7 @@ int GetLayoutConstant(LayoutConstant constant) {
+     case LayoutConstant::kBookmarkBarHeight: {
+       // The fixed margin ensures the bookmark buttons appear centered relative
+       // to the white space above and below.
+-      const int bookmark_bar_attached_vertical_margin = 6;
++      const int bookmark_bar_attached_vertical_margin = 10;
+       return GetLayoutConstant(LayoutConstant::kBookmarkBarButtonHeight) +
+              bookmark_bar_attached_vertical_margin;
+     }
+@@ -93,12 +93,12 @@ int GetLayoutConstant(LayoutConstant constant) {
+     case LayoutConstant::kTabCloseButtonSize:
+       return touch_ui ? 24 : 16;
+     case LayoutConstant::kTabHeight:
+-      return 34 + GetLayoutConstant(LayoutConstant::kTabstripToolbarOverlap);
++      return 36 + GetLayoutConstant(LayoutConstant::kTabstripToolbarOverlap);
+     case LayoutConstant::kTabStripHeight:
+       return GetLayoutConstant(LayoutConstant::kTabHeight) +
+              GetLayoutConstant(LayoutConstant::kTabStripPadding);
+     case LayoutConstant::kTabStripPadding:
+-      return 6;
++      return 4;
+     case LayoutConstant::kTabSeparatorHeight:
+       return touch_ui ? 24 : 20;
+     case LayoutConstant::kTabPreTitlePadding:
+diff --git a/chrome/browser/ui/tabs/tab_style.cc b/chrome/browser/ui/tabs/tab_style.cc
+index 7f1003ce0789f..f12e74878019e 100644
+--- a/chrome/browser/ui/tabs/tab_style.cc
++++ b/chrome/browser/ui/tabs/tab_style.cc
+@@ -27,8 +27,8 @@ constexpr int kChromeRefreshSeparatorHeight = 16;
+ constexpr int kChromeRefreshTabVerticalPadding = 6;
+ constexpr int kChromeRefreshTabHorizontalPadding = 8;
+ 
+-// The standard tab width is 232 DIP, excluding separators and overlap.
+-constexpr int kTabWidth = 232;
++// The standard tab width is 200 DIP, excluding separators and overlap.
++constexpr int kTabWidth = 200;
+ 
+ }  // namespace
+ 
+diff --git a/chrome/browser/ui/toolbar/app_menu_model.cc b/chrome/browser/ui/toolbar/app_menu_model.cc
+index a688f71a4090c..dd69b114e3de4 100644
+--- a/chrome/browser/ui/toolbar/app_menu_model.cc
++++ b/chrome/browser/ui/toolbar/app_menu_model.cc
+@@ -2236,7 +2236,7 @@ bool AppMenuModel::AddDefaultBrowserMenuItems() {
+         IDC_SET_BROWSER_AS_DEFAULT,
+         l10n_util::GetStringUTF16(IDS_SET_BROWSER_AS_DEFAULT_MENU_ITEM),
+         ui::ImageModel::FromVectorIcon(omnibox::kProductChromeRefreshIcon,
+-                                       ui::kColorMenuIcon, kDefaultIconSize));
++                                       ui::kColorMenuIconOnEmphasizedBackground, kDefaultIconSize));
+     SetElementIdentifierAt(GetItemCount() - 1,
+                            AppMenuModel::kSetBrowserAsDefaultMenuItem);
+     return true;
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+index 75c266ea05d6f..a99f034e7c3da 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_bar_view.cc
+@@ -724,25 +724,7 @@ void BookmarkBarView::Layout(PassKey) {
+   const int button_height =
+       GetLayoutConstant(LayoutConstant::kBookmarkBarButtonHeight);
+ 
+-  // Bookmark bar buttons should be centered between the bottom of the location
+-  // bar and the bottom of the bookmarks bar, which requires factoring in the
+-  // bottom margin of the toolbar into the button position.
+-  int toolbar_bottom_margin = 0;
+-  // Note: |browser_view_| may be null during tests.
+-  if (browser_view_ && !browser_view_->IsFullscreen()) {
+-    toolbar_bottom_margin = browser_view_->toolbar()->height() -
+-                            browser_view_->GetLocationBar()->Bounds().bottom();
+-  }
+-  // Center the buttons in the total available space.
+-  const int total_height = GetContentsBounds().height() + toolbar_bottom_margin;
+-  const auto center_y = [total_height, toolbar_bottom_margin](int height) {
+-    const int top_margin = (total_height - height) / 2;
+-    // Calculate the top inset in the bookmarks bar itself (not counting the
+-    // space in the toolbar) but do not allow the buttons to leave the bookmarks
+-    // bar.
+-    return std::max(0, top_margin - toolbar_bottom_margin);
+-  };
+-  const int y = center_y(button_height);
++  const int y = 5;
+ 
+   gfx::Size all_bookmarks_pref = all_bookmarks_button_->GetVisible()
+                                      ? all_bookmarks_button_->GetPreferredSize()
+@@ -850,7 +832,7 @@ void BookmarkBarView::Layout(PassKey) {
+       gfx::Size saved_tab_groups_separator_view_pref =
+           saved_tab_groups_separator_view_->GetPreferredSize();
+       saved_tab_groups_separator_view_->SetBounds(
+-          x, center_y(saved_tab_groups_separator_view_pref.height()),
++          x, 5 + (button_height - saved_tab_groups_separator_view_pref.height()) / 2,
+           saved_tab_groups_separator_view_pref.width(),
+           saved_tab_groups_separator_view_pref.height());
+ 
+@@ -920,7 +902,7 @@ void BookmarkBarView::Layout(PassKey) {
+   // Bookmarks Separator.
+   if (bookmarks_separator_view_->GetVisible()) {
+     bookmarks_separator_view_->SetBounds(
+-        x, center_y(bookmarks_separator_pref.height()),
++        x, 5 + (button_height - bookmarks_separator_pref.height()) / 2,
+         bookmarks_separator_pref.width(), bookmarks_separator_pref.height());
+ 
+     x += bookmarks_separator_pref.width();
+@@ -1122,6 +1104,11 @@ views::View::DropCallback BookmarkBarView::GetDropCallback(
+ 
+ void BookmarkBarView::OnThemeChanged() {
+   views::AccessiblePaneView::OnThemeChanged();
++  if (GetColorProvider()) {
++    SetBorder(views::CreateSolidSidedBorder(
++        gfx::Insets::TLBR(1, 0, 0, 0),
++        GetColorProvider()->GetColor(kColorToolbarSeparator)));
++  }
+   UpdateAppearanceForTheme();
+ }
+ 
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.cc b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+index 2a2b0db646311..5194887e1d609 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.cc
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.cc
+@@ -21,7 +21,6 @@
+ #include "chrome/app/chrome_command_ids.h"
+ #include "chrome/app/vector_icons/vector_icons.h"
+ #include "chrome/browser/actor/ui/actor_ui_window_controller.h"
+-#include "chrome/browser/autocomplete/aim_eligibility_service_factory.h"
+ #include "chrome/browser/browser_process.h"
+ #include "chrome/browser/command_updater.h"
+ #include "chrome/browser/content_settings/host_content_settings_map_factory.h"
+@@ -42,6 +41,7 @@
+ #include "chrome/browser/ui/autofill/payments/save_card_bubble_controller_impl.h"
+ #include "chrome/browser/ui/browser.h"
+ #include "chrome/browser/ui/browser_actions.h"
++#include "chrome/browser/ui/browser_commands.h"
+ #include "chrome/browser/ui/browser_element_identifiers.h"
+ #include "chrome/browser/ui/browser_finder.h"
+ #include "chrome/browser/ui/browser_window.h"
+@@ -491,21 +491,7 @@ void LocationBarView::Init() {
+   // |browser_| may be null when LocationBarView is used for non-Browser windows
+   // such as PresentationReceiverWindowView, which do not support page actions.
+   if (browser_) {
+-    // Page action icons that participate in label animations should be added
+-    // first so that they appear on the left side of the icon container.
+-    // TODO(crbug.com/40835681): Improve the ordering heuristics for page action
+-    // icons and determine a way to handle simultaneous icon animations.
+-    if (base::FeatureList::IsEnabled(commerce::kProductSpecifications)) {
+-      params.types_enabled.push_back(
+-          PageActionIconType::kProductSpecifications);
+-    }
+-    params.types_enabled.push_back(PageActionIconType::kDiscounts);
+-    params.types_enabled.push_back(PageActionIconType::kPriceInsights);
+-    params.types_enabled.push_back(PageActionIconType::kPriceTracking);
+-
+-    if (optimization_guide::features::ShouldEnableOptimizationGuideIconView()) {
+-      params.types_enabled.push_back(PageActionIconType::kOptimizationGuide);
+-    }
++    // Keep only essential page action icons, removing Google-specific features
+     params.types_enabled.push_back(PageActionIconType::kClickToCall);
+     params.types_enabled.push_back(PageActionIconType::kAutofillAddress);
+     params.types_enabled.push_back(PageActionIconType::kManagePasswords);
+@@ -517,7 +503,6 @@ void LocationBarView::Init() {
+     params.types_enabled.push_back(PageActionIconType::kTranslate);
+     params.types_enabled.push_back(PageActionIconType::kZoom);
+     params.types_enabled.push_back(PageActionIconType::kFileSystemAccess);
+-
+     params.types_enabled.push_back(PageActionIconType::kCookieControls);
+     params.types_enabled.push_back(
+         PageActionIconType::kPaymentsOfferNotification);
+@@ -529,46 +514,6 @@ void LocationBarView::Init() {
+   params.types_enabled.push_back(PageActionIconType::kVirtualCardEnroll);
+   params.types_enabled.push_back(PageActionIconType::kMandatoryReauth);
+ 
+-  if (browser_ && lens::features::IsOmniboxEntryPointEnabled()) {
+-    // The persistent compact entrypoint should be positioned directly before
+-    // the star icon and the prominent expanding entrypoint should be
+-    // positioned in the leading position. This entrypoint will be suppressed
+-    // if the AIM page action is enabled and the user meets AIM eligibility
+-    // criteria, since we want to avoid both showing up when the user focuses
+-    // the Omnibox.
+-    if (lens::features::IsOmniboxEntrypointAlwaysVisible()) {
+-      params.types_enabled.push_back(PageActionIconType::kLensOverlay);
+-    } else {
+-      params.types_enabled.insert(params.types_enabled.begin(),
+-                                  PageActionIconType::kLensOverlay);
+-    }
+-  }
+-
+-  if (browser_ && lens::features::IsLensOverlayEduActionChipEnabled()) {
+-    // Position in the leading position, like the expanding entrypoint for
+-    // kLensOverlay above. While both chips may be enabled, they will not appear
+-    // at the same time due to different focus behavior.
+-    params.types_enabled.insert(params.types_enabled.begin(),
+-                                PageActionIconType::kLensOverlayHomework);
+-  }
+-
+-  // Because AIM eligibility can change during the lifecycle of the
+-  // `LocationBarView`, the AI Mode page action is added regardless of
+-  // eligibility, but its visibility is toggled to match eligibility.
+-  if (base::FeatureList::IsEnabled(omnibox::kAiModeOmniboxEntryPoint)) {
+-    // Position in the leading position, like the entrypoint for
+-    // kLensOverlayHomework above. While both chips may be enabled, they will
+-    // not appear at the same time due to different focus behavior. The
+-    // visibility of this entrypoint is dependent on whether or not the user
+-    // meets AIM eligibility criteria.
+-    params.types_enabled.insert(params.types_enabled.begin(),
+-                                PageActionIconType::kAiMode);
+-  }
+-
+-  if (browser_ && tab_groups::SavedTabGroupUtils::SupportsSharedTabGroups()) {
+-    params.types_enabled.push_back(PageActionIconType::kCollaborationMessaging);
+-  }
+-
+   if (browser_ && !is_popup_mode_) {
+     params.types_enabled.push_back(PageActionIconType::kBookmarkStar);
+   }
+@@ -584,17 +529,6 @@ void LocationBarView::Init() {
+       AddChildView(std::make_unique<PageActionIconContainerView>(params));
+   page_action_icon_controller_ = page_action_icon_container_->controller();
+ 
+-  if (!page_action_icon_container_->children().empty() &&
+-      base::FeatureList::IsEnabled(omnibox::kAiModeOmniboxEntryPoint) &&
+-      !IsPageActionMigrated(PageActionIconType::kAiMode)) {
+-    auto* first_page_action_icon_view = static_cast<PageActionIconView*>(
+-        page_action_icon_container_->children().front());
+-    DCHECK(first_page_action_icon_view->action_id() == kActionAiMode)
+-        << "kActionAiMode must be the first child in "
+-           "PageActionIconContainerView to ensure it's the left-most page "
+-           "action.";
+-  }
+-
+   auto clear_all_button = views::CreateVectorImageButton(base::BindRepeating(
+       static_cast<void (OmniboxView::*)(const std::u16string&)>(
+           &OmniboxView::SetUserText),
+@@ -604,6 +538,22 @@ void LocationBarView::Init() {
+   clear_all_button_ = AddChildView(std::move(clear_all_button));
+   RefreshClearAllButtonIcon();
+ 
++  // Add copy URL button
++  auto copy_url_button = views::CreateVectorImageButton(base::BindRepeating(
++      [](Browser* browser) {
++        if (browser) {
++          chrome::ExecuteCommand(browser, IDC_COPY_URL);
++        }
++      },
++      base::Unretained(browser_)));
++  copy_url_button->SetTooltipText(
++      l10n_util::GetStringUTF16(IDS_COPY_URL));
++  copy_url_button->SetImageModel(
++      views::Button::STATE_NORMAL,
++      ui::ImageModel::FromVectorIcon(kLinkChromeRefreshIcon, kColorOmniboxResultsIcon,
++                                     GetLayoutConstant(LayoutConstant::kLocationBarIconSize)));
++  copy_url_button_ = AddChildView(std::move(copy_url_button));
++
+   // Initialize the location entry. We do this to avoid a black flash which is
+   // visible when the location entry has just been initialized.
+   Update(nullptr);
+@@ -984,30 +934,9 @@ void LocationBarView::Layout(PassKey) {
+     }
+   };
+ 
+-  // When the AIM page action is shown as the right-most page action in the
+-  // location bar, it should be positioned flush against the right edge of the
+-  // location bar.
+-  // If all page actions are migrated (i.e. up to bookmark star), then the extra
+-  // padding that is usually added to bridge the new and legacy containers can
+-  // be discounted.
+-  const bool all_page_actions_migrated =
+-      IsPageActionMigrated(PageActionIconType::kBookmarkStar);
+-  const int kTrailingEdgePaddingForAim =
+-      IsPageActionMigrated(PageActionIconType::kAiMode) &&
+-              !all_page_actions_migrated
+-          ? -3
+-          : 5;
+-  const PageActionInfo info = GetPageActionInfo();
+-  const int kTrailingEdgePaddingForNonAim =
+-      (info.num_legacy_page_actions_shown == 0) && !all_page_actions_migrated
+-          ? 4
+-          : trailing_decorations_edge_padding;
+   add_trailing_decoration(page_action_icon_container_,
+                           /*intra_item_padding=*/0,
+-                          /*edge_padding=*/
+-                          info.is_aim_last_visible_page_action
+-                              ? kTrailingEdgePaddingForAim
+-                              : kTrailingEdgePaddingForNonAim);
++                          /*edge_padding=*/trailing_decorations_edge_padding);
+   add_trailing_decoration(page_action_container_,
+                           /*intra_item_padding=*/0,
+                           /*edge_padding=*/trailing_decorations_edge_padding);
+@@ -1026,6 +955,9 @@ void LocationBarView::Layout(PassKey) {
+   add_trailing_decoration(clear_all_button_, /*intra_item_padding=*/0,
+                           /*edge_padding=*/trailing_decorations_edge_padding);
+ 
++  add_trailing_decoration(copy_url_button_, /*intra_item_padding=*/0,
++                          /*edge_padding=*/trailing_decorations_edge_padding);
++
+   // Perform layout.
+   int entry_width = width();
+ 
+@@ -1310,6 +1242,11 @@ bool LocationBarView::ShouldHidePageActionIcons() const {
+ 
+ bool LocationBarView::ShouldHidePageActionIcon(
+     const PageActionIconView* icon_view) const {
++  // Bookmark star should always be visible
++  if (page_action_icon_controller_->GetIconType(icon_view) == PageActionIconType::kBookmarkStar) {
++    return false;
++  }
++
+   if (ShouldHidePageActionIcons()) {
+     return true;
+   }
+@@ -1396,38 +1333,21 @@ LocationBarView::PageActionInfo LocationBarView::GetPageActionInfo() const {
+   PageActionInfo info;
+ 
+   // Check PageActionContainerView (migrated page actions).
+-  bool migrated_aim_page_action_is_visible = false;
+   for (views::View* view : page_action_container_->children()) {
+     if (view->GetVisible()) {
+       info.num_migrated_page_actions_shown++;
+-      page_actions::PageActionView* page_action_view =
+-          static_cast<page_actions::PageActionView*>(view);
+-      if (page_action_view->GetActionId() == kActionAiMode) {
+-        migrated_aim_page_action_is_visible = true;
+-      }
+     }
+   }
+ 
+   // Check PageActionIconContainerView (legacy page actions).
+-  bool aim_page_action_is_visible = false;
+   for (views::View* view : page_action_icon_container_->children()) {
+     if (view->GetVisible()) {
+       info.num_legacy_page_actions_shown++;
+-      PageActionIconView* icon_view = static_cast<PageActionIconView*>(view);
+-      if (icon_view->action_id() == kActionAiMode) {
+-        aim_page_action_is_visible = true;
+-      }
+     }
+   }
+ 
+-  if (migrated_aim_page_action_is_visible &&
+-      (info.num_migrated_page_actions_shown +
+-       info.num_legacy_page_actions_shown) == 1) {
+-    info.is_aim_last_visible_page_action = true;
+-  } else if (aim_page_action_is_visible &&
+-             info.num_legacy_page_actions_shown == 1) {
+-    info.is_aim_last_visible_page_action = true;
+-  }
++  // AI Mode removed - is_aim_last_visible_page_action always false
++  info.is_aim_last_visible_page_action = false;
+ 
+   return info;
+ }
+@@ -1499,9 +1419,9 @@ void LocationBarView::RefreshBackground() {
+                              ui::NativeTheme::PreferredContrast::kMore;
+ 
+   const auto* const color_provider = GetColorProvider();
+-  SkColor normal = color_provider->GetColor(kColorLocationBarBackground);
++  SkColor normal = color_provider->GetColor(kColorToolbar);
+   SkColor hovered =
+-      color_provider->GetColor(kColorLocationBarBackgroundHovered);
++      color_provider->GetColor(kColorToolbar);
+ 
+   background_color_ = gfx::Tween::ColorValueBetween(opacity, normal, hovered);
+   if (is_caret_visible) {
+@@ -1598,20 +1518,7 @@ void LocationBarView::RefreshPageActionIconViews() {
+ }
+ 
+ void LocationBarView::RefreshAiModePageActionIconView() {
+-  if (IsPageActionMigrated(PageActionIconType::kAiMode)) {
+-    auto* aim_page_action_controller =
+-        omnibox::AiModePageActionController::From(browser_);
+-    if (aim_page_action_controller) {
+-      aim_page_action_controller->UpdatePageAction();
+-    }
+-    return;
+-  }
+-
+-  PageActionIconView* aim_icon_view =
+-      page_action_icon_controller_->GetIconView(PageActionIconType::kAiMode);
+-  if (aim_icon_view) {
+-    aim_icon_view->Update();
+-  }
++  // AI Mode removed - no-op
+ }
+ 
+ void LocationBarView::RefreshPageActionContainerViewAndIconsVisibility(
+@@ -1952,13 +1859,12 @@ void LocationBarView::OnChanged() {
+       !omnibox_view_->GetText().empty() &&
+       IsVirtualKeyboardVisible(GetWidget()));
+ 
++  // Copy URL button is always visible
++  copy_url_button_->SetVisible(true);
++
+   InvalidateLayout();
+   SchedulePaint();
+   UpdateChipVisibility();
+-  // The AI mode page action icon view visibility depends on whether or not
+-  // user text has been entered into the omnibox, so refresh the icon on
+-  // changes.
+-  RefreshAiModePageActionIconView();
+ }
+ 
+ const LocationBarModel* LocationBarView::GetLocationBarModel() const {
+@@ -1974,10 +1880,6 @@ void LocationBarView::OnOmniboxFocused() {
+   // the omnibox is intentional, snapping is better than transitioning here.
+   hover_animation_.Reset();
+   RefreshBackground();
+-
+-  // The AI mode page action icon view should only be visible when the omnibox
+-  // is focused, so if there is a change in focus, refresh the icon.
+-  RefreshAiModePageActionIconView();
+ }
+ 
+ void LocationBarView::OnOmniboxBlurred() {
+@@ -1986,10 +1888,6 @@ void LocationBarView::OnOmniboxBlurred() {
+   }
+   RefreshBackground();
+ 
+-  // The AI mode page action icon view should only be visible when the omnibox
+-  // is focused, so if there is a change in focus, refresh the icon.
+-  RefreshAiModePageActionIconView();
+-
+   location_icon_view_->Update(false, false);
+ }
+ 
+diff --git a/chrome/browser/ui/views/location_bar/location_bar_view.h b/chrome/browser/ui/views/location_bar/location_bar_view.h
+index 48d8538415b5e..478d6136f7d59 100644
+--- a/chrome/browser/ui/views/location_bar/location_bar_view.h
++++ b/chrome/browser/ui/views/location_bar/location_bar_view.h
+@@ -576,6 +576,9 @@ class LocationBarView
+   // user to clear all text.
+   raw_ptr<views::ImageButton> clear_all_button_ = nullptr;
+ 
++  // A button to copy the current URL to clipboard.
++  raw_ptr<views::ImageButton> copy_url_button_ = nullptr;
++
+   // Animation to change whole location bar background color on hover.
+   gfx::SlideAnimation hover_animation_{this};
+ 
+diff --git a/chrome/browser/ui/views/tabs/tab.cc b/chrome/browser/ui/views/tabs/tab.cc
+index a90d2ba6fd468..87d7eb79b6692 100644
+--- a/chrome/browser/ui/views/tabs/tab.cc
++++ b/chrome/browser/ui/views/tabs/tab.cc
+@@ -1177,10 +1177,10 @@ void Tab::UpdateIconVisibility() {
+ #if BUILDFLAG(IS_CHROMEOS)
+     // Hide tab close button for OnTask if locked. Only applicable for non-web
+     // browser scenarios.
+-    showing_close_button_ = !controller_->IsLockedForOnTask();
++    showing_close_button_ = !controller_->IsLockedForOnTask() && mouse_hovered_;
+ #else
+-    // Close button is shown on active tabs regardless of the size.
+-    showing_close_button_ = true;
++    // Close button is shown on active tabs only when hovered.
++    showing_close_button_ = mouse_hovered_;
+ #endif  // BUILDFLAG(IS_CHROMEOS)
+     available_width -= close_button_width;
+ 
+@@ -1206,11 +1206,12 @@ void Tab::UpdateIconVisibility() {
+       available_width -= favicon_width;
+     }
+ 
++    // Only show close button on hover for inactive tabs
+     showing_close_button_ =
+ #if BUILDFLAG(IS_CHROMEOS)
+         !controller_->IsLockedForOnTask() &&
+ #endif
+-        large_enough_for_close_button;
++        large_enough_for_close_button && mouse_hovered_;
+     if (showing_close_button_) {
+       available_width -= close_button_width;
+     }
+diff --git a/chrome/browser/ui/views/tabs/tab_style_views.cc b/chrome/browser/ui/views/tabs/tab_style_views.cc
+index aacd3e86550da..89b6a98bd7730 100644
+--- a/chrome/browser/ui/views/tabs/tab_style_views.cc
++++ b/chrome/browser/ui/views/tabs/tab_style_views.cc
+@@ -198,8 +198,6 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
+   CHECK(tab());
+   const int stroke_thickness = GetStrokeThickness(flags.force_active);
+ 
+-  const TabStyle::TabSelectionState state = GetSelectionState();
+-
+   // We'll do the entire path calculation in aligned pixels.
+   // TODO(dfried): determine if we actually want to use `stroke_thickness` as
+   // the inset in this case.
+@@ -217,8 +215,8 @@ SkPath TabStyleViewsImpl::GetPath(TabStyle::PathType path_type,
+                                   scale;
+ 
+   // Selected, hover, and inactive tab fills are a detached squarcle tab.
+-  if ((path_type == TabStyle::PathType::kFill &&
+-       state != TabStyle::TabSelectionState::kActive) ||
++  // Active tabs also use this shape for consistent rounded rectangle appearance.
++  if ((path_type == TabStyle::PathType::kFill) ||
+       path_type == TabStyle::PathType::kHighlight ||
+       path_type == TabStyle::PathType::kInteriorClip ||
+       path_type == TabStyle::PathType::kHitTest) {
+@@ -993,8 +991,8 @@ void TabStyleViewsImpl::PaintBackgroundStroke(
+   }
+ 
+   SkPath outer_path =
+-      GetPath(TabStyle::PathType::kBorder, canvas->image_scale(),
+-              {.force_active = is_active, .should_paint_extension = false});
++      GetPath(TabStyle::PathType::kFill, canvas->image_scale(),
++              {.force_active = is_active});
+   gfx::ScopedCanvas scoped_canvas(canvas);
+   float scale = canvas->UndoDeviceScaleFactor();
+   cc::PaintFlags flags;
+@@ -1025,12 +1023,19 @@ void TabStyleViewsImpl::PaintSeparators(gfx::Canvas* canvas) const {
+ 
+   cc::PaintFlags flags;
+   flags.setAntiAlias(true);
++  flags.setStyle(cc::PaintFlags::kStroke_Style);
++  flags.setStrokeWidth(1.0f * scale);
++
++  // Draw simple vertical lines instead of rounded rectangles
+   flags.setColor(separator_color(separator_opacities.left));
+-  canvas->DrawRoundRect(separator_bounds.leading,
+-                        tab_style()->GetSeparatorCornerRadius() * scale, flags);
++  float left_x = separator_bounds.leading.x() + separator_bounds.leading.width() / 2;
++  canvas->DrawLine(gfx::PointF(left_x, separator_bounds.leading.y()),
++                   gfx::PointF(left_x, separator_bounds.leading.bottom()), flags);
++
+   flags.setColor(separator_color(separator_opacities.right));
+-  canvas->DrawRoundRect(separator_bounds.trailing,
+-                        tab_style()->GetSeparatorCornerRadius() * scale, flags);
++  float right_x = separator_bounds.trailing.x() + separator_bounds.trailing.width() / 2;
++  canvas->DrawLine(gfx::PointF(right_x, separator_bounds.trailing.y()),
++                   gfx::PointF(right_x, separator_bounds.trailing.bottom()), flags);
+ }
+ 
+ bool TabStyleViewsImpl::IsLeftSplitTab(const Tab* tab) const {
+diff --git a/chrome/browser/ui/views/toolbar/app_menu.cc b/chrome/browser/ui/views/toolbar/app_menu.cc
+index d54e9e00b3532..59f154ba1f3da 100644
+--- a/chrome/browser/ui/views/toolbar/app_menu.cc
++++ b/chrome/browser/ui/views/toolbar/app_menu.cc
+@@ -1599,6 +1599,7 @@ void AppMenu::PopulateMenu(MenuItemView* parent, MenuModel* model) {
+               views::LayoutProvider::Get()->GetDistanceMetric(
+                   views::DISTANCE_CONTROL_VERTICAL_TEXT_PADDING),
+               ui::kColorAppMenuUpgradeRowBackground);
++          item->SetForegroundColorId(ui::kColorAppMenuUpgradeRowSubstringForeground);
+         }
+         break;
+       }
+diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
+index 86086cdea4364..ea00e9db8dbea 100644
+--- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
++++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
+@@ -342,6 +342,16 @@ void ToolbarView::Init() {
+   location_bar_view_ = AddChildView(std::move(location_bar));
+   location_bar_ = location_bar_view_;
+ 
++  // Add a divider after the location bar
++  auto location_bar_divider = std::make_unique<views::View>();
++  location_bar_divider_ = AddChildView(std::move(location_bar_divider));
++  location_bar_divider_->SetPreferredSize(
++      gfx::Size(GetLayoutConstant(LayoutConstant::kToolbarDividerWidth),
++                GetLayoutConstant(LayoutConstant::kToolbarDividerHeight)));
++  location_bar_divider_->SetBackground(views::CreateRoundedRectBackground(
++    kColorToolbarExtensionSeparatorEnabled,
++      GetLayoutConstant(LayoutConstant::kToolbarDividerCornerRadius)));
++
+   if (extensions_container) {
+     extensions_container_ = AddChildView(std::move(extensions_container));
+     extensions_toolbar_coordinator_ =
+@@ -884,6 +894,12 @@ void ToolbarView::InitLayout() {
+             0, GetLayoutConstant(LayoutConstant::kToolbarDividerSpacing)));
+   }
+ 
++  if (location_bar_divider_) {
++    location_bar_divider_->SetProperty(
++        views::kMarginsKey,
++        gfx::Insets::VH(0, GetLayoutConstant(LayoutConstant::kToolbarDividerSpacing)));
++  }
++
+   constexpr int kToolbarFlexOrderStart = 1;
+ 
+   // TODO(crbug.com/40929989): Ignore containers till issue addressed.
+diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
+index 6c14d4d158e14..6ce1b27dd048e 100644
+--- a/chrome/browser/ui/views/toolbar/toolbar_view.h
++++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
+@@ -281,6 +281,7 @@ class ToolbarView : public views::AccessiblePaneView,
+   raw_ptr<CustomTabBarView> custom_tab_bar_ = nullptr;
+   raw_ptr<LocationBarView> location_bar_view_ = nullptr;
+   raw_ptr<LocationBar> location_bar_ = nullptr;
++  raw_ptr<views::View> location_bar_divider_ = nullptr;
+   raw_ptr<ExtensionsToolbarDesktop> extensions_container_ = nullptr;
+   raw_ptr<views::View> toolbar_divider_ = nullptr;
+   raw_ptr<BatterySaverButton> battery_saver_button_ = nullptr;
+diff --git a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
+index 872a7001252b8..8af061f4c4af3 100644
+--- a/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
++++ b/chrome/browser/ui/webui/new_tab_page/new_tab_page_handler.cc
+@@ -602,7 +602,7 @@ void NewTabPageHandler::RegisterProfilePrefs(PrefRegistrySimple* registry) {
+   registry->RegisterIntegerPref(
+       prefs::kNtpCustomizeChromeSidePanelAutoOpeningsCount, 0);
+   registry->RegisterBooleanPref(prefs::kNtpCustomizeChromeExplicitlyClosed,
+-                                false);
++                                true);
+   registry->RegisterBooleanPref(prefs::kNtpCustomizeChromeIPHAutoOpened, false);
+ }
+ 
+diff --git a/components/search/ntp_features.cc b/components/search/ntp_features.cc
+index 348e1d6250322..272ed08d3f982 100644
+--- a/components/search/ntp_features.cc
++++ b/components/search/ntp_features.cc
+@@ -98,7 +98,7 @@ BASE_FEATURE(kNtpDummyModules, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // If enabled, Google Drive module will be shown.
+ // This is a kill switch. Keep indefinitely.
+-BASE_FEATURE(kNtpDriveModule, base::FEATURE_ENABLED_BY_DEFAULT);
++BASE_FEATURE(kNtpDriveModule, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // If enabled, the NTP Drive module does not require sync.
+ BASE_FEATURE(kNtpDriveModuleHistorySyncRequirement,
+@@ -121,7 +121,7 @@ BASE_FEATURE(kNtpMiddleSlotPromo, base::FEATURE_ENABLED_BY_DEFAULT);
+ 
+ // If enabled, middle slot promo will be dismissed from New Tab Page until new
+ // promo message is populated
+-BASE_FEATURE(kNtpMiddleSlotPromoDismissal, base::FEATURE_ENABLED_BY_DEFAULT);
++BASE_FEATURE(kNtpMiddleSlotPromoDismissal, base::FEATURE_DISABLED_BY_DEFAULT);
+ 
+ // Dummy feature to set param "NtpModulesLoadTimeoutMillisecondsParam".
+ // This is used for an emergency Finch param. Keep indefinitely.
+diff --git a/ui/views/controls/menu/menu_item_view.h b/ui/views/controls/menu/menu_item_view.h
+index cd70752a23e34..6725f520d89c2 100644
+--- a/ui/views/controls/menu/menu_item_view.h
++++ b/ui/views/controls/menu/menu_item_view.h
+@@ -186,6 +186,10 @@ class VIEWS_EXPORT MenuItemView : public View, public LayoutDelegate {
+ 
+   std::optional<ui::ColorId> GetSelectedColorId() { return selected_color_id_; }
+ 
++  void SetForegroundColorId(std::optional<ui::ColorId> foreground_color_id) {
++    foreground_color_id_ = foreground_color_id;
++  }
++
+   void SetHighlightWhenSelectedWithChildViews(
+       bool highlight_when_selected_with_child_views) {
+     highlight_when_selected_with_child_views_ =
+@@ -596,10 +600,6 @@ class VIEWS_EXPORT MenuItemView : public View, public LayoutDelegate {
+   // Calculates the X coordinate of the icon.
+   int CalculateIconX(const ImageView* icon_view) const;
+ 
+-  void SetForegroundColorId(std::optional<ui::ColorId> foreground_color_id) {
+-    foreground_color_id_ = foreground_color_id;
+-  }
+-
+   // Returns the corresponding margin from the `MenuConfig` if
+   // `vertical_margin_` is not set.
+   int GetVerticalMargin() const;
+diff --git a/ui/webui/resources/cr_components/searchbox/searchbox.css b/ui/webui/resources/cr_components/searchbox/searchbox.css
+index fe62b8bf6bf28..49ff2f41917c8 100644
+--- a/ui/webui/resources/cr_components/searchbox/searchbox.css
++++ b/ui/webui/resources/cr_components/searchbox/searchbox.css
+@@ -311,7 +311,7 @@ cr-searchbox-icon {
+ 
+ :host([use-webkit-search-icons_][compose-button-enabled]) #voiceSearchButton,
+ :host([use-webkit-search-icons_][compose-button-enabled]) #lensSearchButton {
+-  background-color: #1F1F1F;
++  background-color: var(--color-searchbox-lens-voice-icon-background);
+ }
+ 
+ :host([compose-button-enabled][searchbox-lens-search-enabled_]) {

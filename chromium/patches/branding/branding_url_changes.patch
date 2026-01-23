@@ -1,0 +1,911 @@
+diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
+diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
+index 324103d42acce..41d2adec2fad6 100644
+--- a/chrome/browser/BUILD.gn
++++ b/chrome/browser/BUILD.gn
+@@ -2064,6 +2064,7 @@ static_library("browser") {
+     "//chrome/common/notifications",
+     "//chrome/installer/util:with_no_strings",
+     "//chrome/services/speech/buildflags",
++    "//openbrowser/browser",
+     "//components/application_locale_storage",
+     "//components/assist_ranker",
+     "//components/autofill/content/browser",
+diff --git a/chrome/browser/chrome_browser_main.cc b/chrome/browser/chrome_browser_main.cc
+index 5c8eeaaf5d9dc..0af034caf121a 100644
+--- a/chrome/browser/chrome_browser_main.cc
++++ b/chrome/browser/chrome_browser_main.cc
+@@ -47,6 +47,7 @@
+ #include "chrome/browser/media/webrtc/webrtc_log_util.h"
+ #include "chrome/browser/memory/chrome_browser_main_extra_parts_memory.h"
+ #include "chrome/browser/metrics/chrome_browser_main_extra_parts_metrics.h"
++#include "openbrowser/browser/openbrowser_browser_main_extra_parts.h"
+ #include "chrome/browser/metrics/chrome_feature_list_creator.h"
+ #include "chrome/browser/metrics/chrome_metrics_service_accessor.h"
+ #include "chrome/browser/metrics/expired_histograms_array.h"
+@@ -781,6 +782,9 @@ std::unique_ptr<content::BrowserMainParts> ChromeBrowserMainParts::Create(
+ 
+   main_parts->AddParts(std::make_unique<ChromeBrowserMainExtraPartsMemory>());
+ 
++  // Add OpenBrowser extra parts for openbrowser:// scheme support (Brave-style)
++  main_parts->AddParts(std::make_unique<OpenBrowserBrowserMainExtraParts>());
++
+   chrome::AddMetricsExtraParts(main_parts.get());
+ 
+   main_parts->AddParts(
+diff --git a/chrome/browser/chrome_content_browser_client.cc b/chrome/browser/chrome_content_browser_client.cc
+index d358af3f7b6f2..ae2596d5337b7 100644
+--- a/chrome/browser/chrome_content_browser_client.cc
++++ b/chrome/browser/chrome_content_browser_client.cc
+@@ -2072,6 +2072,8 @@ void ChromeContentBrowserClient::GetAdditionalWebUISchemes(
+   additional_schemes->emplace_back(chrome::kChromeSearchScheme);
+   additional_schemes->emplace_back(dom_distiller::kDomDistillerScheme);
+   additional_schemes->emplace_back(content::kChromeDevToolsScheme);
++  // Add openbrowser:// as a WebUI scheme (like Brave adds brave://)
++  additional_schemes->emplace_back("openbrowser");
+ }
+ 
+ bool ChromeContentBrowserClient::IsInternalScheme(const GURL& url) {
+diff --git a/chrome/browser/ui/BUILD.gn b/chrome/browser/ui/BUILD.gn
+index 05f6b17c2205d..2ce0e2f9809ea 100644
+--- a/chrome/browser/ui/BUILD.gn
++++ b/chrome/browser/ui/BUILD.gn
+@@ -514,6 +514,7 @@ static_library("ui") {
+     "//components/offline_pages/buildflags",
+     "//components/omnibox/browser",
+     "//components/omnibox/browser:vector_icons",
++    "//openbrowser/common",
+     "//components/onc",
+     "//components/optimization_guide/content/browser",
+     "//components/optimization_guide/core",
+diff --git a/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc b/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc
+index b9874b2c34990..8dd1e174579f5 100644
+--- a/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc
++++ b/chrome/browser/ui/page_info/chrome_page_info_ui_delegate.cc
+@@ -26,6 +26,11 @@
+ #include "components/page_info/core/merchant_trust_service.h"
+ #include "components/permissions/permission_decision_auto_blocker.h"
+ #include "components/permissions/permission_manager.h"
++#include "openbrowser/common/buildflags.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ #include "components/permissions/permissions_client.h"
+ #include "components/prefs/pref_service.h"
+ #include "components/strings/grit/components_strings.h"
+@@ -60,7 +65,14 @@
+ ChromePageInfoUiDelegate::ChromePageInfoUiDelegate(
+     content::WebContents* web_contents,
+     const GURL& site_url)
+-    : web_contents_(web_contents), site_url_(site_url) {}
++    : web_contents_(web_contents),
++      // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++      site_url_(openbrowser::GetDisplayURLForInternal(site_url))
++#else
++      site_url_(site_url)
++#endif
++{}
+ 
+ bool ChromePageInfoUiDelegate::ShouldShowAllow(ContentSettingsType type) {
+   switch (type) {
+diff --git a/chrome/browser/ui/tabs/recent_tabs_sub_menu_model.cc b/chrome/browser/ui/tabs/recent_tabs_sub_menu_model.cc
+index 0099aba7e3000..5cbd9422238b1 100644
+--- a/chrome/browser/ui/tabs/recent_tabs_sub_menu_model.cc
++++ b/chrome/browser/ui/tabs/recent_tabs_sub_menu_model.cc
+@@ -48,6 +48,11 @@
+ #include "chrome/grit/generated_resources.h"
+ #include "components/favicon/core/history_ui_favicon_request_handler.h"
+ #include "components/favicon_base/favicon_types.h"
++#include "openbrowser/common/buildflags.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ #include "components/prefs/scoped_user_pref_update.h"
+ #include "components/sessions/core/tab_restore_service.h"
+ #include "components/signin/public/identity_manager/identity_manager.h"
+@@ -541,11 +546,19 @@ void RecentTabsSubMenuModel::BuildLocalTabItem(
+       tab.navigations.at(tab.normalized_navigation_index());
+   TabItem item(std::string(), tab.id, current_navigation.title(),
+                current_navigation.virtual_url());
++
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  GURL display_url = openbrowser::GetDisplayURLForInternal(item.url);
++#else
++  const GURL& display_url = item.url;
++#endif
++
+   // See comments in BuildLocalEntries() about usage of InsertItem*At().
+   // There may be no tab title, in which case, use the url as tab title.
+   InsertItemAt(
+       curr_model_index, command_id,
+-      item.title.empty() ? base::UTF8ToUTF16(item.url.spec()) : item.title);
++      item.title.empty() ? base::UTF8ToUTF16(display_url.spec()) : item.title);
+   local_tab_items_.emplace(command_id, item);
+   AddTabFavicon(command_id, this, item.url);
+   // We shouldn't get here if there is no recently closed title.
+@@ -617,10 +630,18 @@ void RecentTabsSubMenuModel::BuildOtherDevicesTabItem(
+       tab.navigations.at(tab.normalized_navigation_index());
+   TabItem item(session_tag, tab.tab_id, current_navigation.title(),
+                current_navigation.virtual_url());
++
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  GURL display_url = openbrowser::GetDisplayURLForInternal(item.url);
++#else
++  const GURL& display_url = item.url;
++#endif
++
+   // See comments in BuildTabsFromOtherDevices() about usage of AddItem*().
+   // There may be no tab title, in which case, use the url as tab title.
+   containing_model->AddItem(command_id, current_navigation.title().empty()
+-                                            ? base::UTF8ToUTF16(item.url.spec())
++                                            ? base::UTF8ToUTF16(display_url.spec())
+                                             : current_navigation.title());
+   remote_tab_items_.emplace(command_id, item);
+   AddTabFavicon(command_id, containing_model, item.url);
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_button.cc b/chrome/browser/ui/views/bookmarks/bookmark_button.cc
+index ca72c436dd05b..bf4e9309a83e5 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_button.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_button.cc
+@@ -30,6 +30,11 @@
+ #include "ui/base/ui_base_features.h"
+ #include "ui/views/accessibility/view_accessibility.h"
+ #include "ui/views/widget/tooltip_manager.h"
++#include "openbrowser/common/buildflags.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ 
+ // These values are persisted to logs. Entries should not be renumbered and
+ // numeric values should never be reused.
+@@ -138,21 +143,33 @@ void BookmarkButton::UpdateTooltipText() {
+     return;
+   }
+ 
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  // OpenBrowser: Disable URL tooltips for bookmarks (privacy/cleaner UI)
++  SetTooltipText(std::u16string());
++#else
+   const views::TooltipManager* tooltip_manager =
+       GetWidget()->GetTooltipManager();
+   if (tooltip_manager) {
+     SetTooltipText(BookmarkBarView::CreateToolTipForURLAndTitle(
+         max_tooltip_width_, tooltip_manager->GetFontList(), *url_, GetText()));
+   }
++#endif
+ }
+ 
+ void BookmarkButton::AdjustAccessibleName(std::u16string& new_name,
+                                           ax::mojom::NameFrom& name_from) {
+   if (new_name.empty()) {
++    // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++    GURL display_url = openbrowser::GetDisplayURLForInternal(*url_);
++#else
++    const GURL& display_url = *url_;
++#endif
++
+     new_name = l10n_util::GetStringFUTF16(
+         IDS_UNNAMED_BOOKMARK_BUTTON_ACCESSIBLE_NAME,
+         url_formatter::FormatUrl(
+-            url_.get(), url_formatter::kFormatUrlOmitDefaults,
++            display_url, url_formatter::kFormatUrlOmitDefaults,
+             base::UnescapeRule::NORMAL, nullptr, nullptr, nullptr));
+     name_from = ax::mojom::NameFrom::kContents;
+   }
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_menu_button_base.cc b/chrome/browser/ui/views/bookmarks/bookmark_menu_button_base.cc
+index 6c1ba4355c030..addd2c63e0ba9 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_menu_button_base.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_menu_button_base.cc
+@@ -20,7 +20,8 @@ BookmarkMenuButtonBase::BookmarkMenuButtonBase(PressedCallback callback,
+   ConfigureInkDropForToolbar(this);
+   SetImageLabelSpacing(ChromeLayoutProvider::Get()->GetDistanceMetric(
+       DISTANCE_RELATED_LABEL_HORIZONTAL_LIST));
+-  views::InstallPillHighlightPathGenerator(this);
++  // OpenBrowser: Use fixed 8px corner radius instead of pill shape
++  views::InstallRoundRectHighlightPathGenerator(this, gfx::Insets(), 8);
+ }
+ 
+ // MenuButton:
+diff --git a/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc b/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc
+index a1fd95cae27a9..122fa4ec4f739 100644
+--- a/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc
++++ b/chrome/browser/ui/views/bookmarks/bookmark_menu_delegate.cc
+@@ -44,6 +44,7 @@
+ #include "components/prefs/pref_service.h"
+ #include "components/profile_metrics/browser_profile_type.h"
+ #include "components/url_formatter/url_formatter.h"
++#include "openbrowser/common/buildflags.h"
+ #include "content/public/browser/page_navigator.h"
+ #include "ui/base/accelerators/menu_label_accelerator_util.h"
+ #include "ui/base/dragdrop/drag_drop_types.h"
+@@ -418,6 +419,10 @@ void BookmarkMenuDelegate::SetMenuStartIndex(const BookmarkParentFolder& folder,
+ std::u16string BookmarkMenuDelegate::GetTooltipText(
+     int id,
+     const gfx::Point& screen_loc) const {
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  // OpenBrowser: Disable URL tooltips in "All Bookmarks" menu (privacy/cleaner UI)
++  return std::u16string();
++#else
+   auto i = menu_id_to_node_map_.find(id);
+   // Ignore queries about unknown items, e.g. the empty menu item.
+   if (i != menu_id_to_node_map_.end()) {
+@@ -431,6 +436,7 @@ std::u16string BookmarkMenuDelegate::GetTooltipText(
+     }
+   }
+   return std::u16string();
++#endif
+ }
+ 
+ bool BookmarkMenuDelegate::IsTriggerableEvent(views::MenuItemView* menu,
+diff --git a/chrome/browser/ui/views/status_bubble_views.cc b/chrome/browser/ui/views/status_bubble_views.cc
+index 01a7b1aca2958..ea39c5f5a1c5d 100644
+--- a/chrome/browser/ui/views/status_bubble_views.cc
++++ b/chrome/browser/ui/views/status_bubble_views.cc
+@@ -28,7 +28,12 @@
+ #include "chrome/browser/ui/views/chrome_widget_sublevel.h"
+ #include "components/url_formatter/elide_url.h"
+ #include "components/url_formatter/url_formatter.h"
++#include "openbrowser/common/buildflags.h"
+ #include "third_party/skia/include/core/SkPath.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ #include "third_party/skia/include/core/SkRRect.h"
+ #include "third_party/skia/include/pathops/SkPathOps.h"
+ #include "ui/base/metadata/metadata_header_macros.h"
+@@ -875,12 +880,19 @@ void StatusBubbleViews::SetStatus(const std::u16string& status_text) {
+ }
+ 
+ void StatusBubbleViews::SetURL(const GURL& url) {
+-  url_ = url;
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  GURL display_url = openbrowser::GetDisplayURLForInternal(url);
++#else
++  const GURL& display_url = url;
++#endif
++
++  url_ = display_url;
+   if (size_.IsEmpty()) {
+     return;  // We have no bounds, don't attempt to show the popup.
+   }
+ 
+-  if (url.is_empty() && status_text_.empty() && !popup_) {
++  if (display_url.is_empty() && status_text_.empty() && !popup_) {
+     return;
+   }
+ 
+@@ -888,7 +900,7 @@ void StatusBubbleViews::SetURL(const GURL& url) {
+ 
+   // If we want to clear a displayed URL but there is a status still to
+   // display, display that status instead.
+-  if (url.is_empty() && !status_text_.empty()) {
++  if (display_url.is_empty() && !status_text_.empty()) {
+     url_text_ = std::u16string();
+     if (IsFrameVisible()) {
+       view_->AnimateForText(status_text_);
+@@ -899,11 +911,11 @@ void StatusBubbleViews::SetURL(const GURL& url) {
+   // Set Elided Text corresponding to the GURL object.
+   int text_width = static_cast<int>(
+       size_.width() - (kShadowThickness + kTextHorizPadding) * 2 - 1);
+-  url_text_ = url_formatter::ElideUrl(url, GetFont(), text_width);
++  url_text_ = url_formatter::ElideUrl(display_url, GetFont(), text_width);
+ 
+   // Get the width of the URL if the bubble width is the maximum size.
+   std::u16string full_size_elided_url =
+-      url_formatter::ElideUrl(url, GetFont(), GetMaxStatusBubbleWidth());
++      url_formatter::ElideUrl(display_url, GetFont(), GetMaxStatusBubbleWidth());
+   int url_width = GetWidthForURL(full_size_elided_url);
+ 
+   // Get the width for the url if it is unexpanded.
+@@ -912,15 +924,15 @@ void StatusBubbleViews::SetURL(const GURL& url) {
+   // Reset expansion state only when bubble is completely hidden.
+   if (view_->GetState() == StatusView::BubbleState::kHidden) {
+     is_expanded_ = false;
+-    url_text_ = url_formatter::ElideUrl(url, GetFont(), unexpanded_width);
++    url_text_ = url_formatter::ElideUrl(display_url, GetFont(), unexpanded_width);
+     SetBubbleWidth(unexpanded_width);
+   }
+ 
+   if (IsFrameVisible()) {
+     // If bubble is not expanded & not empty, make it fit properly in the
+     // unexpanded bubble
+-    if (!is_expanded_ & !url.is_empty()) {
+-      url_text_ = url_formatter::ElideUrl(url, GetFont(), unexpanded_width);
++    if (!is_expanded_ & !display_url.is_empty()) {
++      url_text_ = url_formatter::ElideUrl(display_url, GetFont(), unexpanded_width);
+       SetBubbleWidth(unexpanded_width);
+     }
+ 
+@@ -928,9 +940,9 @@ void StatusBubbleViews::SetURL(const GURL& url) {
+ 
+     // If bubble is already in expanded state, shift to adjust to new text
+     // size (shrinking or expanding). Otherwise delay.
+-    if (is_expanded_ && !url.is_empty()) {
++    if (is_expanded_ && !display_url.is_empty()) {
+       ExpandBubble();
+-    } else if (url_formatter::FormatUrl(url).length() > url_text_.length()) {
++    } else if (url_formatter::FormatUrl(display_url).length() > url_text_.length()) {
+       task_runner_->PostDelayedTask(
+           FROM_HERE,
+           base::BindOnce(&StatusBubbleViews::ExpandBubble,
+diff --git a/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc b/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
+index 18d0e53e8ae4b..34fc92e4a9b79 100644
+--- a/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
++++ b/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
+@@ -38,7 +38,12 @@
+ #include "components/collaboration/public/messaging/message.h"
+ #include "components/strings/grit/components_strings.h"
+ #include "components/url_formatter/url_formatter.h"
++#include "openbrowser/common/buildflags.h"
+ #include "ui/accessibility/ax_enums.mojom.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ #include "ui/base/l10n/l10n_util.h"
+ #include "ui/base/metadata/metadata_header_macros.h"
+ #include "ui/base/metadata/metadata_impl_macros.h"
+@@ -547,14 +552,21 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
+         tabs::TabAlertController::GetAlertStateToShow(tab_data.alert_state);
+   }
+ 
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  GURL display_url = openbrowser::GetDisplayURLForInternal(domain_url);
++#else
++  const GURL& display_url = domain_url;
++#endif
++
+   std::u16string domain;
+   bool is_filename = false;
+-  if (domain_url.SchemeIsFile()) {
++  if (display_url.SchemeIsFile()) {
+     is_filename = true;
+     domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_FILE_URL_SOURCE);
+-  } else if (domain_url.SchemeIsBlob()) {
++  } else if (display_url.SchemeIsBlob()) {
+     domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_BLOB_URL_SOURCE);
+-  } else if (domain_url.SchemeIs(url::kViewSourceScheme)) {
++  } else if (display_url.SchemeIs(url::kViewSourceScheme)) {
+     domain = l10n_util::GetStringUTF16(IDS_HOVER_CARD_VIEW_SOURCE_URL_SOURCE);
+   } else {
+     if (tab_data.should_display_url) {
+@@ -562,7 +574,7 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
+       // card, but this scenario is very rare. Also, shrinking the card to
+       // remove the space would result in visual noise, so we keep it simple.
+       domain = url_formatter::FormatUrl(
+-          domain_url,
++          display_url,
+           url_formatter::kFormatUrlOmitDefaults |
+               url_formatter::kFormatUrlOmitHTTPS |
+               url_formatter::kFormatUrlOmitTrivialSubdomains |
+diff --git a/chrome/browser/ui/webui/history/browsing_history_handler.cc b/chrome/browser/ui/webui/history/browsing_history_handler.cc
+index c2a2396dd2365..0ad64f14916b0 100644
+--- a/chrome/browser/ui/webui/history/browsing_history_handler.cc
++++ b/chrome/browser/ui/webui/history/browsing_history_handler.cc
+@@ -48,6 +48,11 @@
+ #include "components/favicon/core/large_icon_service.h"
+ #include "components/favicon_base/favicon_url_parser.h"
+ #include "components/history_clusters/core/config.h"
++#include "openbrowser/common/buildflags.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ #include "components/history_clusters/core/features.h"
+ #include "components/history_clusters/core/history_clusters_prefs.h"
+ #include "components/history_embeddings/history_embeddings_features.h"
+@@ -145,11 +150,18 @@ void GetDeviceNameAndType(const syncer::DeviceInfoTracker* tracker,
+ // Formats `entry`'s URL and title and adds them to `result`.
+ std::pair<std::string, std::string> SetHistoryEntryUrlAndTitle(
+     const BrowsingHistoryService::HistoryEntry& entry) {
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  GURL display_url = openbrowser::GetDisplayURLForInternal(entry.url);
++#else
++  const GURL& display_url = entry.url;
++#endif
++
+   bool using_url_as_the_title = false;
+   std::u16string title_to_set(entry.title);
+   if (entry.title.empty()) {
+     using_url_as_the_title = true;
+-    title_to_set = base::UTF8ToUTF16(entry.url.spec());
++    title_to_set = base::UTF8ToUTF16(display_url.spec());
+   }
+ 
+   // Since the title can contain BiDi text, we need to mark the text as either
+@@ -170,7 +182,7 @@ std::pair<std::string, std::string> SetHistoryEntryUrlAndTitle(
+     title_to_set.resize(kShortTitleLength);
+   }
+ 
+-  return std::make_tuple(entry.url.spec(), base::UTF16ToUTF8(title_to_set));
++  return std::make_tuple(display_url.spec(), base::UTF16ToUTF8(title_to_set));
+ }
+ 
+ // Helper function to check if entry is present in local database (local-side
+diff --git a/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc b/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc
+index 6186da9598132..3ef33a2a76d35 100644
+--- a/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc
++++ b/chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_page_handler.cc
+@@ -48,6 +48,11 @@
+ #include "chrome/browser/ui/webui/side_panel/bookmarks/bookmarks.mojom.h"
+ #include "chrome/browser/ui/webui/side_panel/bookmarks/bookmarks_side_panel_ui.h"
+ #include "chrome/browser/ui/webui/side_panel/reading_list/reading_list_ui.h"
++#include "openbrowser/common/buildflags.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
+ #include "chrome/browser/ui/webui/webui_embedding_context.h"
+ #include "chrome/browser/undo/bookmark_undo_service_factory.h"
+ #include "chrome/grit/generated_resources.h"
+@@ -363,7 +368,13 @@ side_panel::mojom::BookmarksTreeNodePtr ConstructMojoNode(
+           bookmark_merged_surface.GetChildren(sub_parent));
+     }
+   } else {
++    // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++#if BUILDFLAG(OPENBROWSER_BUILD)
++    GURL display_url = openbrowser::GetDisplayURLForInternal(node->url());
++    mojo_node->url = display_url.spec();
++#else
+     mojo_node->url = node->url().spec();
++#endif
+   }
+ 
+   return mojo_node;
+@@ -874,9 +885,20 @@ void BookmarksPageHandler::BookmarkNodeMoved(
+ 
+ void BookmarksPageHandler::BookmarkNodeChanged(
+     const bookmarks::BookmarkNode* node) {
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++  std::string url_str;
++  if (node->is_url()) {
++#if BUILDFLAG(OPENBROWSER_BUILD)
++    GURL display_url = openbrowser::GetDisplayURLForInternal(node->url());
++    url_str = display_url.spec();
++#else
++    url_str = node->url().spec();
++#endif
++  }
++
+   page_->OnBookmarkNodeChanged(base::ToString(node->id()),
+                                base::UTF16ToUTF8(node->GetTitle()),
+-                               node->is_url() ? node->url().spec() : "");
++                               url_str);
+ }
+ 
+ std::string GetFolderSidePanelIDForTesting(
+diff --git a/components/omnibox/browser/BUILD.gn b/components/omnibox/browser/BUILD.gn
+index e0f69f0966f0d..b4b86fb8c2567 100644
+--- a/components/omnibox/browser/BUILD.gn
++++ b/components/omnibox/browser/BUILD.gn
+@@ -338,6 +338,7 @@ static_library("browser") {
+   deps = [
+     "//build:branding_buildflags",
+     "//components/bookmarks/browser",
++    "//openbrowser/common",
+     "//components/component_updater",
+     "//components/dom_distiller/core",
+     "//components/favicon/core",
+diff --git a/components/omnibox/browser/location_bar_model_impl.cc b/components/omnibox/browser/location_bar_model_impl.cc
+index 2c9a990b5e4aa..8f79579d20384 100644
+--- a/components/omnibox/browser/location_bar_model_impl.cc
++++ b/components/omnibox/browser/location_bar_model_impl.cc
+@@ -28,6 +28,12 @@
+ #include "ui/gfx/vector_icon_types.h"
+ #include "url/origin.h"
+ 
++#include "openbrowser/common/buildflags.h"
++
++#if BUILDFLAG(OPENBROWSER_BUILD)
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++#endif
++
+ #if (!BUILDFLAG(IS_ANDROID) || BUILDFLAG(ENABLE_VR)) && !BUILDFLAG(IS_IOS)
+ #include "components/omnibox/browser/vector_icons.h"  // nogncheck
+ #endif
+@@ -93,6 +99,12 @@ std::u16string LocationBarModelImpl::GetFormattedURL(
+ 
+   GURL url(GetURL());
+ 
++  // OpenBrowser: Rewrite chrome:// → openbrowser:// for display (Brave-style)
++  // This only affects what the user sees in the URL bar, not navigation
++#if BUILDFLAG(OPENBROWSER_BUILD)
++  url = openbrowser::GetDisplayURLForInternal(url);
++#endif
++
+ #if BUILDFLAG(IS_IOS)
+   // On iOS, the blob: display URLs should be simply the domain name. However,
+   // url_formatter parses everything past blob: as path, not domain, so swap
+diff --git a/openbrowser/BUILD.gn b/openbrowser/BUILD.gn
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/BUILD.gn
+@@ -0,0 +1,10 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++group("openbrowser") {
++  deps = [
++    "//openbrowser/browser",
++    "//openbrowser/common",
++  ]
++}
+diff --git a/openbrowser/browser/BUILD.gn b/openbrowser/browser/BUILD.gn
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/browser/BUILD.gn
+@@ -0,0 +1,17 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++source_set("browser") {
++  sources = [
++    "openbrowser_browser_main_extra_parts.cc",
++    "openbrowser_browser_main_extra_parts.h",
++  ]
++
++  deps = [
++    "//chrome/browser:main_extra_parts",
++    "//content/public/browser",
++    "//openbrowser/browser/ui/webui",
++    "//openbrowser/common",
++  ]
++}
+diff --git a/openbrowser/browser/openbrowser_browser_main_extra_parts.cc b/openbrowser/browser/openbrowser_browser_main_extra_parts.cc
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/browser/openbrowser_browser_main_extra_parts.cc
+@@ -0,0 +1,24 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/browser/openbrowser_browser_main_extra_parts.h"
++
++#include "content/public/browser/child_process_security_policy.h"
++#include "content/public/browser/web_ui_controller_factory.h"
++#include "openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h"
++#include "openbrowser/common/openbrowser_constants.h"
++
++OpenBrowserBrowserMainExtraParts::OpenBrowserBrowserMainExtraParts() = default;
++
++OpenBrowserBrowserMainExtraParts::~OpenBrowserBrowserMainExtraParts() = default;
++
++void OpenBrowserBrowserMainExtraParts::PostBrowserStart() {
++  // Step 3: Register openbrowser:// as a WebUI-safe scheme (like chrome://)
++  auto* policy = content::ChildProcessSecurityPolicy::GetInstance();
++  policy->RegisterWebSafeScheme(openbrowser::kOpenBrowserUIScheme);
++
++  // Step 4: Register the OpenBrowser WebUI controller factory
++  content::WebUIControllerFactory::RegisterFactory(
++      OpenBrowserWebUIControllerFactory::GetInstance());
++}
+diff --git a/openbrowser/browser/openbrowser_browser_main_extra_parts.h b/openbrowser/browser/openbrowser_browser_main_extra_parts.h
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/browser/openbrowser_browser_main_extra_parts.h
+@@ -0,0 +1,22 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
++#define OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
++
++#include "chrome/browser/chrome_browser_main_extra_parts.h"
++
++// Brave-style: handle OpenBrowser-specific browser initialization
++class OpenBrowserBrowserMainExtraParts : public ChromeBrowserMainExtraParts {
++ public:
++  OpenBrowserBrowserMainExtraParts();
++  OpenBrowserBrowserMainExtraParts(const OpenBrowserBrowserMainExtraParts&) = delete;
++  OpenBrowserBrowserMainExtraParts& operator=(const OpenBrowserBrowserMainExtraParts&) = delete;
++  ~OpenBrowserBrowserMainExtraParts() override;
++
++  // ChromeBrowserMainExtraParts overrides:
++  void PostBrowserStart() override;
++};
++
++#endif  // OPENBROWSER_BROWSER_OPENBROWSER_BROWSER_MAIN_EXTRA_PARTS_H_
+diff --git a/openbrowser/browser/ui/webui/BUILD.gn b/openbrowser/browser/ui/webui/BUILD.gn
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/browser/ui/webui/BUILD.gn
+@@ -0,0 +1,21 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++source_set("webui") {
++  sources = [
++    "openbrowser_web_ui_controller_factory.cc",
++    "openbrowser_web_ui_controller_factory.h",
++  ]
++
++  deps = [
++    "//base",
++    "//chrome/browser/profiles",
++    "//chrome/browser/ui/webui",
++    "//chrome/common",
++    "//content/public/browser",
++    "//content/public/common",
++    "//openbrowser/common",
++    "//url",
++  ]
++}
+diff --git a/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.cc
+@@ -0,0 +1,77 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h"
++
++#include "chrome/browser/profiles/profile.h"
++#include "chrome/browser/ui/webui/chrome_web_ui_controller_factory.h"
++#include "chrome/common/webui_url_constants.h"
++#include "content/public/browser/web_ui_controller.h"
++#include "content/public/common/url_constants.h"
++#include "openbrowser/common/openbrowser_constants.h"
++#include "url/gurl.h"
++
++// static
++OpenBrowserWebUIControllerFactory* OpenBrowserWebUIControllerFactory::GetInstance() {
++  static base::NoDestructor<OpenBrowserWebUIControllerFactory> instance;
++  return instance.get();
++}
++
++OpenBrowserWebUIControllerFactory::OpenBrowserWebUIControllerFactory() = default;
++
++OpenBrowserWebUIControllerFactory::~OpenBrowserWebUIControllerFactory() = default;
++
++content::WebUI::TypeID OpenBrowserWebUIControllerFactory::GetWebUIType(
++    content::BrowserContext* browser_context,
++    const GURL& url) {
++  // Only handle openbrowser:// URLs
++  if (!url.SchemeIs(openbrowser::kOpenBrowserUIScheme)) {
++    return content::WebUI::kNoWebUI;
++  }
++
++  // Brave-style: Convert openbrowser:// to chrome:// to check if it exists
++  // This is only for checking - the actual URL stays as openbrowser://
++  GURL::Replacements replacements;
++  replacements.SetSchemeStr(content::kChromeUIScheme);
++  GURL chrome_url = url.ReplaceComponents(replacements);
++
++  return ChromeWebUIControllerFactory::GetInstance()->GetWebUIType(
++      browser_context, chrome_url);
++}
++
++bool OpenBrowserWebUIControllerFactory::UseWebUIForURL(
++    content::BrowserContext* browser_context,
++    const GURL& url) {
++  // Only handle openbrowser:// URLs
++  if (!url.SchemeIs(openbrowser::kOpenBrowserUIScheme)) {
++    return false;
++  }
++
++  // Convert to chrome:// to check if it exists
++  GURL::Replacements replacements;
++  replacements.SetSchemeStr(content::kChromeUIScheme);
++  GURL chrome_url = url.ReplaceComponents(replacements);
++
++  return ChromeWebUIControllerFactory::GetInstance()->UseWebUIForURL(
++      browser_context, chrome_url);
++}
++
++std::unique_ptr<content::WebUIController>
++OpenBrowserWebUIControllerFactory::CreateWebUIControllerForURL(
++    content::WebUI* web_ui,
++    const GURL& url) {
++  // Only handle openbrowser:// URLs
++  if (!url.SchemeIs(openbrowser::kOpenBrowserUIScheme)) {
++    return nullptr;
++  }
++
++  // Brave-style: Convert openbrowser:// to chrome:// to create the controller
++  // The controller will use chrome:// internally, but the URL bar shows openbrowser://
++  GURL::Replacements replacements;
++  replacements.SetSchemeStr(content::kChromeUIScheme);
++  GURL chrome_url = url.ReplaceComponents(replacements);
++
++  return ChromeWebUIControllerFactory::GetInstance()->CreateWebUIControllerForURL(
++      web_ui, chrome_url);
++}
+diff --git a/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/browser/ui/webui/openbrowser_web_ui_controller_factory.h
+@@ -0,0 +1,38 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
++#define OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
++
++#include <memory>
++
++#include "base/no_destructor.h"
++#include "content/public/browser/web_ui_controller_factory.h"
++
++// Brave-style: Factory that handles openbrowser:// URLs
++// Maps them to existing Chrome WebUI controllers
++class OpenBrowserWebUIControllerFactory : public content::WebUIControllerFactory {
++ public:
++  static OpenBrowserWebUIControllerFactory* GetInstance();
++
++  OpenBrowserWebUIControllerFactory(const OpenBrowserWebUIControllerFactory&) = delete;
++  OpenBrowserWebUIControllerFactory& operator=(const OpenBrowserWebUIControllerFactory&) = delete;
++
++  // content::WebUIControllerFactory overrides:
++  content::WebUI::TypeID GetWebUIType(content::BrowserContext* browser_context,
++                                      const GURL& url) override;
++  bool UseWebUIForURL(content::BrowserContext* browser_context,
++                      const GURL& url) override;
++  std::unique_ptr<content::WebUIController> CreateWebUIControllerForURL(
++      content::WebUI* web_ui,
++      const GURL& url) override;
++
++ private:
++  friend base::NoDestructor<OpenBrowserWebUIControllerFactory>;
++
++  OpenBrowserWebUIControllerFactory();
++  ~OpenBrowserWebUIControllerFactory() override;
++};
++
++#endif  // OPENBROWSER_BROWSER_UI_WEBUI_OPENBROWSER_WEB_UI_CONTROLLER_FACTORY_H_
+diff --git a/openbrowser/buildflags.gni b/openbrowser/buildflags.gni
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/buildflags.gni
+@@ -0,0 +1,8 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++# OpenBrowser build flag - always true for OpenBrowser builds
++declare_args() {
++  openbrowser_build = true
++}
+diff --git a/openbrowser/common/BUILD.gn b/openbrowser/common/BUILD.gn
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/common/BUILD.gn
+@@ -0,0 +1,30 @@
++# Copyright 2024 The OpenBrowser Authors
++# Use of this source code is governed by a BSD-style license that can be
++# found in the LICENSE file.
++
++import("//build/buildflag_header.gni")
++import("//openbrowser/buildflags.gni")
++
++buildflag_header("buildflags") {
++  header = "buildflags.h"
++  flags = [ "OPENBROWSER_BUILD=$openbrowser_build" ]
++}
++
++source_set("common") {
++  sources = [
++    "openbrowser_constants.cc",
++    "openbrowser_constants.h",
++    "openbrowser_url_rewrite.cc",
++    "openbrowser_url_rewrite.h",
++  ]
++
++  public_deps = [
++    ":buildflags",
++  ]
++
++  deps = [
++    "//base",
++    "//content/public/common",
++    "//url",
++  ]
++}
+diff --git a/openbrowser/common/openbrowser_constants.cc b/openbrowser/common/openbrowser_constants.cc
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/common/openbrowser_constants.cc
+@@ -0,0 +1,11 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/common/openbrowser_constants.h"
++
++namespace openbrowser {
++
++const char kOpenBrowserUIScheme[] = "openbrowser";
++
++}  // namespace openbrowser
+diff --git a/openbrowser/common/openbrowser_constants.h b/openbrowser/common/openbrowser_constants.h
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/common/openbrowser_constants.h
+@@ -0,0 +1,15 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
++#define OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
++
++namespace openbrowser {
++
++// URL scheme for OpenBrowser internal pages (like chrome://)
++extern const char kOpenBrowserUIScheme[];
++
++}  // namespace openbrowser
++
++#endif  // OPENBROWSER_COMMON_OPENBROWSER_CONSTANTS_H_
+diff --git a/openbrowser/common/openbrowser_url_rewrite.cc b/openbrowser/common/openbrowser_url_rewrite.cc
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/common/openbrowser_url_rewrite.cc
+@@ -0,0 +1,26 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "openbrowser/common/openbrowser_url_rewrite.h"
++
++#include "content/public/common/url_constants.h"
++#include "openbrowser/common/openbrowser_constants.h"
++#include "url/gurl.h"
++
++namespace openbrowser {
++
++GURL GetDisplayURLForInternal(const GURL& url) {
++  // Only rewrite chrome:// URLs for UI display
++  // Never change the actual URL used for navigation
++  if (url.SchemeIs(content::kChromeUIScheme)) {
++    GURL::Replacements replacements;
++    replacements.SetSchemeStr(kOpenBrowserUIScheme);
++    return url.ReplaceComponents(replacements);
++  }
++
++  // Return unchanged for all other URLs
++  return url;
++}
++
++}  // namespace openbrowser
+diff --git a/openbrowser/common/openbrowser_url_rewrite.h b/openbrowser/common/openbrowser_url_rewrite.h
+new file mode 100644
+--- /dev/null
++++ b/openbrowser/common/openbrowser_url_rewrite.h
+@@ -0,0 +1,19 @@
++// Copyright 2024 The OpenBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef OPENBROWSER_COMMON_OPENBROWSER_URL_REWRITE_H_
++#define OPENBROWSER_COMMON_OPENBROWSER_URL_REWRITE_H_
++
++class GURL;
++
++namespace openbrowser {
++
++// Brave-style: Rewrites chrome:// URLs to openbrowser:// for display in UI
++// This does NOT change the actual URL used for navigation - only what the user sees
++// Example: chrome://settings → openbrowser://settings (for display only)
++GURL GetDisplayURLForInternal(const GURL& url);
++
++}  // namespace openbrowser
++
++#endif  // OPENBROWSER_COMMON_OPENBROWSER_URL_REWRITE_H_

@@ -1,0 +1,26 @@
+# OpenBrowser Patches - Apply in this order
+# Lines starting with # are comments and will be ignored
+# Empty lines will be ignored
+
+# Theme and UI changes
+patches/theme/theme-color-system.patch
+patches/ui/ui-layout-changes.patch
+
+# Branding assets and styling
+patches/branding/branding-assets.patch
+patches/theme/theme-styling.patch
+
+# Settings UI changes
+patches/ui/settings_ui_changes.patch
+
+# Branding URL changes
+patches/branding/branding_url_changes.patch
+
+# Tab radius updates
+patches/ui/updated-tab-radius.patch
+
+# Theme colors API
+patches/theme_api/theme-colors-api.patch
+
+# OpenBrowser Assistant integration
+patches/openbrowser_integration/openbrowser-assistant-integration.patch

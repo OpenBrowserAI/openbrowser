@@ -1,0 +1,554 @@
+diff --git a/chrome/browser/ui/color/chrome_color_id.h b/chrome/browser/ui/color/chrome_color_id.h
+index 59296a7cb076a..c349c59837fe9 100644
+--- a/chrome/browser/ui/color/chrome_color_id.h
++++ b/chrome/browser/ui/color/chrome_color_id.h
+@@ -657,6 +657,7 @@
+   E_CPONLY(kColorSearchboxResultsForeground) \
+   E_CPONLY(kColorSearchboxResultsForegroundDimmed) \
+   E_CPONLY(kColorSearchboxResultsIcon) \
++  E_CPONLY(kColorSearchboxResultsIconContainerBackground) \
+   E_CPONLY(kColorSearchboxResultsIconFocusedOutline) \
+   E_CPONLY(kColorSearchboxResultsIconSelected) \
+   E_CPONLY(kColorSearchboxResultsUrl) \
+diff --git a/chrome/browser/ui/color/chrome_color_mixer.cc b/chrome/browser/ui/color/chrome_color_mixer.cc
+index d6f02fceb7ee8..9446c65b4d2cf 100644
+--- a/chrome/browser/ui/color/chrome_color_mixer.cc
++++ b/chrome/browser/ui/color/chrome_color_mixer.cc
+@@ -192,9 +192,9 @@ void AddChromeColorMixer(ui::ColorProvider* provider,
+   mixer[kColorExtensionsMenuContainerBackground] = {ui::kColorSysSurface3};
+   mixer[kColorFeatureFirstRunInfoContainerBackground] = {ui::kColorSysSurface3};
+   mixer[kColorFeatureFirstRunIconColor] = {ui::kColorSysOnSurfaceSubtle};
+-  mixer[kColorFeaturePromoBubbleBackground] = {gfx::kGoogleBlue700};
++  mixer[kColorFeaturePromoBubbleBackground] = {dark_mode ? SK_ColorWHITE : SK_ColorBLACK};
+   mixer[kColorFeaturePromoBubbleButtonBorder] = {gfx::kGoogleGrey300};
+-  mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {gfx::kGoogleBlue300};
++  mixer[kColorFeaturePromoBubbleCloseButtonInkDrop] = {dark_mode ? SK_ColorBLACK : SK_ColorWHITE};
+   mixer[kColorFeaturePromoBubbleDefaultButtonBackground] = {
+       kColorFeaturePromoBubbleForeground};
+   mixer[kColorFeaturePromoBubbleDefaultButtonForeground] = {
+diff --git a/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc b/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
+index b2b1a40d80524..18cf4a075b8f2 100644
+--- a/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
++++ b/chrome/browser/ui/color/material_new_tab_page_color_mixer.cc
+@@ -53,7 +53,9 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+       ui::kColorSysStateHoverOnSubtle};
+   mixer[kColorNewTabPageButtonForeground] = {ui::kColorSysOnTonalContainer};
+ 
+-  mixer[kColorComposeboxBackground] = {SK_ColorWHITE};
++  mixer[kColorComposeboxBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
+   mixer[kColorComposeboxFileChipSpinner] = {kColorSysPrimary_Light};
+   mixer[kColorComposeboxFont] = {
+       dark_mode ? SkColorSetRGB(0xE6, 0xE8, 0xF0)
+@@ -103,8 +105,9 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+                 : SkColorSetRGB(0xAD, 0xAF, 0xB8)};
+   mixer[kColorComposeboxFileChipBackground] = {kColorSysSurface3_Light};
+   mixer[kColorComposeboxFileChipFaviconBackground] = {kColorSysSurface_Light};
+-  mixer[kColorComposeboxFileChipText] = {
+-      SkColorSetRGB(0x1F, 0x1F, 0x1F)};
++  mixer[kColorComposeboxFileChipText] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                 : SkColorSetRGB(0x1F, 0x1F, 0x1F)};
+   mixer[kColorComposeboxPdfChipIcon] = {
+       dark_mode ? SkColorSetRGB(0xAD, 0xAF, 0xB8)
+                 : SkColorSetRGB(0x56, 0x59, 0x5E)};
+@@ -219,12 +222,20 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+       ui::kColorSysOnPrimary};
+   if (base::FeatureList::IsEnabled(ntp_features::kRealboxCr23Theming)) {
+     // Steady state theme colors.
+-    mixer[kColorSearchboxBackground] = {kColorToolbarBackgroundSubtleEmphasis};
++    mixer[kColorSearchboxBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                   : ui::ColorTransform(kColorToolbarBackgroundSubtleEmphasis)};
++    mixer[kColorSearchboxPlaceholder] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxTextDimmed)};
++    mixer[kColorSearchboxSearchIconBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsIcon)};
++    mixer[kColorSearchboxLensVoiceIconBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(ui::kColorSysPrimary)};
+     mixer[kColorSearchboxBackgroundHovered] = {
+         kColorToolbarBackgroundSubtleEmphasisHovered};
+-    mixer[kColorSearchboxPlaceholder] = {kColorOmniboxTextDimmed};
+-    mixer[kColorSearchboxSearchIconBackground] = {kColorOmniboxResultsIcon};
+-    mixer[kColorSearchboxLensVoiceIconBackground] = {ui::kColorSysPrimary};
+     mixer[kColorSearchboxSelectionBackground] = {
+         kColorOmniboxSelectionBackground};
+     mixer[kColorSearchboxSelectionForeground] = {
+@@ -235,42 +246,56 @@ void AddMaterialNewTabPageColorMixer(ui::ColorProvider* provider,
+         kColorOmniboxAnswerIconGM3Background};
+     mixer[kColorSearchboxAnswerIconForeground] = {
+         kColorOmniboxAnswerIconGM3Foreground};
+-    mixer[kColorSearchboxForeground] = {kColorOmniboxText};
+     mixer[kColorSearchboxResultsActionChip] = {ui::kColorSysTonalOutline};
+     mixer[kColorSearchboxResultsActionChipIcon] = {ui::kColorSysPrimary};
+     mixer[kColorSearchboxResultsActionChipFocusOutline] = {
+         ui::kColorSysStateFocusRing};
+-    mixer[kColorSearchboxResultsBackgroundHovered] = {
+-        kColorOmniboxResultsBackgroundHovered};
+-    mixer[kColorSearchboxResultsButtonHover] = {
+-        kColorOmniboxResultsButtonInkDropRowHovered};
+-    mixer[kColorSearchboxResultsDimSelected] = {
+-        kColorOmniboxResultsTextDimmedSelected};
+     mixer[kColorSearchboxResultsFocusIndicator] = {
+         kColorOmniboxResultsFocusIndicator};
+-    mixer[kColorSearchboxResultsForeground] = {kColorOmniboxText};
+-    mixer[kColorSearchboxResultsForegroundDimmed] = {kColorOmniboxTextDimmed};
+-    mixer[kColorSearchboxResultsIcon] = {kColorOmniboxResultsIcon};
+-    mixer[kColorSearchboxResultsIconSelected] = {kColorOmniboxResultsIcon};
+     mixer[kColorSearchboxResultsIconFocusedOutline] = {
+         kColorOmniboxResultsButtonIconSelected};
+-    mixer[kColorSearchboxResultsUrl] = {kColorOmniboxResultsUrl};
+-    mixer[kColorSearchboxResultsUrlSelected] = {
+-        kColorOmniboxResultsUrlSelected};
++
++    mixer[kColorSearchboxForeground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                   : ui::ColorTransform(kColorOmniboxText)};
++    mixer[kColorSearchboxResultsBackgroundHovered] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysStateHoverOnSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsBackgroundHovered)};
++    mixer[kColorSearchboxResultsButtonHover] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysStateHoverOnSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsButtonInkDropRowHovered)};
++    mixer[kColorSearchboxResultsDimSelected] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsTextDimmedSelected)};
++    mixer[kColorSearchboxResultsForeground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                   : ui::ColorTransform(kColorOmniboxText)};
++    mixer[kColorSearchboxResultsForegroundDimmed] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxTextDimmed)};
++    mixer[kColorSearchboxResultsIcon] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsIcon)};
++    mixer[kColorSearchboxResultsIconContainerBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                   : ui::ColorTransform(SK_ColorWHITE)};
++    mixer[kColorSearchboxResultsIconSelected] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                   : ui::ColorTransform(kColorOmniboxResultsIcon)};
++    mixer[kColorSearchboxResultsUrl] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                   : ui::ColorTransform(kColorOmniboxResultsUrl)};
++    mixer[kColorSearchboxResultsUrlSelected] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                   : ui::ColorTransform(kColorOmniboxResultsUrlSelected)};
+     mixer[kColorSearchboxShadow] =
+         ui::SetAlpha(gfx::kGoogleGrey900,
+                      (dark_mode ? /* % opacity */ 0.32 : 0.1) * SK_AlphaOPAQUE);
+ 
+-    // This determines weather the realbox expanded state background in dark
+-    // mode will match the omnibox or not.
+-    if (dark_mode &&
+-        !ntp_features::kNtpRealboxCr23ExpandedStateBgMatchesOmnibox.Get()) {
+-      mixer[kColorSearchboxResultsBackground] = {
+-          kColorToolbarBackgroundSubtleEmphasis};
+-    } else {
+-      mixer[kColorSearchboxResultsBackground] = {
+-          kColorOmniboxResultsBackground};
+-    }
++    // Use base container color for searchbox results background in dark mode, omnibox color in light mode
++    mixer[kColorSearchboxResultsBackground] =
++        {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                   : ui::ColorTransform(kColorOmniboxResultsBackground)};
+   }
+ 
+   /* NewTabFooter */
+diff --git a/chrome/browser/ui/color/material_tab_strip_color_mixer.cc b/chrome/browser/ui/color/material_tab_strip_color_mixer.cc
+index 8d99d0d5e526e..0a06f2f6d7a0d 100644
+--- a/chrome/browser/ui/color/material_tab_strip_color_mixer.cc
++++ b/chrome/browser/ui/color/material_tab_strip_color_mixer.cc
+@@ -27,8 +27,9 @@ void AddMaterialTabStripColorMixer(ui::ColorProvider* provider,
+ 
+   // TODO(crbug.com/40883407): Validate final mappings for ChromeRefresh23
+   // color.
++  const bool dark_mode = key.color_mode == ui::ColorProviderKey::ColorMode::kDark;
+   ui::ColorMixer& mixer = provider->AddMixer();
+-  mixer[kColorTabBackgroundActiveFrameActive] = {ui::kColorSysBase};
++  mixer[kColorTabBackgroundActiveFrameActive] = {dark_mode ? ui::kColorSysBaseContainer : ui::kColorSysSurface};
+   mixer[kColorTabBackgroundActiveFrameInactive] = {
+       kColorTabBackgroundActiveFrameActive};
+ 
+diff --git a/chrome/browser/ui/color/new_tab_page_color_mixer.cc b/chrome/browser/ui/color/new_tab_page_color_mixer.cc
+index 558cc275c8847..350f052b92aef 100644
+--- a/chrome/browser/ui/color/new_tab_page_color_mixer.cc
++++ b/chrome/browser/ui/color/new_tab_page_color_mixer.cc
+@@ -314,7 +314,7 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       ui::SelectBasedOnDarkInput(kColorNewTabPageAddShortcutBackground,
+                                  SK_ColorWHITE, gfx::kGoogleGrey900);
+ 
+-  mixer[kColorComposeboxBackground] = {SK_ColorWHITE};
++  mixer[kColorComposeboxBackground] = {dark_mode ? ui::kColorSysBaseContainer : SK_ColorWHITE};
+   mixer[kColorComposeboxFileChipSpinner] = {kColorSysPrimary_Light};
+   mixer[kColorComposeboxFont] = {
+       dark_mode ? SkColorSetRGB(0xE6, 0xE8, 0xF0)
+@@ -400,15 +400,28 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       SkColorSetRGB(0xD3, 0xE3, 0xFD)};
+   mixer[kColorSearchboxAnswerIconForeground] = {
+       SkColorSetRGB(0x04, 0x1E, 0x49)};
+-  mixer[kColorSearchboxBackground] = {SK_ColorWHITE};
+-  mixer[kColorSearchboxBackgroundHovered] = {SK_ColorWHITE};
++  mixer[kColorSearchboxBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
++  mixer[kColorSearchboxBackgroundHovered] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
++  mixer[kColorSearchboxForeground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                 : ui::ColorTransform(SK_ColorBLACK)};
++  mixer[kColorSearchboxPlaceholder] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxLensVoiceIconBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
+   mixer[kColorSearchboxBorder] = {
+       key.contrast_mode == ui::ColorProviderKey::ContrastMode::kHigh
+           ? kColorLocationBarBorder
+           : gfx::kGoogleGrey300};
+-  mixer[kColorSearchboxForeground] = {SK_ColorBLACK};
+-  mixer[kColorSearchboxPlaceholder] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsBackground] = {SK_ColorWHITE};
+   mixer[kColorSearchboxResultsBackgroundHovered] =
+       ui::SetAlpha(gfx::kGoogleGrey900,
+                    /* 10% opacity */ 0.1 * SK_AlphaOPAQUE);
+@@ -420,16 +433,39 @@ void AddNewTabPageColorMixer(ui::ColorProvider* provider,
+       SkColorSetRGB(0x0B, 0x57, 0xD0)};
+   mixer[kColorSearchboxResultsActionChipFocusOutline] = {
+       SkColorSetRGB(0x0B, 0x57, 0xD0)};
+-  mixer[kColorSearchboxResultsDimSelected] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsFocusIndicator] = {gfx::kGoogleBlue600};
+-  mixer[kColorSearchboxResultsForeground] = {SK_ColorBLACK};
+-  mixer[kColorSearchboxResultsForegroundDimmed] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsIconSelected] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsUrl] = {gfx::kGoogleBlue700};
+-  mixer[kColorSearchboxResultsUrlSelected] = {gfx::kGoogleBlue700};
+-  mixer[kColorSearchboxSearchIconBackground] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsIcon] = {gfx::kGoogleGrey700};
+-  mixer[kColorSearchboxResultsIconFocusedOutline] = {gfx::kGoogleBlue600};
++  mixer[kColorSearchboxResultsDimSelected] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsFocusIndicator] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue600};
++  mixer[kColorSearchboxResultsForeground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurface)
++                 : ui::ColorTransform(SK_ColorBLACK)};
++  mixer[kColorSearchboxResultsForegroundDimmed] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIconSelected] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIconContainerBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysBaseContainer)
++                 : ui::ColorTransform(SK_ColorWHITE)};
++  mixer[kColorSearchboxResultsUrl] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue700};
++  mixer[kColorSearchboxResultsUrlSelected] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue700};
++  mixer[kColorSearchboxSearchIconBackground] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIcon] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysOnSurfaceSubtle)
++                 : gfx::kGoogleGrey700};
++  mixer[kColorSearchboxResultsIconFocusedOutline] =
++      {dark_mode ? ui::ColorTransform(ui::kColorSysPrimary)
++                 : gfx::kGoogleBlue600};
+   mixer[kColorSearchboxShadow] =
+       ui::SetAlpha(gfx::kGoogleGrey900,
+                    (dark_mode ? /* % opacity */ 0.32 : 0.28) * SK_AlphaOPAQUE);
+diff --git a/ui/color/core_default_color_mixer.cc b/ui/color/core_default_color_mixer.cc
+index 54cb33c7e3f91..41446d2a935c5 100644
+--- a/ui/color/core_default_color_mixer.cc
++++ b/ui/color/core_default_color_mixer.cc
+@@ -25,7 +25,7 @@ void AddCoreDefaultColorMixer(ColorProvider* provider,
+   DVLOG(2) << "Adding CoreDefaultColorMixer to ColorProvider for "
+            << (dark_mode ? "Dark" : "Light") << " window.";
+   ColorMixer& mixer = provider->AddMixer();
+-  mixer[kColorAccent] = {dark_mode ? gfx::kGoogleBlue300 : gfx::kGoogleBlue600};
++  mixer[kColorAccent] = {dark_mode ? SK_ColorWHITE : SK_ColorWHITE};
+   // 4.5 and 7.0 approximate the default light and dark theme contrasts of
+   // accent-against-primary-background.
+   mixer[kColorAccentWithGuaranteedContrastAtopPrimaryBackground] =
+diff --git a/ui/color/mac/native_color_mixers_mac.mm b/ui/color/mac/native_color_mixers_mac.mm
+index fb2d49fe27f3d..c740e3b5fa995 100644
+--- a/ui/color/mac/native_color_mixers_mac.mm
++++ b/ui/color/mac/native_color_mixers_mac.mm
+@@ -99,11 +99,11 @@ void AddNativeUiColorMixer(ColorProvider* provider,
+ 
+     mixer[kColorTableBackgroundAlternate] = {skia::NSSystemColorToSkColor(
+         NSColor.alternatingContentBackgroundColors[1])};
+-    if (!key.user_color.has_value()) {
+-      mixer[kColorSysStateFocusRing] = PickGoogleColor(
+-          skia::NSSystemColorToSkColor(NSColor.keyboardFocusIndicatorColor),
+-          kColorSysBase, color_utils::kMinimumVisibleContrastRatio);
+ 
++    // Override focus ring color: white in dark mode, black in light mode
++    mixer[kColorSysStateFocusRing] = {properties.dark ? SK_ColorWHITE : SK_ColorBLACK};
++
++    if (!key.user_color.has_value()) {
+       const SkColor system_highlight_color =
+           skia::NSSystemColorToSkColor(NSColor.selectedTextBackgroundColor);
+       mixer[kColorTextSelectionBackground] = {system_highlight_color};
+diff --git a/ui/color/ref_color_mixer.cc b/ui/color/ref_color_mixer.cc
+index 3eb2f1053b895..a57a92344f27a 100644
+--- a/ui/color/ref_color_mixer.cc
++++ b/ui/color/ref_color_mixer.cc
+@@ -25,36 +25,36 @@ namespace ui {
+ void AddBaselinePalette(ColorProvider* provider) {
+   ColorMixer& mixer = provider->AddMixer();
+   mixer[kColorRefPrimary0] = {SkColorSetRGB(0x00, 0x00, 0x00)};
+-  mixer[kColorRefPrimary10] = {SkColorSetRGB(0x04, 0x1E, 0x49)};
+-  mixer[kColorRefPrimary20] = {SkColorSetRGB(0x06, 0x2E, 0x6F)};
+-  mixer[kColorRefPrimary25] = {SkColorSetRGB(0x07, 0x38, 0x88)};
+-  mixer[kColorRefPrimary30] = {SkColorSetRGB(0x08, 0x42, 0xA0)};
+-  mixer[kColorRefPrimary40] = {SkColorSetRGB(0x0B, 0x57, 0xD0)};
+-  mixer[kColorRefPrimary50] = {SkColorSetRGB(0x1B, 0x6E, 0xF3)};
+-  mixer[kColorRefPrimary60] = {SkColorSetRGB(0x4C, 0x8D, 0xF6)};
+-  mixer[kColorRefPrimary70] = {SkColorSetRGB(0x7C, 0xAC, 0xF8)};
+-  mixer[kColorRefPrimary80] = {SkColorSetRGB(0xA8, 0xC7, 0xFA)};
+-  mixer[kColorRefPrimary90] = {SkColorSetRGB(0xD3, 0xE3, 0xFD)};
+-  mixer[kColorRefPrimary95] = {SkColorSetRGB(0xEC, 0xF3, 0xFE)};
+-  mixer[kColorRefPrimary99] = {SkColorSetRGB(0xFA, 0xFB, 0xFF)};
++  mixer[kColorRefPrimary10] = {SkColorSetRGB(0x1A, 0x1A, 0x1A)};
++  mixer[kColorRefPrimary20] = {SkColorSetRGB(0x33, 0x33, 0x33)};
++  mixer[kColorRefPrimary25] = {SkColorSetRGB(0x40, 0x40, 0x40)};
++  mixer[kColorRefPrimary30] = {SkColorSetRGB(0x4D, 0x4D, 0x4D)};
++  mixer[kColorRefPrimary40] = {SkColorSetRGB(0x66, 0x66, 0x66)};
++  mixer[kColorRefPrimary50] = {SkColorSetRGB(0x80, 0x80, 0x80)};
++  mixer[kColorRefPrimary60] = {SkColorSetRGB(0x99, 0x99, 0x99)};
++  mixer[kColorRefPrimary70] = {SkColorSetRGB(0xB3, 0xB3, 0xB3)};
++  mixer[kColorRefPrimary80] = {SkColorSetRGB(0xCC, 0xCC, 0xCC)};
++  mixer[kColorRefPrimary90] = {SkColorSetRGB(0xE6, 0xE6, 0xE6)};
++  mixer[kColorRefPrimary95] = {SkColorSetRGB(0xF2, 0xF2, 0xF2)};
++  mixer[kColorRefPrimary99] = {SkColorSetRGB(0xFA, 0xFA, 0xFA)};
+   mixer[kColorRefPrimary100] = {SkColorSetRGB(0xFF, 0xFF, 0xFF)};
+ 
+   mixer[kColorRefSecondary0] = {SkColorSetRGB(0x00, 0x00, 0x00)};
+-  mixer[kColorRefSecondary10] = {SkColorSetRGB(0x00, 0x1D, 0x35)};
+-  mixer[kColorRefSecondary12] = {SkColorSetRGB(0x00, 0x22, 0x38)};
+-  mixer[kColorRefSecondary15] = {SkColorSetRGB(0x00, 0x28, 0x45)};
+-  mixer[kColorRefSecondary20] = {SkColorSetRGB(0x00, 0x33, 0x55)};
+-  mixer[kColorRefSecondary25] = {SkColorSetRGB(0x00, 0x3f, 0x66)};
+-  mixer[kColorRefSecondary30] = {SkColorSetRGB(0x00, 0x4A, 0x77)};
+-  mixer[kColorRefSecondary35] = {SkColorSetRGB(0x00, 0x57, 0x89)};
+-  mixer[kColorRefSecondary40] = {SkColorSetRGB(0x00, 0x63, 0x9B)};
+-  mixer[kColorRefSecondary50] = {SkColorSetRGB(0x04, 0x7D, 0xB7)};
+-  mixer[kColorRefSecondary60] = {SkColorSetRGB(0x39, 0x98, 0xD3)};
+-  mixer[kColorRefSecondary70] = {SkColorSetRGB(0x5A, 0xB3, 0xF0)};
+-  mixer[kColorRefSecondary80] = {SkColorSetRGB(0x7F, 0xCF, 0xFF)};
+-  mixer[kColorRefSecondary90] = {SkColorSetRGB(0xC2, 0xE7, 0xFF)};
+-  mixer[kColorRefSecondary95] = {SkColorSetRGB(0xDF, 0xF3, 0xFF)};
+-  mixer[kColorRefSecondary99] = {SkColorSetRGB(0xF7, 0xFC, 0xFF)};
++  mixer[kColorRefSecondary10] = {SkColorSetRGB(0x1A, 0x1A, 0x1A)};
++  mixer[kColorRefSecondary12] = {SkColorSetRGB(0x1F, 0x1F, 0x1F)};
++  mixer[kColorRefSecondary15] = {SkColorSetRGB(0x26, 0x26, 0x26)};
++  mixer[kColorRefSecondary20] = {SkColorSetRGB(0x33, 0x33, 0x33)};
++  mixer[kColorRefSecondary25] = {SkColorSetRGB(0x40, 0x40, 0x40)};
++  mixer[kColorRefSecondary30] = {SkColorSetRGB(0x4D, 0x4D, 0x4D)};
++  mixer[kColorRefSecondary35] = {SkColorSetRGB(0x59, 0x59, 0x59)};
++  mixer[kColorRefSecondary40] = {SkColorSetRGB(0x66, 0x66, 0x66)};
++  mixer[kColorRefSecondary50] = {SkColorSetRGB(0x80, 0x80, 0x80)};
++  mixer[kColorRefSecondary60] = {SkColorSetRGB(0x99, 0x99, 0x99)};
++  mixer[kColorRefSecondary70] = {SkColorSetRGB(0xB3, 0xB3, 0xB3)};
++  mixer[kColorRefSecondary80] = {SkColorSetRGB(0xCC, 0xCC, 0xCC)};
++  mixer[kColorRefSecondary90] = {SkColorSetRGB(0xE6, 0xE6, 0xE6)};
++  mixer[kColorRefSecondary95] = {SkColorSetRGB(0xF2, 0xF2, 0xF2)};
++  mixer[kColorRefSecondary99] = {SkColorSetRGB(0xFA, 0xFA, 0xFA)};
+   mixer[kColorRefSecondary100] = {SkColorSetRGB(0xFF, 0xFF, 0xFF)};
+ 
+   mixer[kColorRefTertiary0] = {SkColorSetRGB(0x00, 0x00, 0x00)};
+diff --git a/ui/color/sys_color_mixer.cc b/ui/color/sys_color_mixer.cc
+index 4745b7f50a28b..6cef161038ae8 100644
+--- a/ui/color/sys_color_mixer.cc
++++ b/ui/color/sys_color_mixer.cc
+@@ -31,6 +31,8 @@ void AddThemedSysColorOverrides(ColorMixer& mixer,
+                                                   : kColorRefSecondary30};
+   mixer[kColorSysTonalContainer] = {dark_mode ? kColorRefPrimary30
+                                               : kColorRefPrimary90};
++  mixer[kColorSysOnTonalContainer] = {dark_mode ? kColorRefPrimary90
++                                                : kColorRefPrimary10};
+   mixer[kColorSysBaseTonalContainer] = {dark_mode ? kColorRefPrimary10
+                                                   : kColorRefPrimary90};
+   mixer[kColorSysNeutralContainer] = {dark_mode ? kColorRefNeutralVariant15
+@@ -39,18 +41,18 @@ void AddThemedSysColorOverrides(ColorMixer& mixer,
+                                        : kColorRefPrimary90};
+ 
+   // Chrome surfaces.
+-  mixer[kColorSysBase] = {dark_mode ? kColorRefSecondary25
++  mixer[kColorSysBase] = {dark_mode ? kColorRefSecondary10
+                                     : kColorRefNeutral98};
+-  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefSecondary15
++  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefSecondary25
+                                              : kColorSysSurface4};
+   mixer[kColorSysBaseContainerElevated] = {dark_mode ? kColorRefSecondary25
+                                                      : kColorRefNeutral98};
+ 
+-  mixer[kColorSysHeader] = {dark_mode ? kColorRefSecondary12
++  mixer[kColorSysHeader] = {dark_mode ? kColorRefSecondary10
+                                       : kColorRefSecondary90};
+   mixer[kColorSysHeaderContainer] = {dark_mode ? kColorRefSecondary25
+                                                : kColorRefPrimary95};
+-  mixer[kColorSysHeaderContainerInactive] = {dark_mode ? kColorRefNeutral25
++  mixer[kColorSysHeaderContainerInactive] = {dark_mode ? kColorRefNeutral10
+                                                        : kColorRefNeutral99};
+   mixer[kColorSysOnHeaderDivider] = {dark_mode ? kColorRefSecondary25
+                                                : kColorRefPrimary80};
+@@ -78,12 +80,12 @@ void AddGrayscaleSysColorOverrides(ColorMixer& mixer,
+ 
+   // General
+   mixer[kColorSysOnSurfacePrimary] = {dark_mode ? kColorRefNeutral90
+-                                                : kColorRefNeutral10};
+-  mixer[kColorSysDivider] = {dark_mode ? kColorRefNeutral40
+-                                       : kColorRefNeutral90};
++    : kColorRefNeutral10};
++mixer[kColorSysDivider] = {dark_mode ? kColorRefNeutral40
++: kColorRefNeutral90};
+ 
+   // Chrome surfaces.
+-  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral12
++  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral10
+                                       : kColorRefNeutral90};
+   mixer[kColorSysHeaderInactive] = {
+       dark_mode ? AlphaBlend({kColorSysHeader}, {kColorRefNeutral25}, 0x99)
+@@ -116,24 +118,24 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+   ColorMixer& mixer = provider->AddMixer();
+ 
+   // Primary.
+-  mixer[kColorSysPrimary] = {dark_mode ? kColorRefPrimary80
+-                                       : kColorRefPrimary40};
+-  mixer[kColorSysOnPrimary] = {dark_mode ? kColorRefPrimary20
+-                                         : kColorRefPrimary100};
+-  mixer[kColorSysPrimaryContainer] = {dark_mode ? kColorRefPrimary30
+-                                                : kColorRefPrimary90};
+-  mixer[kColorSysOnPrimaryContainer] = {dark_mode ? kColorRefPrimary90
+-                                                  : kColorRefPrimary10};
++  mixer[kColorSysPrimary] = {dark_mode ? kColorRefPrimary90
++                                       : kColorRefPrimary10};
++  mixer[kColorSysOnPrimary] = {dark_mode ? kColorRefPrimary10
++                                         : kColorRefPrimary90};
++  mixer[kColorSysPrimaryContainer] = {dark_mode ? kColorRefPrimary90
++                                                : kColorRefPrimary10};
++  mixer[kColorSysOnPrimaryContainer] = {dark_mode ? kColorRefPrimary10
++                                                  : kColorRefPrimary90};
+ 
+   // Secondary.
+-  mixer[kColorSysSecondary] = {dark_mode ? kColorRefSecondary80
+-                                         : kColorRefSecondary40};
+-  mixer[kColorSysOnSecondary] = {dark_mode ? kColorRefSecondary20
+-                                           : kColorRefSecondary100};
+-  mixer[kColorSysSecondaryContainer] = {dark_mode ? kColorRefSecondary30
+-                                                  : kColorRefSecondary90};
+-  mixer[kColorSysOnSecondaryContainer] = {dark_mode ? kColorRefSecondary90
+-                                                    : kColorRefSecondary10};
++  mixer[kColorSysSecondary] = {dark_mode ? kColorRefSecondary90
++                                         : kColorRefSecondary10};
++  mixer[kColorSysOnSecondary] = {dark_mode ? kColorRefSecondary10
++                                           : kColorRefSecondary90};
++  mixer[kColorSysSecondaryContainer] = {dark_mode ? kColorRefSecondary90
++                                                  : kColorRefSecondary10};
++  mixer[kColorSysOnSecondaryContainer] = {dark_mode ? kColorRefSecondary10
++                                                    : kColorRefSecondary90};
+   // Tertiary.
+   mixer[kColorSysTertiary] = {dark_mode ? kColorRefTertiary80
+                                         : kColorRefTertiary40};
+@@ -179,8 +181,8 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+   mixer[kColorSysSurface] = {dark_mode ? kColorRefNeutral10
+                                        : kColorRefNeutral100};
+   mixer[kColorSysSurfaceNumberedForeground] = {
+-      dark_mode ? SkColorSetRGB(0xD1, 0xE1, 0xFF)
+-                : SkColorSetRGB(0x69, 0x91, 0xD6)};
++      dark_mode ? kColorRefNeutral90
++                : kColorRefNeutral10};
+   mixer[kColorSysSurface1] = AlphaBlend({kColorSysSurfaceNumberedForeground},
+                                         {kColorSysSurface}, 0x0C);
+   mixer[kColorSysSurface2] = AlphaBlend({kColorSysSurfaceNumberedForeground},
+@@ -202,10 +204,10 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+   mixer[kColorSysOnSurfacePrimaryInactive] = {dark_mode ? kColorRefNeutral90
+                                                         : kColorRefNeutral10};
+ 
+-  mixer[kColorSysTonalContainer] = {dark_mode ? kColorRefSecondary30
+-                                              : kColorRefPrimary90};
+-  mixer[kColorSysOnTonalContainer] = {dark_mode ? kColorRefSecondary90
+-                                                : kColorRefPrimary10};
++  mixer[kColorSysTonalContainer] = {dark_mode ? kColorRefSecondary100
++                                              : kColorRefPrimary0};
++  mixer[kColorSysOnTonalContainer] = {dark_mode ? kColorRefSecondary0
++                                                : kColorRefPrimary100};
+   mixer[kColorSysBaseTonalContainer] = {dark_mode ? kColorRefSecondary10
+                                                   : kColorRefPrimary90};
+   mixer[kColorSysOnBaseTonalContainer] = {dark_mode ? kColorRefSecondary90
+@@ -220,14 +222,13 @@ void AddSysColorMixer(ColorProvider* provider, const ColorProviderKey& key) {
+                                        : kColorRefPrimary90};
+ 
+   // Chrome surfaces.
+-  mixer[kColorSysBase] = {dark_mode ? kColorRefNeutral25 : kColorRefNeutral100};
+-  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefNeutral15
+-                                             : kColorSysSurface4};
++  mixer[kColorSysBase] = {dark_mode ? kColorRefNeutral10 : kColorRefNeutral100};
++  mixer[kColorSysBaseContainer] = {dark_mode ? kColorRefNeutral25 : kColorSysSurface4};
+   mixer[kColorSysBaseContainerElevated] = {dark_mode ? kColorRefNeutral25
+                                                      : kColorRefNeutral100};
+ 
+-  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral12
+-                                      : kColorRefPrimary90};
++  mixer[kColorSysHeader] = {dark_mode ? kColorRefNeutral10
++                                      : kColorRefNeutral90};
+   mixer[kColorSysHeaderInactive] = {
+       dark_mode
+           ? AlphaBlend({kColorSysHeader}, {kColorRefNeutral25}, 0x99)
+diff --git a/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts b/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts
+index 6c77613866851..8c2a9b66df274 100644
+--- a/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts
++++ b/ui/webui/resources/cr_components/theme_color_picker/color_utils.ts
+@@ -29,26 +29,26 @@ export const DARK_DEFAULT_COLOR: Color = {
+ };
+ 
+ export const LIGHT_BASELINE_BLUE_COLOR: Color = {
+-  background: {value: 0xff0b57d0},
+-  foreground: {value: 0xffd3e3fd},
+-  base: {value: 0xffc7c7c7},
++  background: {value: 0xff000000},
++  foreground: {value: 0xffffffff},
++  base: {value: 0xff606060},
+ };
+ 
+ export const DARK_BASELINE_BLUE_COLOR: Color = {
+-  background: {value: 0xffa8c7fa},
+-  foreground: {value: 0xff0842a0},
++  background: {value: 0xffffffff},
++  foreground: {value: 0xff000000},
+   base: {value: 0xff757575},
+ };
+ 
+ export const LIGHT_BASELINE_GREY_COLOR: Color = {
+-  background: {value: 0xff0b57d0},
+-  foreground: {value: 0xffe3e3e3},
+-  base: {value: 0xffc7c7c7},
++  background: {value: 0xff000000},
++  foreground: {value: 0xffffffff},
++  base: {value: 0xff606060},
+ };
+ 
+ export const DARK_BASELINE_GREY_COLOR: Color = {
+-  background: {value: 0xffa8c7fa},
+-  foreground: {value: 0xff474747},
++  background: {value: 0xffffffff},
++  foreground: {value: 0xff000000},
+   base: {value: 0xff757575},
+ };
+ 
