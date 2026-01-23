@@ -24,3 +24,6 @@ patches/theme_api/theme-colors-api.patch
 
 # OpenBrowser Assistant integration
 patches/openbrowser_integration/openbrowser-assistant-integration.patch
+
+# OpenBrowser product branding
+patches/branding/openbrowser_product_branding.patch

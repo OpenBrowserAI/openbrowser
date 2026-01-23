@@ -25,7 +25,8 @@ echo ""
 echo "This script will:"
 echo "  1. Apply all patches"
 echo "  2. Copy branding assets"
-echo "  3. Copy extension to resources"
+echo "  3. Copy icon assets"
+echo "  4. Copy extension to resources"
 echo ""
 
 # Step 1: Apply patches
@@ -46,7 +47,7 @@ echo ""
 
 # Step 2: Apply branding assets
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}Step 2/3: Applying Branding Assets${NC}"
+echo -e "${BLUE}Step 2/4: Applying Branding Assets${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -60,9 +61,25 @@ fi
 echo ""
 echo ""
 
-# Step 3: Copy extension to resources
+# Step 3: Apply icon assets
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}Step 3/3: Copying Extension to Resources${NC}"
+echo -e "${BLUE}Step 3/4: Applying Icon Assets${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+
+if bash "$SCRIPT_DIR/apply_icon_assets.sh"; then
+    echo -e "${GREEN}✅ Icon assets applied successfully${NC}"
+else
+    echo -e "${RED}❌ Icon assets application failed${NC}"
+    exit 1
+fi
+
+echo ""
+echo ""
+
+# Step 4: Copy extension to resources
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}Step 4/4: Copying Extension to Resources${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -87,5 +104,5 @@ echo -e "${GREEN}✅ All steps completed successfully!${NC}"
 echo ""
 echo "Next steps:"
 echo "  1. Build Chromium: autoninja -C out/fast chrome"
-echo "  2. Run OpenBrowser: out/fast/Chromium.app/Contents/MacOS/Chromium"
+echo "  2. Run OpenBrowser: out/fast/OpenBrowser.app/Contents/MacOS/OpenBrowser"
 echo ""
