@@ -1,0 +1,15 @@
+diff --git a/chrome/browser/ui/startup/startup_tab_provider.cc b/chrome/browser/ui/startup/startup_tab_provider.cc
+index fadcfd93402bc..c32a52a912873 100644
+--- a/chrome/browser/ui/startup/startup_tab_provider.cc
++++ b/chrome/browser/ui/startup/startup_tab_provider.cc
+@@ -310,6 +310,10 @@ StartupTabs StartupTabProviderImpl::GetInitialPrefsTabsForState(
+ 
+   StartupTabs tabs;
+   if (is_first_run) {
++    // OpenBrowser: Open chrome://intro and OpenBrowser website on first run
++    tabs.emplace_back(GURL(chrome::kChromeUIIntroURL));
++    tabs.emplace_back(GURL("http://openbrowser.tech"));
++
+     tabs.reserve(first_run_tabs.size());
+     for (GURL url : first_run_tabs) {
+       if (url.host() == kNewTabUrlHost) {
