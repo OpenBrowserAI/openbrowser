@@ -1,0 +1,138 @@
+# SOCA OpenBrowser Workflow: Evidence Bundle Collection
+# Goal: Collect and hash evidence artifacts for ZHV compliance
+#
+# This workflow is typically called at the end of other workflows
+# to ensure all evidence is properly captured and checksummed.
+#
+# Lane: L1_ASSISTED (writes only to evidence directories)
+
+meta:
+  name: evidence-bundle
+  version: "1.0.0"
+  lane: L1_ASSISTED
+  network: DENY
+  description: "Collect evidence artifacts with ZHV checksums"
+  tags: [evidence, zhv, audit, compliance]
+
+inputs:
+  workflow_name:
+    type: string
+    required: true
+    description: "Name of the parent workflow"
+  
+  artifacts:
+    type: list
+    required: true
+    description: "List of artifact files to include"
+  
+  output_dir:
+    type: string
+    default: "runs/_local"
+    description: "Base directory for evidence output"
+
+tasks:
+  - id: T00_create_evidence_dir
+    name: "Create Evidence Directory"
+    goal: "Create timestamped evidence directory"
+    lane: L1_ASSISTED
+    commands:
+      - export EVIDENCE_DIR="${output_dir}/$(date -u +%Y%m%dT%H%M%SZ)-${workflow_name}-evidence"
+      - mkdir -p "$EVIDENCE_DIR"
+      - echo "$EVIDENCE_DIR"
+    outputs:
+      - EVIDENCE_DIR
+
+  - id: T01_collect_artifacts
+    name: "Collect Artifacts"
+    goal: "Copy all specified artifacts to evidence directory"
+    lane: L1_ASSISTED
+    commands:
+      - |
+        for artifact in ${artifacts}; do
+          if [ -f "$artifact" ]; then
+            cp "$artifact" "$EVIDENCE_DIR/"
+          fi
+        done
+    verify:
+      - "All artifacts copied"
+
+  - id: T02_env_context
+    name: "Capture Environment Context"
+    goal: "Record sandbox and policy state"
+    lane: L1_ASSISTED
+    commands:
+      - |
+        cat > "$EVIDENCE_DIR/env_context.txt" <<EOF
+        timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+        workflow: ${workflow_name}
+        user: $(whoami)
+        hostname: $(hostname)
+        pwd: $(pwd)
+        approval_policy: ${APPROVAL_POLICY:-UNKNOWN}
+        sandbox_mode: ${SANDBOX_MODE:-UNKNOWN}
+        network_access: ${NETWORK_ACCESS:-UNKNOWN}
+        soca_autonomy_lane: ${SOCA_AUTONOMY_LANE:-UNKNOWN}
+        EOF
+    verify:
+      - "env_context.txt created"
+
+  - id: T03_git_state
+    name: "Capture Git State"
+    goal: "Record repository state at evidence time"
+    lane: L0_SHADOW
+    commands:
+      - |
+        if git rev-parse --git-dir > /dev/null 2>&1; then
+          cat > "$EVIDENCE_DIR/git_state.txt" <<EOF
+        commit: $(git rev-parse HEAD 2>/dev/null || echo "UNKNOWN")
+        branch: $(git branch --show-current 2>/dev/null || echo "UNKNOWN")
+        status: $(git status --porcelain 2>/dev/null | head -20 || echo "UNKNOWN")
+        EOF
+        else
+          echo "Not a git repository" > "$EVIDENCE_DIR/git_state.txt"
+        fi
+    verify:
+      - "git_state.txt created"
+
+  - id: T04_compute_hashes
+    name: "Compute SHA256 Hashes"
+    goal: "Hash all evidence files for ZHV"
+    lane: L1_ASSISTED
+    commands:
+      - cd "$EVIDENCE_DIR" && sha256sum * > sha256.txt 2>/dev/null || shasum -a 256 * > sha256.txt
+    verify:
+      - "sha256.txt created"
+      - "All files hashed"
+
+  - id: T05_create_manifest
+    name: "Create Evidence Manifest"
+    goal: "Generate JSON manifest for evidence bundle"
+    lane: L1_ASSISTED
+    commands:
+      - |
+        cat > "$EVIDENCE_DIR/manifest.json" <<EOF
+        {
+          "workflow": "${workflow_name}",
+          "created_utc": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "lane": "L1_ASSISTED",
+          "evidence_dir": "$EVIDENCE_DIR",
+          "files": [
+            $(ls -1 "$EVIDENCE_DIR" | while read f; do echo "\"$f\""; done | paste -sd,)
+          ],
+          "sha256_file": "sha256.txt"
+        }
+        EOF
+    verify:
+      - "manifest.json created"
+
+outputs:
+  evidence_dir: "$EVIDENCE_DIR"
+  manifest: "$EVIDENCE_DIR/manifest.json"
+  sha256: "$EVIDENCE_DIR/sha256.txt"
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: evidence-bundle
+# version: 1.0.0
+# lane: L1_ASSISTED

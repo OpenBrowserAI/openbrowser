@@ -1,0 +1,134 @@
+# SOCA OpenBrowser Workflow: Universal Preflight Inventory
+# Goal: prove current system state before any changes (read-only)
+#
+# Usage: Paste into OpenCode or reference from workflow runner
+# Lane: L0_SHADOW (read-only, no mutations)
+
+meta:
+  name: preflight-inventory
+  version: "1.0.0"
+  lane: L0_SHADOW
+  network: DENY
+  description: "Prove current state before changes (read-only)"
+  tags: [preflight, inventory, audit]
+
+agents:
+  rules_file: AGENTS.md
+  permission_overrides:
+    read: allow
+    bash: ask
+    edit: deny
+
+tasks:
+  - id: T00_system_info
+    name: "System Information"
+    goal: "Capture basic system identity"
+    lane: L0_SHADOW
+    commands:
+      - whoami
+      - uname -a
+      - hostname
+    verify:
+      - "outputs captured"
+      - "no changes made"
+
+  - id: T01_node_npm
+    name: "Node.js and npm versions"
+    goal: "Check Node.js toolchain availability"
+    lane: L0_SHADOW
+    commands:
+      - node --version || echo "node not installed"
+      - npm --version || echo "npm not installed"
+      - pnpm --version || echo "pnpm not installed"
+    verify:
+      - "version strings captured or 'not installed' noted"
+
+  - id: T02_python
+    name: "Python environment"
+    goal: "Check Python availability"
+    lane: L0_SHADOW
+    commands:
+      - python3 --version || echo "python3 not installed"
+      - pip3 --version || echo "pip3 not installed"
+    verify:
+      - "version strings captured"
+
+  - id: T03_docker
+    name: "Docker availability"
+    goal: "Check Docker daemon status"
+    lane: L0_SHADOW
+    commands:
+      - docker --version || echo "docker not installed"
+      - docker compose version || echo "docker compose not available"
+      - docker ps --format '{{.Names}}' 2>/dev/null | head -5 || echo "docker not running or no containers"
+    verify:
+      - "docker status captured"
+
+  - id: T04_git
+    name: "Git status"
+    goal: "Capture git repository state"
+    lane: L0_SHADOW
+    commands:
+      - git --version
+      - git status --porcelain 2>/dev/null | head -10 || echo "not a git repo"
+      - git branch --show-current 2>/dev/null || echo "no branch"
+    verify:
+      - "git state captured"
+
+  - id: T05_tailscale
+    name: "Tailscale status"
+    goal: "Check Tailscale connectivity"
+    lane: L0_SHADOW
+    commands:
+      - tailscale status 2>/dev/null || echo "tailscale not installed or not running"
+    verify:
+      - "tailscale status captured"
+
+  - id: T06_disk
+    name: "Disk usage"
+    goal: "Capture disk state (Rule 30 compliance)"
+    lane: L0_SHADOW
+    commands:
+      - df -h . | tail -1
+      - du -sh ~/.soca-secrets 2>/dev/null || echo "~/.soca-secrets does not exist"
+    verify:
+      - "disk usage captured"
+      - "secrets dir existence noted (not contents)"
+
+  - id: T07_opencode
+    name: "OpenCode version"
+    goal: "Verify OpenCode installation"
+    lane: L0_SHADOW
+    commands:
+      - opencode --version 2>/dev/null || echo "opencode not installed"
+    verify:
+      - "opencode version captured"
+
+  - id: T08_soca_bridge
+    name: "SOCA Bridge status"
+    goal: "Check SOCA Bridge availability"
+    lane: L0_SHADOW
+    commands:
+      - curl -s http://127.0.0.1:9834/health 2>/dev/null || echo "bridge not running"
+    verify:
+      - "bridge health captured"
+
+evidence:
+  output_dir: "runs/_local/preflight"
+  artifacts:
+    - preflight_inventory.json
+    - sha256.txt
+  format: |
+    {
+      "workflow": "preflight-inventory",
+      "timestamp": "<UTC_ISO>",
+      "tasks": [<task_outputs>],
+      "lane": "L0_SHADOW"
+    }
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: preflight-inventory
+# version: 1.0.0
+# lane: L0_SHADOW

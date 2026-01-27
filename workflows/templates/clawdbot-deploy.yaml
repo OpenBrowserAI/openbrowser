@@ -1,0 +1,174 @@
+# SOCA OpenBrowser Workflow: Clawdbot Deployment
+# Goal: Install and configure Clawdbot with Telegram + Tailscale Serve
+#
+# Prerequisites:
+#   - VPS capsule created (vps-capsule.yaml)
+#   - Secrets in ~/.soca-secrets/
+#   - Tailscale installed and authenticated
+#
+# Lane: L2_CONTROLLED_WRITE (HIL required)
+
+meta:
+  name: clawdbot-deploy
+  version: "1.0.0"
+  lane: L2_CONTROLLED_WRITE
+  network: ALLOW  # Required for installation
+  description: "Deploy Clawdbot with Telegram and Tailscale Serve"
+  tags: [clawdbot, telegram, tailscale, deployment]
+  depends_on:
+    - vps-capsule.yaml
+
+tasks:
+  - id: T00_verify_prereqs
+    name: "Verify Prerequisites"
+    goal: "Check capsule and secrets exist"
+    lane: L0_SHADOW
+    commands:
+      - test -d ~/soca-vps && echo "capsule: ok" || echo "capsule: missing"
+      - test -d ~/.soca-secrets && echo "secrets dir: ok" || echo "secrets dir: missing"
+      - test -f ~/.soca-secrets/telegram_bot_token.txt && echo "telegram token: exists" || echo "telegram token: missing"
+      - tailscale status 2>/dev/null | head -3 || echo "tailscale: not running"
+    verify:
+      - "capsule directory exists"
+      - "secrets directory exists"
+      - "telegram token file exists"
+      - "tailscale is running"
+
+  - id: T01_install_clawdbot
+    name: "Install Clawdbot"
+    goal: "Download and install Clawdbot"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      - curl -fsSL https://clawd.bot/install.sh | bash
+      - clawdbot --version
+    verify:
+      - "clawdbot binary installed"
+      - "version prints successfully"
+
+  - id: T02_onboard_clawdbot
+    name: "Onboard Clawdbot Daemon"
+    goal: "Configure daemon with loopback + Tailscale Serve"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    hil_note: "Wizard will prompt for choices. Select: loopback, serve, token"
+    commands:
+      - clawdbot onboard --install-daemon
+    wizard_choices:
+      gateway_bind: "loopback"
+      tailscale_mode: "serve"
+      auth_mode: "token"
+    verify:
+      - "clawdbot daemon running"
+      - "gateway bound to loopback"
+
+  - id: T03_force_token_auth
+    name: "Force Token Authentication"
+    goal: "Disable Tailscale identity bypass"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    description: |
+      Set gateway.auth.allowTailscale=false so token/password is always required,
+      even when connecting via Tailscale identity headers.
+    edit_file: ~/.clawdbot/clawdbot.json
+    edit_content: |
+      "gateway": {
+        "auth": {
+          "allowTailscale": false
+        }
+      }
+    verify:
+      - "clawdbot status shows allowTailscale=false"
+
+  - id: T04_telegram_channel
+    name: "Add Telegram Channel"
+    goal: "Configure Telegram bot using token file"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      - clawdbot channels add --channel telegram --token-file ~/.soca-secrets/telegram_bot_token.txt
+      - clawdbot channels status --probe
+    rules:
+      - "NEVER print the token"
+      - "Use --token-file to avoid shell history leak"
+    verify:
+      - "Telegram channel shows as configured/healthy"
+
+  - id: T05_telegram_pairing
+    name: "Telegram Pairing"
+    goal: "Pair your Telegram account"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    manual_steps:
+      - "DM the bot on Telegram"
+      - "Note the pairing code from the bot"
+    commands:
+      - clawdbot pairing list telegram
+      - "clawdbot pairing approve telegram <PAIRING_CODE>  # Replace with actual code"
+    verify:
+      - "After approval, bot responds to your DMs"
+
+  - id: T06_tailscale_verify
+    name: "Verify Tailscale Serve"
+    goal: "Confirm Tailscale Serve routing"
+    lane: L0_SHADOW
+    commands:
+      - tailscale serve status --json
+      - tailscale status
+    verify:
+      - "Serve rules exist (not empty)"
+      - "Gateway still bound to loopback"
+
+  - id: T07_health_check
+    name: "Health Check"
+    goal: "Run Clawdbot diagnostics"
+    lane: L0_SHADOW
+    commands:
+      - clawdbot doctor
+      - clawdbot status --deep
+      - clawdbot health
+    verify:
+      - "No critical errors"
+      - "All services healthy"
+
+evidence:
+  output_dir: "runs/_local/clawdbot-deploy"
+  artifacts:
+    - clawdbot_deploy.json
+    - tailscale_serve_status.json
+    - clawdbot_status_deep.json
+    - clawdbot_doctor.txt
+    - sha256.txt
+  commands:
+    - "mkdir -p ~/runs/$(date -u +%Y%m%dT%H%M%SZ)-evidence"
+    - "tailscale serve status --json > tailscale_serve_status.json"
+    - "clawdbot status --deep --json > clawdbot_status_deep.json 2>/dev/null || true"
+    - "clawdbot doctor > clawdbot_doctor.txt"
+    - "sha256sum * > sha256.txt"
+
+openbrowser_verify:
+  - id: OBS_01
+    name: "Dashboard Screenshot"
+    goal: "Verify Clawdbot dashboard UI"
+    action: "open_tab + screenshot + snapshot"
+    url: "http://127.0.0.1:18789/"
+    check:
+      - "Channel configured?"
+      - "Pairing ok?"
+      - "Auth prompt present?"
+
+  - id: OBS_02
+    name: "Tailscale HTTPS Verify"
+    goal: "Confirm token required on tailnet"
+    action: "open_tab + screenshot"
+    url: "<TAILSCALE_SERVE_URL>"  # Replace with actual MagicDNS URL
+    check:
+      - "Login prompt appears"
+      - "Asks for token (allowTailscale=false)"
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: clawdbot-deploy
+# version: 1.0.0
+# lane: L2_CONTROLLED_WRITE

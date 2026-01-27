@@ -1,0 +1,173 @@
+# SOCA OpenBrowser Workflow: VPS Secure Capsule Setup
+# Goal: Create a fail-closed "SOCA capsule" workspace on a VPS
+#
+# Prerequisites:
+#   - SSH access to VPS
+#   - Manual secret placement (never paste tokens into agent chat)
+#
+# Lane: L2_CONTROLLED_WRITE (HIL required for writes)
+
+meta:
+  name: vps-capsule-setup
+  version: "1.0.0"
+  lane: L2_CONTROLLED_WRITE
+  network: DENY
+  description: "Create secure SOCA capsule workspace on VPS"
+  tags: [vps, capsule, security, setup]
+
+agents:
+  rules_file: AGENTS.md
+  rules_content: |
+    # SOCA VPS Capsule (Fail-Closed)
+    
+    - No public exposure: never bind services to 0.0.0.0 unless explicitly requested.
+    - No secrets in chat/log output: never echo tokens/keys; never print files from ~/.soca-secrets.
+    - Propose -> then execute: always provide a command plan first; run one command at a time.
+    - Prefer loopback + Tailscale Serve for admin surfaces.
+    - Deny destructive commands unless explicitly approved.
+    
+    Success criteria:
+    - Capsule workspace created
+    - Secrets directory exists with correct permissions
+    - OpenCode config installed
+    - AGENTS.md rules installed
+  
+  permission_config:
+    "$schema": "https://opencode.ai/config.json"
+    instructions: ["AGENTS.md"]
+    model: "openrouter/anthropic/claude-opus-4.5"
+    permission:
+      "*": "ask"
+      read:
+        "*": "ask"
+        "~/.soca-secrets/*": "deny"
+      bash:
+        "*": "ask"
+        "rm *": "deny"
+        "sudo rm *": "deny"
+        "ufw *": "deny"
+        "iptables *": "deny"
+      edit: "ask"
+      webfetch: "ask"
+      task: "ask"
+
+tasks:
+  - id: T00_preflight
+    name: "Preflight Inventory"
+    goal: "Prove current state before changes"
+    lane: L0_SHADOW
+    include: preflight.yaml
+    verify:
+      - "all preflight outputs captured"
+      - "no changes made"
+
+  - id: T01_secrets_dir
+    name: "Create Secrets Directory (HIL step)"
+    goal: "Create a secrets dir that agents cannot read"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    hil_note: "This creates the secrets directory. You must manually add secrets via nano."
+    commands:
+      - mkdir -p ~/.soca-secrets
+      - chmod 700 ~/.soca-secrets
+    manual_steps:
+      - "nano ~/.soca-secrets/openrouter_api_key.txt  # Paste API key, save, exit"
+      - "nano ~/.soca-secrets/telegram_bot_token.txt  # Paste bot token, save, exit"
+      - "chmod 600 ~/.soca-secrets/*.txt"
+    verify:
+      - "~/.soca-secrets exists with mode 700"
+      - "secret files have mode 600"
+    rules:
+      - "NEVER paste tokens into OpenCode chat"
+      - "NEVER read or print secret file contents"
+
+  - id: T02_workspace
+    name: "Create Capsule Workspace"
+    goal: "Create SOCA capsule directory structure"
+    lane: L2_CONTROLLED_WRITE
+    commands:
+      - mkdir -p ~/soca-vps
+      - cd ~/soca-vps && pwd
+    verify:
+      - "~/soca-vps directory exists"
+
+  - id: T03_agents_md
+    name: "Install AGENTS.md Rules"
+    goal: "Create OpenCode rules file"
+    lane: L2_CONTROLLED_WRITE
+    commands:
+      - |
+        cat > ~/soca-vps/AGENTS.md <<'EOF'
+        # SOCA VPS Capsule (Fail-Closed)
+        
+        - No public exposure: never bind services to 0.0.0.0 unless explicitly requested.
+        - No secrets in chat/log output: never echo tokens/keys; never print files from ~/.soca-secrets.
+        - Propose -> then execute: always provide a command plan first; run one command at a time.
+        - Prefer loopback + Tailscale Serve for admin surfaces.
+        - Deny destructive commands unless explicitly approved.
+        
+        Success criteria:
+        - Clawdbot daemon running
+        - Telegram configured with pairing
+        - Gateway bound to loopback
+        - Dashboard reachable via Tailscale Serve
+        - Token required even on tailnet (gateway.auth.allowTailscale=false)
+        EOF
+    verify:
+      - "~/soca-vps/AGENTS.md exists"
+      - "content matches expected rules"
+
+  - id: T04_opencode_config
+    name: "Install OpenCode Config"
+    goal: "Create opencode.json with permissions"
+    lane: L2_CONTROLLED_WRITE
+    commands:
+      - |
+        cat > ~/soca-vps/opencode.json <<'EOF'
+        {
+          "$schema": "https://opencode.ai/config.json",
+          "instructions": ["AGENTS.md"],
+          "model": "openrouter/anthropic/claude-opus-4.5",
+          "permission": {
+            "*": "ask",
+            "read": { "*": "ask", "~/.soca-secrets/*": "deny" },
+            "bash": { "*": "ask", "rm *": "deny", "sudo rm *": "deny", "ufw *": "deny", "iptables *": "deny" },
+            "edit": "ask",
+            "webfetch": "ask",
+            "task": "ask"
+          }
+        }
+        EOF
+    verify:
+      - "~/soca-vps/opencode.json exists"
+      - "permission.read.~/.soca-secrets/* = deny"
+
+evidence:
+  output_dir: "runs/_local/vps-capsule"
+  artifacts:
+    - vps_capsule_setup.json
+    - agents_md_content.txt
+    - opencode_json_content.txt
+    - sha256.txt
+  format: |
+    {
+      "workflow": "vps-capsule-setup",
+      "timestamp": "<UTC_ISO>",
+      "tasks": [<task_outputs>],
+      "lane": "L2_CONTROLLED_WRITE",
+      "hil_decisions": [<hil_records>]
+    }
+
+openbrowser_verify:
+  - id: OBS_01
+    name: "Verify workspace structure"
+    action: "Take screenshot of file listing"
+    commands:
+      - ls -la ~/soca-vps/
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: vps-capsule-setup
+# version: 1.0.0
+# lane: L2_CONTROLLED_WRITE

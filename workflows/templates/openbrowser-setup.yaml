@@ -1,0 +1,125 @@
+# SOCA OpenBrowser Workflow: OpenBrowser Plugin Setup
+# Goal: Install and configure OpenBrowser for OpenCode
+#
+# This workflow sets up the opencode-browser plugin in agent-browser mode
+# for headless VPS operation.
+#
+# Lane: L2_CONTROLLED_WRITE (HIL required)
+
+meta:
+  name: openbrowser-setup
+  version: "1.0.0"
+  lane: L2_CONTROLLED_WRITE
+  network: ALLOW  # Required for npm install
+  description: "Install OpenBrowser plugin for OpenCode"
+  tags: [openbrowser, opencode, browser, automation]
+
+tasks:
+  - id: T00_verify_node
+    name: "Verify Node.js"
+    goal: "Ensure Node.js is available"
+    lane: L0_SHADOW
+    commands:
+      - node --version
+      - npm --version
+    verify:
+      - "Node.js >= 18 installed"
+      - "npm available"
+
+  - id: T01_install_plugin
+    name: "Install OpenCode Browser Plugin"
+    goal: "Install opencode-browser plugin"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    workdir: ~/soca-vps
+    commands:
+      - npx @different-ai/opencode-browser@latest install
+    verify:
+      - "Plugin installed successfully"
+
+  - id: T02_install_agent_browser
+    name: "Install Agent Browser"
+    goal: "Install headless browser backend"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      - npm install -g agent-browser
+      - agent-browser install
+    verify:
+      - "agent-browser installed globally"
+      - "Chromium/Playwright downloaded"
+
+  - id: T03_configure_backend
+    name: "Configure Browser Backend"
+    goal: "Set agent-browser as default backend"
+    lane: L2_CONTROLLED_WRITE
+    commands:
+      - |
+        # Add to shell profile
+        echo 'export OPENCODE_BROWSER_BACKEND=agent' >> ~/.bashrc
+        echo 'export OPENCODE_BROWSER_BACKEND=agent' >> ~/.zshrc 2>/dev/null || true
+        
+        # Set for current session
+        export OPENCODE_BROWSER_BACKEND=agent
+    verify:
+      - "OPENCODE_BROWSER_BACKEND=agent in profile"
+
+  - id: T04_verify_tools
+    name: "Verify Browser Tools Available"
+    goal: "Confirm OpenCode has browser tools"
+    lane: L0_SHADOW
+    description: |
+      Inside OpenCode, the following browser tools should be available:
+      - open_tab: Open a URL in headless browser
+      - screenshot: Take screenshot of current tab
+      - snapshot: Get DOM snapshot
+      - close_tab: Close browser tab
+    manual_check:
+      - "Run OpenCode and check for browser tools in tool list"
+      - "Try: open_tab with a test URL"
+    verify:
+      - "Browser tools visible in OpenCode"
+
+  - id: T05_soca_bridge_check
+    name: "Check SOCA Bridge Integration"
+    goal: "Verify SOCA Bridge is accessible"
+    lane: L0_SHADOW
+    commands:
+      - curl -s http://127.0.0.1:9834/health || echo "bridge not running"
+      - curl -s -H "Authorization: Bearer soca" http://127.0.0.1:9834/v1/models | head -20 || echo "models endpoint failed"
+    verify:
+      - "Bridge health returns ok"
+      - "Models endpoint returns model list"
+
+evidence:
+  output_dir: "runs/_local/openbrowser-setup"
+  artifacts:
+    - openbrowser_setup.json
+    - node_version.txt
+    - plugin_install.log
+    - sha256.txt
+
+openbrowser_verify:
+  - id: OBS_01
+    name: "Test Screenshot Capability"
+    goal: "Verify browser can take screenshots"
+    action: "open_tab + screenshot"
+    url: "https://example.com"
+    check:
+      - "Screenshot captured successfully"
+      - "Page content visible"
+
+  - id: OBS_02
+    name: "Test Localhost Access"
+    goal: "Verify browser can access localhost"
+    action: "open_tab + snapshot"
+    url: "http://127.0.0.1:9834/health"
+    check:
+      - "Response shows status: ok"
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: openbrowser-setup
+# version: 1.0.0
+# lane: L2_CONTROLLED_WRITE
