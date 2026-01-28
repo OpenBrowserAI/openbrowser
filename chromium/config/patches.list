@@ -27,3 +27,9 @@ patches/openbrowser_integration/openbrowser-assistant-integration.patch
 
 # OpenBrowser product branding
 patches/branding/openbrowser_product_branding.patch
+
+# Startup page customization
+patches/branding/startup_page.patch
+
+# Tab search URL replacement (chrome:// to openbrowser://)
+patches/branding/tab_search_url_replacement.patch

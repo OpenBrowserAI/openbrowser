@@ -1,0 +1,46 @@
+diff --git a/chrome/browser/resources/tab_search/tab_search_item.ts b/chrome/browser/resources/tab_search/tab_search_item.ts
+index c155876d9e644..6d4c6d1fd283e 100644
+--- a/chrome/browser/resources/tab_search/tab_search_item.ts
++++ b/chrome/browser/resources/tab_search/tab_search_item.ts
+@@ -235,14 +235,19 @@ export class TabSearchItemElement extends TabSearchItemBase {
+           if (element) {
+             const highlightRanges =
+                 data.highlightRanges ? data.highlightRanges[path] : undefined;
+-            highlightText(element, deepGet(data, path), highlightRanges);
++            let textValue = deepGet(data, path);
++            // Replace chrome:// with openbrowser:// in titles
++            if (textValue && typeof textValue === 'string') {
++              textValue = textValue.replace(/chrome:\/\//g, 'openbrowser://');
++            }
++            highlightText(element, textValue, highlightRanges);
+           }
+         });
+ 
+-    // Show chrome:// if it's a chrome internal url
++    // Show openbrowser:// if it's a chrome internal url
+     const protocol = new URL(normalizeURL(data.tab.url.url)).protocol;
+     if (protocol === 'chrome:') {
+-      this.$.secondaryText.prepend(document.createTextNode('chrome://'));
++      this.$.secondaryText.prepend(document.createTextNode('openbrowser://'));
+     }
+   }
+ 
+diff --git a/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc b/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
+index 34fc92e4a9b79..d265d403d089c 100644
+--- a/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
++++ b/chrome/browser/ui/views/tabs/tab_hover_card_bubble_view.cc
+@@ -573,8 +573,13 @@ void TabHoverCardBubbleView::UpdateCardContent(const Tab* tab) {
+       // Hide the domain when necessary. This leaves an empty space in the
+       // card, but this scenario is very rare. Also, shrinking the card to
+       // remove the space would result in visual noise, so we keep it simple.
++      GURL formatted_url = display_url;
++#if BUILDFLAG(OPENBROWSER_BUILD)
++      // Rewrite chrome:// to openbrowser:// for display
++      formatted_url = openbrowser::GetDisplayURLForInternal(display_url);
++#endif
+       domain = url_formatter::FormatUrl(
+-          display_url,
++          formatted_url,
+           url_formatter::kFormatUrlOmitDefaults |
+               url_formatter::kFormatUrlOmitHTTPS |
+               url_formatter::kFormatUrlOmitTrivialSubdomains |

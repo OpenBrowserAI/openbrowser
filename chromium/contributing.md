@@ -56,16 +56,17 @@ fetch --nohooks chromium
 
 # 5. Checkout the correct version
 cd src
-git checkout 144.0.7543.1
+git checkout 146.0.7647.0
 
-# 6. Sync dependencies
-gclient sync -D
+# 6. Pin version in .gclient (recommended for persistence)
+cd ..
+# Edit .gclient and add: "revision": "f2722c85cc7f44f035bfc91b40406883e8f3b07d"
 
-# 7. Run hooks
-gclient runhooks
+# 7. Sync dependencies (this also runs hooks automatically)
+gclient sync --with_branch_heads --with_tags -r src@f2722c85cc7f44f035bfc91b40406883e8f3b07d
 
 # 8. Apply OpenBrowser patches and assets
-cd ../../openbrowser
+cd ../openbrowser
 bash chromium/scripts/setup_openbrowser.sh
 
 # 9. Build Chromium
@@ -73,7 +74,7 @@ cd ../chromium/src
 autoninja -C out/fast chrome
 
 # 10. Run OpenBrowser
-./out/fast/OpenBrowser.app/Contents/MacOS/OpenBrowser 
+./out/fast/OpenBrowser.app/Contents/MacOS/OpenBrowser
 ```
 
 ## Detailed Setup
@@ -135,21 +136,42 @@ fetch --nohooks chromium
 
 #### 4.2. Checkout Correct Version
 
-OpenBrowser is based on Chromium version **144.0.7543.1**:
+OpenBrowser is based on Chromium version **146.0.7647.0**:
 
 ```bash
 cd src
-git checkout 144.0.7543.1
+git checkout 146.0.7647.0
 ```
 
-#### 4.3. Sync Dependencies
+#### 4.3. Pin Version in .gclient
+
+To ensure gclient syncs to the exact version, add the revision to your `.gclient` file:
 
 ```bash
-# Sync all dependencies for this version
-gclient sync -D
+cd ..
+```
 
-# Run build hooks
-gclient runhooks
+Edit `/Users/user/OpenBrowser/chromium/.gclient` and add the revision field to the solutions array:
+
+```python
+solutions = [
+  {
+    "name": "src",
+    "url": "https://chromium.googlesource.com/chromium/src.git",
+    "managed": False,
+    "custom_deps": {},
+    "custom_vars": {},
+    "revision": "f2722c85cc7f44f035bfc91b40406883e8f3b07d",  # Add this line
+  },
+]
+```
+
+#### 4.4. Sync Dependencies
+
+```bash
+# Sync dependencies to exact revision f2722c85cc7f44f035bfc91b40406883e8f3b07d
+# This automatically runs hooks (downloads Rust, Clang, etc.)
+gclient sync --with_branch_heads --with_tags -r src@f2722c85cc7f44f035bfc91b40406883e8f3b07d
 ```
 
 ### 5. Apply OpenBrowser Patches and Assets
@@ -364,8 +386,10 @@ bash copy_extension_to_resources.sh
 
 ```bash
 cd chromium/src
-git checkout 144.0.7543.1
-gclient sync -D
+git checkout 146.0.7647.0
+cd ..
+# Edit .gclient and add: "revision": "f2722c85cc7f44f035bfc91b40406883e8f3b07d"
+gclient sync --with_branch_heads --with_tags -r src@f2722c85cc7f44f035bfc91b40406883e8f3b07d
 ```
 
 ### Permission Errors
