@@ -43,6 +43,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
   - Handle popups/cookies by accepting or closing them
   - When encountering scenarios that require user assistance such as login, verification codes, QR code scanning, Payment, etc, you can request user help.
 * Browser operation:
+  - Prefer reusing existing tabs to minimize clutter, and open new tabs only when truly necessary.
   - Use scroll to find elements you are looking for, When extracting content, prioritize using extract_page_content, only scroll when you need to load more content
   - Please follow user instructions and don't be lazy until the task is completed. For example, if a user asks you to find 30 people, don't just find 10 - keep searching until you find all 30.`;
     if (config.parallelToolCalls) {
@@ -294,7 +295,7 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
       {
         name: "navigate_to",
         description:
-          "Navigate to a specific URL in the browser. Use this tool when you need to visit a webpage or change the current page location.",
+          "Open a URL in a NEW browser tab. WARNING: This creates a new tab. Only use this when no existing tab with the target domain is open. If a tab with the same domain already exists in the open tabs list, use switch_tab instead to avoid duplicates.",
         parameters: {
           type: "object",
           properties: {
@@ -572,7 +573,8 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
       },
       {
         name: "switch_tab",
-        description: "Switch to the specified tab (based on tabId)",
+        description:
+          "Switch to an existing tab by tabId. Use this to reuse existing tabs instead of creating duplicates with navigate_to. Check the open tabs list to find the tabId of the domain you want to visit.",
         parameters: {
           type: "object",
           properties: {

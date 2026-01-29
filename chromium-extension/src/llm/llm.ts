@@ -33,9 +33,11 @@ export async function fetchModelsData(): Promise<ModelsData> {
  */
 export function supportsImageInput(model: Model): boolean {
   return (
-    model.modalities?.input?.includes("image") ||
-    model.modalities?.input?.includes("video") ||
-    false
+    (model.modalities?.input?.includes("image") ||
+      model.modalities?.input?.includes("video") ||
+      false) &&
+    model.status !== "deprecated" &&
+    model.tool_call !== false
   );
 }
 

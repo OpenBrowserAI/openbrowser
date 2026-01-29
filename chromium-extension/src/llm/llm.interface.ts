@@ -24,6 +24,7 @@ export interface Model {
   family?: string;
   attachment?: boolean;
   reasoning?: boolean;
+  status?: string;
   tool_call?: boolean;
   temperature?: boolean;
   knowledge?: string;
