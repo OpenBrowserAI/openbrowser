@@ -49,8 +49,8 @@ copy_asset() {
 }
 
 echo "Copying macOS app icons..."
-copy_asset "mac/app.icns" "chrome/app/theme/chromium/mac/app.icns"
-copy_asset "mac/app-temp.icns" "chrome/app/theme/chromium/mac/app-temp.icns"
+copy_asset "icons/mac/app.icns" "chrome/app/theme/chromium/mac/app.icns"
+copy_asset "icons/mac/app-temp.icns" "chrome/app/theme/chromium/mac/app-temp.icns"
 echo ""
 
 echo "Copying SVG logos..."

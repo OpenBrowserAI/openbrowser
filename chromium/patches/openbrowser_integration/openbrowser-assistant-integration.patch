@@ -59,17 +59,11 @@ diff --git a/chrome/browser/resources/component_extension_resources.grd b/chrome
 index c8f16f0451d7a..654a9a962f259 100644
 --- a/chrome/browser/resources/component_extension_resources.grd
 +++ b/chrome/browser/resources/component_extension_resources.grd
-@@ -22,6 +22,86 @@
+@@ -22,6 +22,79 @@
        <include name="IDR_READING_MODE_GDOC_HELPER_CONTENT_JS" file="reading_mode_gdocs_helper/content.js" type="BINDATA" />
        <include name="IDR_READING_MODE_GDOC_HELPER_GDOCS_SCRIPT_JS" file="reading_mode_gdocs_helper/gdocs_script.js" type="BINDATA" />
  
 +      <!-- OpenBrowser Assistant extension -->
-+      <include name="IDR_OPENBROWSER_ASSISTANT_ICON" file="openbrowser_assistant/icon.png" type="BINDATA" />
-+      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_16" file="openbrowser_assistant/icon-16.png" type="BINDATA" />
-+      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_32" file="openbrowser_assistant/icon-32.png" type="BINDATA" />
-+      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_WHITE" file="openbrowser_assistant/icon_white.png" type="BINDATA" />
-+      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_WHITE_16" file="openbrowser_assistant/icon_white-16.png" type="BINDATA" />
-+      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_WHITE_32" file="openbrowser_assistant/icon_white-32.png" type="BINDATA" />
 +      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_DARK" file="openbrowser_assistant/icon_dark.png" type="BINDATA" />
 +      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_LIGHT" file="openbrowser_assistant/icon_light.png" type="BINDATA" />
 +      <include name="IDR_OPENBROWSER_ASSISTANT_ICON_NEUTRAL" file="openbrowser_assistant/icon_neutral.png" type="BINDATA" />
@@ -80,7 +74,6 @@ index c8f16f0451d7a..654a9a962f259 100644
 +      <include name="IDR_OPENBROWSER_ASSISTANT_OPTIONS_JS" file="openbrowser_assistant/js/options.js" type="BINDATA" />
 +      <include name="IDR_OPENBROWSER_ASSISTANT_CONTENT_SCRIPT_JS" file="openbrowser_assistant/js/content_script.js" type="BINDATA" />
 +      <include name="IDR_OPENBROWSER_ASSISTANT_VENDOR_JS" file="openbrowser_assistant/js/vendor.js" type="BINDATA" />
-+      <include name="IDR_OPENBROWSER_ASSISTANT_THEME_JS" file="openbrowser_assistant/js/theme.js" type="BINDATA" />
 +      <!-- OpenBrowser Assistant KaTeX fonts -->
 +      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_AMS_REGULAR_TTF" file="openbrowser_assistant/js/assets/KaTeX_AMS-Regular.ttf" type="BINDATA" />
 +      <include name="IDR_OPENBROWSER_ASSISTANT_ASSET_KATEX_AMS_REGULAR_WOFF" file="openbrowser_assistant/js/assets/KaTeX_AMS-Regular.woff" type="BINDATA" />
