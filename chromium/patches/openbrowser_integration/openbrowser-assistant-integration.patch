@@ -10,6 +10,18 @@ index 3e7015eb63c22..d71e0fc1fd52c 100644
        <if expr="_google_chrome">
          <then>
            <if expr="is_linux">
+diff --git a/chrome/app/vector_icons/BUILD.gn b/chrome/app/vector_icons/BUILD.gn
+index 99f0a0ec124ca..46bbec5757e81 100644
+--- a/chrome/app/vector_icons/BUILD.gn
++++ b/chrome/app/vector_icons/BUILD.gn
+@@ -144,6 +144,7 @@ aggregate_vector_icons("chrome_vector_icons") {
+     "open_in_new.icon",
+     "open_in_new_chrome_refresh.icon",
+     "open_in_new_off_chrome_refresh.icon",
++    "openbrowser_logo.icon",
+     "overflow_button.icon",
+     "overflow_button_touch.icon",
+     "paintbrush.icon",
 diff --git a/chrome/browser/browser_resources.grd b/chrome/browser/browser_resources.grd
 index c5f6cbb073dbe..14219ae345c15 100644
 --- a/chrome/browser/browser_resources.grd
@@ -44,7 +56,7 @@ index b0f343384c5a0..4b8cfe4a0f50b 100644
  #endif  // BUILDFLAG(IS_CHROMEOS)
  
 +#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CHROMEOS_ASH)
-+  // OpenBrowser Assistant - load from BINDATA resources 
++  // OpenBrowser Assistant - load from BINDATA resources
 +  std::string openbrowser_manifest =
 +      ui::ResourceBundle::GetSharedInstance().LoadDataResourceString(
 +          IDR_OPENBROWSER_ASSISTANT_MANIFEST);
@@ -139,6 +151,30 @@ index c8f16f0451d7a..654a9a962f259 100644
        <!-- Hangout Services extension, included in Google Chrome builds only. -->
        <if expr="_google_chrome or enable_hangout_services_extension">
          <include name="IDR_HANGOUT_SERVICES_BACKGROUND_HTML" file="hangout_services/background.html" type="BINDATA" />
+diff --git a/chrome/browser/ui/browser_element_identifiers.cc b/chrome/browser/ui/browser_element_identifiers.cc
+index 8f4afb5ae1882..e545497870c2c 100644
+--- a/chrome/browser/ui/browser_element_identifiers.cc
++++ b/chrome/browser/ui/browser_element_identifiers.cc
+@@ -175,6 +175,7 @@ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarHomeButtonElementId);
+ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarMediaBubbleElementId);
+ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarMediaButtonElementId);
+ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarNewTabButtonElementId);
++DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarOpenBrowserAssistantButtonElementId);
+ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarOverflowButtonElementId);
+ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarPerformanceInterventionButtonElementId);
+ DEFINE_ELEMENT_IDENTIFIER_VALUE(kToolbarSplitTabsToolbarButtonElementId);
+diff --git a/chrome/browser/ui/browser_element_identifiers.h b/chrome/browser/ui/browser_element_identifiers.h
+index a2452eefd9293..5a7850af5f74c 100644
+--- a/chrome/browser/ui/browser_element_identifiers.h
++++ b/chrome/browser/ui/browser_element_identifiers.h
+@@ -188,6 +188,7 @@ DECLARE_ELEMENT_IDENTIFIER_VALUE(kToolbarHomeButtonElementId);
+ DECLARE_ELEMENT_IDENTIFIER_VALUE(kToolbarMediaBubbleElementId);
+ DECLARE_ELEMENT_IDENTIFIER_VALUE(kToolbarMediaButtonElementId);
+ DECLARE_ELEMENT_IDENTIFIER_VALUE(kToolbarNewTabButtonElementId);
++DECLARE_ELEMENT_IDENTIFIER_VALUE(kToolbarOpenBrowserAssistantButtonElementId);
+ DECLARE_ELEMENT_IDENTIFIER_VALUE(kToolbarOverflowButtonElementId);
+ DECLARE_ELEMENT_IDENTIFIER_VALUE(
+     kToolbarPerformanceInterventionButtonElementId);
 diff --git a/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc b/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
 index 2116104c556d9..55b2bc9cacfc5 100644
 --- a/chrome/browser/ui/toolbar/pinned_toolbar/pinned_toolbar_actions_model.cc
@@ -560,10 +596,18 @@ index 5faebc2c5021d..7352e6df452ae 100644
  
    bool ShouldSkipExecutionForTesting() { return skip_execution_; }
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-index 74537be6ca655..4e5cc23453199 100644
+index fac2af86a8f72..40b5b9dc018f9 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-@@ -69,6 +69,9 @@
+@@ -9,6 +9,7 @@
+ #include <utility>
+
+ #include "base/command_line.h"
++#include "chrome/app/vector_icons/vector_icons.h"
+ #include "base/containers/fixed_flat_map.h"
+ #include "base/feature_list.h"
+ #include "base/functional/bind.h"
+@@ -69,6 +70,9 @@
  #include "chrome/browser/ui/views/performance_controls/battery_saver_button.h"
  #include "chrome/browser/ui/views/performance_controls/performance_intervention_button.h"
  #include "chrome/browser/ui/views/side_panel/side_panel.h"
@@ -573,53 +617,29 @@ index 74537be6ca655..4e5cc23453199 100644
  #include "chrome/browser/ui/views/tabs/tab_strip.h"
  #include "chrome/browser/ui/views/tabs/tab_strip_controller.h"
  #include "chrome/browser/ui/views/toolbar/app_menu.h"
-@@ -113,6 +116,7 @@
- #include "ui/base/window_open_disposition_utils.h"
- #include "ui/color/color_id.h"
- #include "ui/color/color_provider.h"
-+#include "ui/gfx/color_utils.h"
- #include "ui/compositor/layer.h"
- #include "ui/gfx/canvas.h"
- #include "ui/gfx/image/canvas_image_source.h"
-@@ -441,6 +445,17 @@ void ToolbarView::Init() {
+@@ -431,6 +435,18 @@ void ToolbarView::Init() {
    overflow_button_ = AddChildView(std::make_unique<OverflowButton>());
    overflow_button_->SetVisible(false);
- 
+
 +  // OpenBrowser Assistant button
 +  auto assistant_button = std::make_unique<ToolbarButton>(
 +      base::BindRepeating(&ToolbarView::OnAssistantButtonPressed,
 +                          base::Unretained(this)));
 +  assistant_button->SetTooltipText(u"Open Assistant");
++  assistant_button->SetHorizontalAlignment(gfx::ALIGN_CENTER);
 +  assistant_button->GetViewAccessibility().SetName(u"Assistant");
-+  assistant_button->SetImageModel(
-+      views::Button::STATE_NORMAL,
-+      ui::ImageModel::FromResourceId(IDR_PRODUCT_LOGO_16));
++  assistant_button->SetVectorIcon(kOpenbrowserLogoIcon);
++  assistant_button->SetVisible(true);
++  assistant_button->SetProperty(views::kElementIdentifierKey, kToolbarOpenBrowserAssistantButtonElementId);
 +  assistant_button_ = AddChildView(std::move(assistant_button));
 +
    auto app_menu_button = std::make_unique<BrowserAppMenuButton>(this);
    app_menu_button->SetFlipCanvasOnPaintForRTLUI(true);
    app_menu_button->GetViewAccessibility().SetName(
-@@ -794,6 +809,16 @@ void ToolbarView::OnThemeChanged() {
-     LoadImages();
-   }
- 
-+  // Update OpenBrowser Assistant icon based on theme
-+  if (assistant_button_) {
-+    const bool is_dark_mode =
-+        color_utils::IsDark(GetColorProvider()->GetColor(kColorToolbar));
-+    const int icon_id = is_dark_mode ? IDR_PRODUCT_LOGO_16_WHITE : IDR_PRODUCT_LOGO_16;
-+    assistant_button_->SetImageModel(
-+        views::Button::STATE_NORMAL,
-+        ui::ImageModel::FromResourceId(icon_id));
-+  }
-+
-   SchedulePaint();
- }
- 
-@@ -802,6 +827,19 @@ void ToolbarView::NewTabButtonPressed(const ui::Event& event) {
+@@ -792,6 +808,19 @@ void ToolbarView::NewTabButtonPressed(const ui::Event& event) {
                   NewTabTypes::kNewTabButtonInToolbarForTouch);
  }
- 
+
 +void ToolbarView::OnAssistantButtonPressed() {
 +  auto* side_panel_ui = browser_->GetFeatures().side_panel_ui();
 +
@@ -637,24 +657,24 @@ index 74537be6ca655..4e5cc23453199 100644
    const views::View* focused_view = focus_manager()->GetFocusedView();
    if (focused_view && (focused_view->GetID() == VIEW_ID_OMNIBOX)) {
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.h b/chrome/browser/ui/views/toolbar/toolbar_view.h
-index a1bb987e9957e..3ee094d76beb9 100644
+index 1871e125add9f..3ee094d76beb9 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.h
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.h
 @@ -268,6 +268,8 @@ class ToolbarView : public views::AccessiblePaneView,
- 
+
    void NewTabButtonPressed(const ui::Event& event);
- 
+
 +  void OnAssistantButtonPressed();
 +
    gfx::SlideAnimation size_animation_{this};
- 
+
    // Controls. Most of these can be null, e.g. in popup windows. Only
-@@ -295,6 +297,7 @@ class ToolbarView : public views::AccessiblePaneView,
+@@ -294,6 +296,7 @@ class ToolbarView : public views::AccessiblePaneView,
    raw_ptr<BrowserAppMenuButton> app_menu_button_ = nullptr;
    raw_ptr<views::View> new_tab_button_ = nullptr;
    raw_ptr<PinnedActionToolbarButton> tab_search_button_ = nullptr;
 +  raw_ptr<ToolbarButton> assistant_button_ = nullptr;
- 
+
    const raw_ptr<Browser> browser_;
    const raw_ptr<BrowserView> browser_view_;
 diff --git a/extensions/common/constants.h b/extensions/common/constants.h

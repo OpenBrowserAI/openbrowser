@@ -101,6 +101,10 @@ echo "Copying side panel icons..."
 copy_asset "side_panel_icons/mini_new_tab_page.svg" "chrome/browser/resources/side_panel/customize_chrome/icons/mini_new_tab_page.svg"
 echo ""
 
+echo "Copying vector icons..."
+copy_asset "vector_icons/openbrowser_logo.icon" "chrome/app/vector_icons/openbrowser_logo.icon"
+echo ""
+
 echo "========================================="
 echo "✅ Branding assets applied successfully!"
 echo "========================================="
