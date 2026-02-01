@@ -23,6 +23,8 @@ const AppRun = () => {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [updateTrigger, setUpdateTrigger] = useState(0);
+  const lastMessageCountRef = useRef(0);
+  const scrollRafRef = useRef<number | null>(null);
 
   const {
     chatId,
@@ -76,9 +78,33 @@ const AppRun = () => {
   }, [isNearBottom]);
 
   useEffect(() => {
-    if (autoScroll) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!autoScroll) return;
+    const messageCount = messages.length;
+    const isNewMessage = messageCount !== lastMessageCountRef.current;
+    lastMessageCountRef.current = messageCount;
+
+    if (scrollRafRef.current !== null) {
+      cancelAnimationFrame(scrollRafRef.current);
     }
+
+    scrollRafRef.current = requestAnimationFrame(() => {
+      if (!autoScroll) return;
+      if (isNewMessage) {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        return;
+      }
+      const container = messagesContainerRef.current;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+
+    return () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+        scrollRafRef.current = null;
+      }
+    };
   }, [messages, autoScroll]);
 
   // Listen to background messages
