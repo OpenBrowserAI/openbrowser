@@ -9,7 +9,8 @@ import type { ChatMessage, UploadedFile } from "./types";
 import { useChatCallbacks } from "./hooks/useChatCallbacks";
 import { useSessionManagement } from "./hooks/useSessionManagement";
 import { ThemeProvider } from "./providers/ThemeProvider";
-import { message as AntdMessage } from "antd";
+import { message as AntdMessage, Button, Space } from "antd";
+import { HistoryOutlined, SettingOutlined } from "@ant-design/icons";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 const AppRun = () => {
@@ -108,8 +109,8 @@ const AppRun = () => {
           level === "error"
             ? AntdMessage.error
             : level === "success"
-              ? AntdMessage.success
-              : AntdMessage.info;
+            ? AntdMessage.success
+            : AntdMessage.info;
         showMessage({
           content: msg,
           className: "toast-text-black"
@@ -276,6 +277,24 @@ const AppRun = () => {
 
   return (
     <div className="flex flex-col h-screen bg-white">
+      {/* Header with Session and Settings Buttons */}
+      <div className="flex items-center justify-end px-1 py-1 bg-gray-100">
+        <Space size={4}>
+          <Button
+            type="text"
+            icon={<HistoryOutlined />}
+            onClick={handleShowSessionHistory}
+            className="text-gray-500 hover:text-gray-700"
+          />
+          <Button
+            type="text"
+            icon={<SettingOutlined />}
+            onClick={() => chrome.runtime.openOptionsPage()}
+            className="text-gray-500 hover:text-gray-700"
+          />
+        </Space>
+      </div>
+
       {/* Message area */}
       <div
         ref={messagesContainerRef}
@@ -323,7 +342,6 @@ const AppRun = () => {
         sending={sending}
         currentMessageId={currentMessageId}
         onNewSession={handleNewSession}
-        onShowSessionHistory={handleShowSessionHistory}
       />
 
       {/* Session History Modal */}

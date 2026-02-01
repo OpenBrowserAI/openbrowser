@@ -5,9 +5,7 @@ import {
   FileOutlined,
   DeleteOutlined,
   PaperClipOutlined,
-  PlusOutlined,
-  HistoryOutlined,
-  SettingOutlined,
+  PlusOutlined
 } from "@ant-design/icons";
 import type { UploadedFile } from "../types";
 import { Button, Space, Image, Typography } from "antd";
@@ -26,7 +24,6 @@ interface ChatInputProps {
   sending: boolean;
   currentMessageId: string | null;
   onNewSession: () => void;
-  onShowSessionHistory: () => void;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
@@ -39,8 +36,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   uploadedFiles,
   sending,
   currentMessageId,
-  onNewSession,
-  onShowSessionHistory
+  onNewSession
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isEmpty = !inputValue.trim() && uploadedFiles.length === 0;
@@ -90,7 +86,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
       )}
 
       {/* Floating Chat Input Box */}
-      <div className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px" style={{borderWidth: '1px', borderStyle: 'solid', overflow: 'hidden'}}>
+      <div
+        className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px"
+        style={{ borderWidth: "1px", borderStyle: "solid", overflow: "hidden" }}
+      >
         <input
           ref={fileInputRef}
           type="file"
@@ -112,30 +111,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
 
         {/* Bottom Action Bar */}
         <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2">
-          {/* Left: Attachment, History, and Settings Buttons */}
-          <Space size="small">
-            <Button
-              type="text"
-              icon={<PaperClipOutlined />}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={sending || currentMessageId !== null}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <Button
-              type="text"
-              icon={<HistoryOutlined />}
-              onClick={onShowSessionHistory}
-              disabled={sending || currentMessageId !== null}
-              className="text-gray-500 hover:text-gray-700"
-            />
-            <Button
-              type="text"
-              icon={<SettingOutlined />}
-              onClick={() => chrome.runtime.openOptionsPage()}
-              disabled={sending || currentMessageId !== null}
-              className="text-gray-500 hover:text-gray-700"
-            />
-          </Space>
+          {/* Left: Attachment Button */}
+          <Button
+            type="text"
+            icon={<PaperClipOutlined />}
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending || currentMessageId !== null}
+            className="text-gray-500 hover:text-gray-700"
+          />
 
           {/* Right: Send/Stop/New Session Button */}
           {currentMessageId ? (

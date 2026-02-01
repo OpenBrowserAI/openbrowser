@@ -30,7 +30,8 @@
     "url": "git+https://github.com/OpenBrowserAI/openbrowser.git"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "husky": "9.1.7"
+    "husky": "9.1.7",
+    "prettier": "^2.8.8",
+    "typescript": "^5.8.3"
   }
 }

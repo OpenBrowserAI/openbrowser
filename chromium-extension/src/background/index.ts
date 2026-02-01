@@ -205,6 +205,11 @@ async function init(chatId?: string): Promise<ChatAgent | void> {
   initAgentServices();
 
   const llms = await loadLLMs();
+  if (!llms) {
+    chatAgent = null;
+    currentChatId = null;
+    return;
+  }
   const agents = [new BrowserAgent(), new WriteFileAgent()];
   // agents.forEach((agent) =>
   //   agent.Tools.forEach((tool) => wrapToolInputSchema(agent, tool))
@@ -387,24 +392,26 @@ const eventHandlers: Record<
 };
 
 // Message listener
-chrome.runtime.onMessage.addListener(
-  async function (request, sender, sendResponse) {
-    const requestId = request.requestId;
-    const type = request.type;
-    const data = request.data;
+chrome.runtime.onMessage.addListener(async function (
+  request,
+  sender,
+  sendResponse
+) {
+  const requestId = request.requestId;
+  const type = request.type;
+  const data = request.data;
 
-    if (!chatAgent) {
-      await init();
-    }
-
-    const handler = eventHandlers[type];
-    if (handler) {
-      handler(requestId, data).catch((error) => {
-        printLog(`Error handling ${type}: ${error}`, "error");
-      });
-    }
+  if (!chatAgent && type !== "chat") {
+    await init();
   }
-);
+
+  const handler = eventHandlers[type];
+  if (handler) {
+    handler(requestId, data).catch((error) => {
+      printLog(`Error handling ${type}: ${error}`, "error");
+    });
+  }
+});
 
 function printLog(message: string, level?: "info" | "success" | "error") {
   chrome.runtime.sendMessage({

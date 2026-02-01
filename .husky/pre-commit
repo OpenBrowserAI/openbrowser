@@ -13,7 +13,7 @@ echo "Husky: running Prettier on staged files..."
 git diff --name-only --cached --diff-filter=ACM | while read -r file; do
   case "$file" in
     *.ts|*.tsx|*.js|*.jsx|*.json|*.md|*.mdx|*.yml|*.yaml|*.css|*.scss|*.html)
-      npx --no-install prettier --write "$file"
+      npx prettier --write "$file"
       git add "$file"
       ;;
     *) ;;
