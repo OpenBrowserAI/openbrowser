@@ -1,0 +1,25 @@
+diff --git a/chrome/browser/ui/views/webauthn/authenticator_hybrid_and_security_key_sheet_view.cc b/chrome/browser/ui/views/webauthn/authenticator_hybrid_and_security_key_sheet_view.cc
+index 3a2d0dd1bf3d7..a832159a90616 100644
+--- a/chrome/browser/ui/views/webauthn/authenticator_hybrid_and_security_key_sheet_view.cc
++++ b/chrome/browser/ui/views/webauthn/authenticator_hybrid_and_security_key_sheet_view.cc
+@@ -122,8 +122,18 @@ AuthenticatorHybridAndSecurityKeySheetView::BuildStepSpecificContent() {
+       l10n_util::GetStringUTF16(IDS_WEBAUTHN_USE_YOUR_PHONE_OR_TABLET),
+       qr_labels));
+ 
+-  container->AddChildView(
+-      std::make_unique<AuthenticatorQrCenteredView>(qr_string_));
++  // TODO(openbrowser): Re-enable when Rust QR code memory bug is fixed
++  // Temporarily disabled to prevent crash in qr_code_generator
++  // container->AddChildView(
++  //     std::make_unique<AuthenticatorQrCenteredView>(qr_string_));
++
++  // Show placeholder message instead of QR code
++  auto placeholder = std::make_unique<views::Label>(
++      u"QR code temporarily disabled. Please use a security key instead.",
++      views::style::CONTEXT_DIALOG_BODY_TEXT);
++  placeholder->SetMultiLine(true);
++  placeholder->SetHorizontalAlignment(gfx::HorizontalAlignment::ALIGN_CENTER);
++  container->AddChildView(std::move(placeholder));
+ 
+   if (sheet_model->dialog_model()->show_security_key_on_qr_sheet) {
+     container->AddChildView(std::make_unique<views::Separator>());

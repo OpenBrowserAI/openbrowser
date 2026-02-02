@@ -188,9 +188,11 @@ bash chromium/scripts/setup_openbrowser.sh
 
 This script will:
 
-1. ✅ Apply all patches (theme, UI, branding, integration)
+1. ✅ Apply all patches (theme, UI, branding, integration, development)
 2. ✅ Copy branding assets (logos, icons)
 3. ✅ Copy extension to resources
+
+**Note:** The `patches.list` includes development patches that should be removed before production builds. Check the comments in `chromium/config/patches.list` for patches marked with "REMOVE IN PRODUCTION".
 
 ### 6. Configure Build
 
@@ -267,6 +269,7 @@ openbrowser/
 │   │   ├── theme/                 # Theme system patches
 │   │   ├── theme_api/             # Theme Colors API patches
 │   │   ├── ui/                    # UI modification patches
+│   │   ├── development/           # Development-only patches (remove in production)
 │   │   └── openbrowser_integration/  # Assistant integration patches
 │   └── scripts/
 │       ├── setup_openbrowser.sh   # Main setup script (runs all)

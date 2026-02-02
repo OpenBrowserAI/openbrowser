@@ -271,6 +271,8 @@ async function handleChat(requestId: string, data: any): Promise<void> {
       type: "chat_result",
       data: { messageId, error: String(error) }
     });
+  } finally {
+    abortControllers.delete(messageId);
   }
 }
 
@@ -392,25 +394,28 @@ const eventHandlers: Record<
 };
 
 // Message listener
-chrome.runtime.onMessage.addListener(async function (
-  request,
-  sender,
-  sendResponse
-) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   const requestId = request.requestId;
   const type = request.type;
   const data = request.data;
 
-  if (!chatAgent && type !== "chat") {
-    await init();
+  const handler = eventHandlers[type];
+  if (!handler) {
+    return;
   }
 
-  const handler = eventHandlers[type];
-  if (handler) {
-    handler(requestId, data).catch((error) => {
-      printLog(`Error handling ${type}: ${error}`, "error");
-    });
-  }
+  (async () => {
+    if (!chatAgent && type !== "chat") {
+      await init();
+    }
+    await handler(requestId, data);
+    sendResponse({ requestId, ok: true });
+  })().catch((error) => {
+    printLog(`Error handling ${type}: ${error}`, "error");
+    sendResponse({ requestId, ok: false, error: String(error) });
+  });
+
+  return true;
 });
 
 function printLog(message: string, level?: "info" | "success" | "error") {

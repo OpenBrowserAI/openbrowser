@@ -33,3 +33,7 @@ patches/branding/startup_page.patch
 
 # Tab search URL replacement (chrome:// to openbrowser://)
 patches/branding/tab_search_url_replacement.patch
+
+# Development patches (REMOVE IN PRODUCTION)
+# QR code generation crash fix - temporary workaround for development
+patches/development/disable-qr-code-crash.patch

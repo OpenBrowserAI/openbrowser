@@ -34,9 +34,12 @@
     "sidePanel",
     "storage",
     "scripting",
+    "debugger",
     "alarms",
     "notifications",
-    "downloads"
+    "downloads",
+    "clipboardRead",
+    "clipboardWrite"
   ],
   "host_permissions": ["<all_urls>"],
   "web_accessible_resources": [

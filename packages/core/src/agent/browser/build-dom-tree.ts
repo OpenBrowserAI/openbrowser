@@ -84,6 +84,7 @@ export function run_build_dom_tree() {
         "src",
         "href",
         "aria-label",
+        "data-obr-label",
         "placeholder",
         "value",
         "alt",
@@ -454,6 +455,111 @@ export function run_build_dom_tree() {
       return !leafElementDenyList.has(element.tagName.toLowerCase());
     }
 
+    const labelMaxLength = 120;
+
+    function normalizeLabel(text, maxLength) {
+      if (!text) return "";
+      let normalized = String(text).replace(/\s+/g, " ").trim();
+      if (!normalized) return "";
+      if (maxLength && normalized.length > maxLength) {
+        normalized = normalized.slice(0, maxLength).trim();
+      }
+      return normalized;
+    }
+
+    function getLabelFromAriaLabelledBy(element) {
+      const labelledby = element.getAttribute("aria-labelledby");
+      if (!labelledby) return "";
+      const ids = labelledby.split(/\s+/).filter(Boolean);
+      if (!ids.length) return "";
+      const parts = [];
+      for (let i = 0; i < ids.length; i++) {
+        const ref = document.getElementById(ids[i]);
+        if (ref) {
+          const text = normalizeLabel(
+            ref.innerText || ref.textContent,
+            labelMaxLength
+          );
+          if (text) parts.push(text);
+        }
+      }
+      return normalizeLabel(parts.join(" "), labelMaxLength);
+    }
+
+    function getSiblingLabel(element) {
+      const previous = element.previousElementSibling;
+      const next = element.nextElementSibling;
+      if (previous) {
+        const text = normalizeLabel(
+          previous.innerText || previous.textContent,
+          labelMaxLength
+        );
+        if (text) return text;
+      }
+      if (next) {
+        const text = normalizeLabel(
+          next.innerText || next.textContent,
+          labelMaxLength
+        );
+        if (text) return text;
+      }
+      return "";
+    }
+
+    function getAccessibleLabel(element) {
+      const ariaLabel = normalizeLabel(
+        element.getAttribute("aria-label"),
+        labelMaxLength
+      );
+      if (ariaLabel) return ariaLabel;
+
+      const labelledBy = getLabelFromAriaLabelledBy(element);
+      if (labelledBy) return labelledBy;
+
+      const title = normalizeLabel(
+        element.getAttribute("title"),
+        labelMaxLength
+      );
+      if (title) return title;
+
+      const alt = normalizeLabel(element.getAttribute("alt"), labelMaxLength);
+      if (alt) return alt;
+
+      const placeholder = normalizeLabel(
+        element.getAttribute("placeholder"),
+        labelMaxLength
+      );
+      if (placeholder) return placeholder;
+
+      const value = normalizeLabel(
+        element.getAttribute("value"),
+        labelMaxLength
+      );
+      if (value) return value;
+
+      if (element.labels && element.labels.length) {
+        const labelParts = [];
+        for (let i = 0; i < element.labels.length; i++) {
+          const label = element.labels[i];
+          const labelText = normalizeLabel(
+            label.innerText || label.textContent,
+            labelMaxLength
+          );
+          if (labelText) labelParts.push(labelText);
+        }
+        const labelText = normalizeLabel(labelParts.join(" "), labelMaxLength);
+        if (labelText) return labelText;
+      }
+
+      const ownText = normalizeLabel(
+        element.innerText || element.textContent,
+        labelMaxLength
+      );
+      if (ownText) return ownText;
+
+      return getSiblingLabel(element);
+    }
+
     // Helper function to check if element is interactive
     function isInteractiveElement(element) {
       if (!element || element.nodeType !== Node.ELEMENT_NODE) {
@@ -775,6 +881,13 @@ export function run_build_dom_tree() {
         nodeData.isInteractive = isInteractive;
         nodeData.isVisible = isVisible;
         nodeData.isTopElement = isTop;
+
+        if (isInteractive) {
+          const label = getAccessibleLabel(node);
+          if (label && !nodeData.attributes["data-obr-label"]) {
+            nodeData.attributes["data-obr-label"] = label;
+          }
+        }
 
         // For Shadow DOM elements, use more lenient criteria
         const isInShadowDOM = node.getRootNode() instanceof ShadowRoot;
