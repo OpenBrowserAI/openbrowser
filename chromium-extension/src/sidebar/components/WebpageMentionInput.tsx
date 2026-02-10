@@ -491,7 +491,7 @@ export const WebpageMentionInput: React.FC<WebpageMentionInputProps> = ({
       {showDropdown && (
         <div
           data-tab-dropdown
-          className="absolute bottom-full left-0 right-0 mb-1 bg-white border border-gray-300 rounded shadow-md z-[1000]"
+          className="absolute bottom-full left-0 right-0 mb-1 bg-theme-secondary border border-theme-input radius-8px shadow-md z-[1000]"
         >
           {loadingTabs ? (
             <div className="p-3 text-center">

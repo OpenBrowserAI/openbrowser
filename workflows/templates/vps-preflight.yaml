@@ -1,0 +1,131 @@
+meta:
+  name: vps-preflight
+  version: "1.0.0"
+  lane: L0_SHADOW
+  network: DENY
+  description: "VPS health check and system inventory (read-only)"
+
+tasks:
+  - id: T00_system_info
+    name: "Collect system information"
+    goal: "Gather OS, kernel, hostname for inventory"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - uname -a
+      - hostname
+      - cat /etc/os-release 2>/dev/null || echo "Unknown OS"
+    verify:
+      - "Output contains Linux kernel version"
+      - "Hostname is retrieved"
+
+  - id: T01_disk_check
+    name: "Check disk space"
+    goal: "Verify disk usage under 85% (Rule #30)"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - df -h /
+      - df -h /opt 2>/dev/null || echo "/opt not separate partition"
+    verify:
+      - "Root partition usage under 85%"
+      - "At least 10GB free"
+
+  - id: T02_memory_check
+    name: "Check memory"
+    goal: "Verify RAM availability"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - free -h
+      - cat /proc/meminfo | grep -E "^(MemTotal|MemAvailable)"
+    verify:
+      - "At least 4GB RAM total"
+      - "At least 2GB available"
+
+  - id: T03_git_check
+    name: "Verify git installation"
+    goal: "Ensure git with HTTPS support is installed"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - git --version
+      - which git-remote-https || ls /usr/lib/git-core/git-remote-https 2>/dev/null || echo "git-remote-https NOT FOUND"
+    verify:
+      - "git version 2.x or higher"
+      - "git-remote-https binary exists"
+
+  - id: T04_python_check
+    name: "Verify Python installation"
+    goal: "Ensure Python 3.10+ available"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - python3 --version
+      - which pip3 || which pip
+    verify:
+      - "Python 3.10 or higher"
+      - "pip available"
+
+  - id: T05_network_check
+    name: "Check network connectivity"
+    goal: "Verify outbound internet access"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - ping -c 1 8.8.8.8 2>/dev/null && echo "IPv4 OK" || echo "IPv4 FAIL"
+      - curl -s --max-time 5 https://api.github.com/zen || echo "GitHub API unreachable"
+    verify:
+      - "IPv4 connectivity working"
+      - "Can reach GitHub API"
+
+  - id: T06_services_check
+    name: "Check existing services"
+    goal: "Inventory running services"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - systemctl list-units --type=service --state=running 2>/dev/null | head -20 || echo "systemctl not available"
+      - docker --version 2>/dev/null || echo "Docker NOT installed"
+      - docker ps 2>/dev/null || echo "Docker not running or permission denied"
+    verify:
+      - "systemd services enumerated"
+      - "Docker status known"
+
+  - id: T07_ports_check
+    name: "Check port availability"
+    goal: "Verify required ports are free"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - ss -tlnp 2>/dev/null | grep -E ":(9834|11434|22)" || echo "Ports 9834, 11434 appear free"
+      - netstat -tlnp 2>/dev/null | grep -E ":(9834|11434)" || echo "netstat check done"
+    verify:
+      - "Port 9834 (SOCA Bridge) is free or identified"
+      - "Port 11434 (Ollama) is free or identified"
+
+  - id: T08_tailscale_check
+    name: "Check Tailscale status"
+    goal: "Verify Tailscale installation and connection"
+    lane: L0_SHADOW
+    hil_required: false
+    commands:
+      - tailscale status 2>/dev/null || echo "Tailscale NOT installed or not running"
+      - tailscale ip -4 2>/dev/null || echo "No Tailscale IP"
+    verify:
+      - "Tailscale status retrieved or noted as missing"
+
+evidence:
+  output_dir: "runs/_local/vps-preflight"
+  artifacts:
+    - preflight_report.json
+    - sha256.txt
+
+# Composite preflight command (run this on VPS):
+# echo "=== VPS PREFLIGHT ===" && uname -a && df -h / && free -h && git --version && \
+# which git-remote-https 2>/dev/null || ls /usr/lib/git-core/git-remote-https 2>/dev/null || echo "git-remote-https: NOT FOUND" && \
+# python3 --version 2>/dev/null || echo "python3: NOT FOUND" && \
+# go version 2>/dev/null || echo "go: NOT FOUND" && \
+# docker --version 2>/dev/null || echo "docker: NOT FOUND" && \
+# tailscale status 2>/dev/null || echo "tailscale: NOT INSTALLED" && \
+# echo "=== END PREFLIGHT ==="

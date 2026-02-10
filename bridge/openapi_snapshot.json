@@ -1,0 +1,1430 @@
+{
+  "components": {
+    "schemas": {
+      "Constraints": {
+        "additionalProperties": false,
+        "properties": {
+          "allow_online_enrichment": {
+            "default": false,
+            "title": "Allow Online Enrichment",
+            "type": "boolean"
+          },
+          "keep_language": {
+            "default": true,
+            "title": "Keep Language",
+            "type": "boolean"
+          },
+          "max_chars": {
+            "anyOf": [
+              {
+                "maximum": 200000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Chars"
+          },
+          "preserve_code_blocks": {
+            "default": true,
+            "title": "Preserve Code Blocks",
+            "type": "boolean"
+          }
+        },
+        "title": "Constraints",
+        "type": "object"
+      },
+      "Context7DocsRequest": {
+        "properties": {
+          "lane": {
+            "default": "OB_OFFLINE",
+            "description": "OpenBrowser lane identifier (OB_OFFLINE or OB_ONLINE_PULSE)",
+            "title": "Lane",
+            "type": "string"
+          },
+          "library_id": {
+            "description": "Context7 library id, e.g. /octokit/octokit.js",
+            "title": "Library Id",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 20000,
+            "description": "Maximum characters to return",
+            "title": "Max Chars",
+            "type": "integer"
+          },
+          "topic": {
+            "default": "",
+            "description": "Topic focus (optional)",
+            "title": "Topic",
+            "type": "string"
+          }
+        },
+        "required": ["library_id"],
+        "title": "Context7DocsRequest",
+        "type": "object"
+      },
+      "ContextPackRequest": {
+        "properties": {
+          "lane": {
+            "description": "OpenBrowser lane identifier (e.g. OB_OFFLINE, OB_ONLINE_PULSE)",
+            "title": "Lane",
+            "type": "string"
+          },
+          "page_text": {
+            "default": "",
+            "description": "Visible page text or extracted content",
+            "title": "Page Text",
+            "type": "string"
+          },
+          "query": {
+            "description": "User query / task statement",
+            "title": "Query",
+            "type": "string"
+          },
+          "requested_layers": {
+            "description": "Subset of 5LM layers to retrieve",
+            "items": {
+              "type": "string"
+            },
+            "title": "Requested Layers",
+            "type": "array"
+          },
+          "ssot_scopes": {
+            "description": "Allowlisted SSOT scopes under core/SOCAcore",
+            "items": {
+              "type": "string"
+            },
+            "title": "Ssot Scopes",
+            "type": "array"
+          },
+          "tab_meta": {
+            "additionalProperties": true,
+            "description": "Tab metadata (url/title/tabId/etc.)",
+            "title": "Tab Meta",
+            "type": "object"
+          }
+        },
+        "required": ["lane", "query"],
+        "title": "ContextPackRequest",
+        "type": "object"
+      },
+      "ContextPackResponse": {
+        "properties": {
+          "compression_summary": {
+            "additionalProperties": true,
+            "title": "Compression Summary",
+            "type": "object"
+          },
+          "provenance": {
+            "additionalProperties": true,
+            "title": "Provenance",
+            "type": "object"
+          },
+          "snippets": {
+            "items": {
+              "$ref": "#/components/schemas/ContextSnippet"
+            },
+            "title": "Snippets",
+            "type": "array"
+          },
+          "ssot_refs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ssot Refs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snippets",
+          "ssot_refs",
+          "provenance",
+          "compression_summary"
+        ],
+        "title": "ContextPackResponse",
+        "type": "object"
+      },
+      "ContextSnippet": {
+        "properties": {
+          "layer": {
+            "title": "Layer",
+            "type": "string"
+          },
+          "score": {
+            "default": 0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "source": {
+            "additionalProperties": true,
+            "title": "Source",
+            "type": "object"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": ["layer", "text", "source"],
+        "title": "ContextSnippet",
+        "type": "object"
+      },
+      "DiffInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "title": "Data"
+          },
+          "type": {
+            "default": "unified",
+            "enum": ["spans", "unified"],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": ["data"],
+        "title": "DiffInfo",
+        "type": "object"
+      },
+      "ErrorItem": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": ["code", "message"],
+        "title": "ErrorItem",
+        "type": "object"
+      },
+      "GitHubGetRequest": {
+        "properties": {
+          "lane": {
+            "default": "OB_OFFLINE",
+            "description": "OpenBrowser lane identifier (OB_OFFLINE or OB_ONLINE_PULSE)",
+            "title": "Lane",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 20000,
+            "description": "Maximum characters to return",
+            "title": "Max Chars",
+            "type": "integer"
+          },
+          "path": {
+            "description": "GitHub REST path, e.g. /repos/octokit/octokit.js or /search/repositories",
+            "title": "Path",
+            "type": "string"
+          },
+          "query": {
+            "additionalProperties": true,
+            "description": "Query parameters",
+            "title": "Query",
+            "type": "object"
+          }
+        },
+        "required": ["path"],
+        "title": "GitHubGetRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Lane": {
+        "enum": ["OB_OFFLINE", "OB_ONLINE_PULSE"],
+        "title": "Lane",
+        "type": "string"
+      },
+      "Mode": {
+        "enum": ["clarify", "structure", "compress", "persona", "safe_exec"],
+        "title": "Mode",
+        "type": "string"
+      },
+      "MutationInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "reorder",
+              "clarify",
+              "add_constraints",
+              "compress",
+              "persona",
+              "safety",
+              "profile"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": ["type", "note"],
+        "title": "MutationInfo",
+        "type": "object"
+      },
+      "Nt2lPlanBridgeRequest": {
+        "properties": {
+          "fake_model": {
+            "default": false,
+            "description": "Force SOCA_FAKE_MODEL=1 for deterministic stub output",
+            "title": "Fake Model",
+            "type": "boolean"
+          },
+          "prompt": {
+            "description": "Natural-language prompt to convert into an NT2L plan",
+            "title": "Prompt",
+            "type": "string"
+          }
+        },
+        "required": ["prompt"],
+        "title": "Nt2lPlanBridgeRequest",
+        "type": "object"
+      },
+      "OpenBrowserPanelDumpRequest": {
+        "properties": {
+          "exported_utc": {
+            "description": "UTC ISO timestamp for when the panel was exported",
+            "title": "Exported Utc",
+            "type": "string"
+          },
+          "panel_html": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Panel HTML snapshot (optional)",
+            "title": "Panel Html"
+          },
+          "panel_text": {
+            "description": "Full panel text content",
+            "title": "Panel Text",
+            "type": "string"
+          },
+          "source_tab_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Active tab URL when export occurred",
+            "title": "Source Tab Url"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Panel title at export time",
+            "title": "Title"
+          }
+        },
+        "required": ["exported_utc", "panel_text"],
+        "title": "OpenBrowserPanelDumpRequest",
+        "type": "object"
+      },
+      "PolicyInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "lane_allowed": {
+            "title": "Lane Allowed",
+            "type": "boolean"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "network_used": {
+            "title": "Network Used",
+            "type": "boolean"
+          }
+        },
+        "required": ["lane_allowed", "network_used", "model"],
+        "title": "PolicyInfo",
+        "type": "object"
+      },
+      "PromptContext": {
+        "additionalProperties": false,
+        "properties": {
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intent"
+          },
+          "tab_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tab Title"
+          },
+          "tab_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tab Url"
+          },
+          "target_base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Base Url"
+          }
+        },
+        "title": "PromptContext",
+        "type": "object"
+      },
+      "PromptEnhanceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "api_version": {
+            "const": "v1",
+            "default": "v1",
+            "title": "Api Version",
+            "type": "string"
+          },
+          "constraints": {
+            "$ref": "#/components/schemas/Constraints"
+          },
+          "context": {
+            "$ref": "#/components/schemas/PromptContext"
+          },
+          "lane": {
+            "$ref": "#/components/schemas/Lane"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/Mode"
+          },
+          "profile_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Id"
+          },
+          "prompt": {
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "2026-02-06",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "trace": {
+            "$ref": "#/components/schemas/Trace"
+          }
+        },
+        "required": ["lane", "prompt", "mode"],
+        "title": "PromptEnhanceRequest",
+        "type": "object"
+      },
+      "PromptEnhanceResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "api_version": {
+            "const": "v1",
+            "default": "v1",
+            "title": "Api Version",
+            "type": "string"
+          },
+          "diff": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DiffInfo"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "enhanced_prompt": {
+            "title": "Enhanced Prompt",
+            "type": "string"
+          },
+          "enhancement_id": {
+            "title": "Enhancement Id",
+            "type": "string"
+          },
+          "errors": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ErrorItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Errors"
+          },
+          "lane": {
+            "title": "Lane",
+            "type": "string"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "mutations": {
+            "items": {
+              "$ref": "#/components/schemas/MutationInfo"
+            },
+            "title": "Mutations",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "original_prompt": {
+            "title": "Original Prompt",
+            "type": "string"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/PolicyInfo"
+          },
+          "profile_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Profile Id"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/Provenance"
+          },
+          "rationale": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rationale",
+            "type": "array"
+          },
+          "redactions": {
+            "items": {
+              "$ref": "#/components/schemas/RedactionInfo"
+            },
+            "title": "Redactions",
+            "type": "array"
+          },
+          "safety_flags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Safety Flags",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "2026-02-06",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "stats": {
+            "$ref": "#/components/schemas/Stats"
+          }
+        },
+        "required": [
+          "ok",
+          "enhancement_id",
+          "original_prompt",
+          "enhanced_prompt",
+          "mode",
+          "lane",
+          "policy",
+          "stats",
+          "provenance"
+        ],
+        "title": "PromptEnhanceResponse",
+        "type": "object"
+      },
+      "Provenance": {
+        "additionalProperties": false,
+        "properties": {
+          "bridge_version": {
+            "title": "Bridge Version",
+            "type": "string"
+          },
+          "generated_utc": {
+            "title": "Generated Utc",
+            "type": "string"
+          },
+          "retrieval_mode": {
+            "title": "Retrieval Mode",
+            "type": "string"
+          },
+          "run_id": {
+            "title": "Run Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "generated_utc",
+          "bridge_version",
+          "retrieval_mode",
+          "run_id"
+        ],
+        "title": "Provenance",
+        "type": "object"
+      },
+      "RedactionInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "type": {
+            "enum": ["secret_like", "credential", "token"],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": ["type", "note"],
+        "title": "RedactionInfo",
+        "type": "object"
+      },
+      "Stats": {
+        "additionalProperties": false,
+        "properties": {
+          "chars_after": {
+            "title": "Chars After",
+            "type": "integer"
+          },
+          "chars_before": {
+            "title": "Chars Before",
+            "type": "integer"
+          },
+          "est_tokens_after": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Est Tokens After"
+          },
+          "est_tokens_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Est Tokens Before"
+          }
+        },
+        "required": ["chars_before", "chars_after"],
+        "title": "Stats",
+        "type": "object"
+      },
+      "Trace": {
+        "additionalProperties": false,
+        "properties": {
+          "client_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Version"
+          },
+          "source": {
+            "default": "openbrowser",
+            "enum": ["openbrowser", "mcp", "cli"],
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "title": "Trace",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "WebFetchRequest": {
+        "properties": {
+          "lane": {
+            "default": "OB_OFFLINE",
+            "description": "OpenBrowser lane identifier (OB_OFFLINE or OB_ONLINE_PULSE)",
+            "title": "Lane",
+            "type": "string"
+          },
+          "max_bytes": {
+            "default": 512000,
+            "description": "Maximum bytes to fetch",
+            "title": "Max Bytes",
+            "type": "integer"
+          },
+          "prompt": {
+            "default": "",
+            "description": "Extraction prompt (optional)",
+            "title": "Prompt",
+            "type": "string"
+          },
+          "url": {
+            "description": "URL to fetch (http/https)",
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": ["url"],
+        "title": "WebFetchRequest",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "SOCA OpenBrowser Bridge",
+    "version": "v1.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    },
+    "/soca/context-pack": {
+      "post": {
+        "operationId": "context_pack_soca_context_pack_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContextPackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContextPackResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Context Pack"
+      }
+    },
+    "/soca/context7/get-library-docs": {
+      "post": {
+        "operationId": "soca_context7_get_library_docs_soca_context7_get_library_docs_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Context7DocsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Soca Context7 Get Library Docs Soca Context7 Get Library Docs Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Soca Context7 Get Library Docs"
+      }
+    },
+    "/soca/github/get": {
+      "post": {
+        "operationId": "soca_github_get_soca_github_get_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GitHubGetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Soca Github Get Soca Github Get Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Soca Github Get"
+      }
+    },
+    "/soca/nt2l/plan": {
+      "post": {
+        "operationId": "soca_nt2l_plan_soca_nt2l_plan_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Nt2lPlanBridgeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Soca Nt2L Plan Soca Nt2L Plan Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Soca Nt2L Plan"
+      }
+    },
+    "/soca/openbrowser/panel-dump": {
+      "post": {
+        "operationId": "soca_openbrowser_panel_dump_soca_openbrowser_panel_dump_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenBrowserPanelDumpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Soca Openbrowser Panel Dump Soca Openbrowser Panel Dump Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Soca Openbrowser Panel Dump"
+      }
+    },
+    "/soca/promptbuddy/capabilities": {
+      "get": {
+        "operationId": "promptbuddy_capabilities_soca_promptbuddy_capabilities_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Promptbuddy Capabilities Soca Promptbuddy Capabilities Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Promptbuddy Capabilities"
+      }
+    },
+    "/soca/promptbuddy/enhance": {
+      "post": {
+        "operationId": "promptbuddy_enhance_soca_promptbuddy_enhance_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromptEnhanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PromptEnhanceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Promptbuddy Enhance"
+      }
+    },
+    "/soca/promptbuddy/health": {
+      "get": {
+        "operationId": "promptbuddy_health_soca_promptbuddy_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Promptbuddy Health Soca Promptbuddy Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Promptbuddy Health"
+      }
+    },
+    "/soca/promptbuddy/profiles": {
+      "get": {
+        "operationId": "promptbuddy_profiles_soca_promptbuddy_profiles_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Promptbuddy Profiles Soca Promptbuddy Profiles Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Promptbuddy Profiles"
+      }
+    },
+    "/soca/promptbuddy/selftest": {
+      "get": {
+        "operationId": "promptbuddy_selftest_soca_promptbuddy_selftest_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Promptbuddy Selftest Soca Promptbuddy Selftest Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Promptbuddy Selftest"
+      }
+    },
+    "/soca/webfetch": {
+      "post": {
+        "operationId": "soca_webfetch_soca_webfetch_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebFetchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Soca Webfetch Soca Webfetch Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Soca Webfetch"
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "operationId": "chat_completions_v1_chat_completions_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat Completions"
+      }
+    },
+    "/v1/models": {
+      "get": {
+        "operationId": "list_models_v1_models_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Models V1 Models Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Models"
+      }
+    }
+  }
+}

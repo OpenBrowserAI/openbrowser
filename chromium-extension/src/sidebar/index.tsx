@@ -23,6 +23,20 @@ const AppRun = () => {
   const [autoScroll, setAutoScroll] = useState(true);
   const [updateTrigger, setUpdateTrigger] = useState(0);
 
+  // Keep MV3 service worker alive while the sidebar is open (active automation).
+  useEffect(() => {
+    const port = chrome.runtime.connect({ name: "SOCA_KEEPALIVE" });
+    const ping = () => port.postMessage({ type: "PING" });
+    ping();
+    const id = window.setInterval(ping, 20_000);
+    return () => {
+      window.clearInterval(id);
+      try {
+        port.disconnect();
+      } catch {}
+    };
+  }, []);
+
   const {
     chatId,
     showSessionHistory,
@@ -124,86 +138,97 @@ const AppRun = () => {
   }, [handleChatCallback, handleTaskCallback, currentMessageId]);
 
   // Send message
-  const sendMessage = useCallback(async () => {
-    if ((!inputValue.trim() && uploadedFiles.length === 0) || sending) return;
+  const sendMessage = useCallback(
+    async (overrideInputValue?: string) => {
+      const effectiveInputValue =
+        typeof overrideInputValue === "string"
+          ? overrideInputValue
+          : inputValue;
+      if (
+        (!effectiveInputValue.trim() && uploadedFiles.length === 0) ||
+        sending
+      )
+        return;
 
-    const messageId = uuidv4();
+      const messageId = uuidv4();
 
-    // Upload files
-    const fileParts: Array<{
-      type: "file";
-      fileId: string;
-      filename?: string;
-      mimeType: string;
-      data: string;
-    }> = [];
-    for (const file of uploadedFiles) {
+      // Upload files
+      const fileParts: Array<{
+        type: "file";
+        fileId: string;
+        filename?: string;
+        mimeType: string;
+        data: string;
+      }> = [];
+      for (const file of uploadedFiles) {
+        try {
+          const { fileId, url } = await uploadFile(file);
+          file.fileId = fileId;
+          file.url = url;
+          fileParts.push({
+            type: "file",
+            fileId,
+            filename: file.filename,
+            mimeType: file.mimeType,
+            data: url.startsWith("http") ? url : file.base64Data
+          });
+        } catch (error) {
+          console.error("Error uploading file:", error);
+        }
+      }
+
+      // Build user message content
+      const userParts: Array<
+        | { type: "text"; text: string }
+        | {
+            type: "file";
+            fileId: string;
+            filename?: string;
+            mimeType: string;
+            data: string;
+          }
+      > = [];
+      if (effectiveInputValue.trim()) {
+        userParts.push({ type: "text", text: effectiveInputValue });
+      }
+      userParts.push(...fileParts);
+
+      const userMessage: ChatMessage = {
+        id: messageId,
+        role: "user",
+        content: effectiveInputValue,
+        timestamp: Date.now(),
+        contentItems: [],
+        uploadedFiles: [...uploadedFiles],
+        status: "waiting"
+      };
+
+      setMessages((prev) => [...prev, userMessage]);
+      setInputValue("");
+      setUploadedFiles([]);
+      setSending(true);
+      setCurrentMessageId(messageId);
+
       try {
-        const { fileId, url } = await uploadFile(file);
-        file.fileId = fileId;
-        file.url = url;
-        fileParts.push({
-          type: "file",
-          fileId,
-          filename: file.filename,
-          mimeType: file.mimeType,
-          data: url.startsWith("http") ? url : file.base64Data
+        chrome.runtime.sendMessage({
+          requestId: uuidv4(),
+          type: "chat",
+          data: {
+            user: userParts,
+            messageId: messageId,
+            chatId: chatId,
+            windowId: (await chrome.windows.getCurrent()).id
+          }
         });
       } catch (error) {
-        console.error("Error uploading file:", error);
+        userMessage.status = "error";
+        console.error("Error sending message:", error);
+      } finally {
+        setSending(false);
       }
-    }
-
-    // Build user message content
-    const userParts: Array<
-      | { type: "text"; text: string }
-      | {
-          type: "file";
-          fileId: string;
-          filename?: string;
-          mimeType: string;
-          data: string;
-        }
-    > = [];
-    if (inputValue.trim()) {
-      userParts.push({ type: "text", text: inputValue });
-    }
-    userParts.push(...fileParts);
-
-    const userMessage: ChatMessage = {
-      id: messageId,
-      role: "user",
-      content: inputValue,
-      timestamp: Date.now(),
-      contentItems: [],
-      uploadedFiles: [...uploadedFiles],
-      status: "waiting"
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInputValue("");
-    setUploadedFiles([]);
-    setSending(true);
-    setCurrentMessageId(messageId);
-
-    try {
-      chrome.runtime.sendMessage({
-        requestId: uuidv4(),
-        type: "chat",
-        data: {
-          user: userParts,
-          messageId: messageId,
-          chatId: chatId,
-          windowId: (await chrome.windows.getCurrent()).id
-        }
-      });
-    } catch (error) {
-      userMessage.status = "error";
-      console.error("Error sending message:", error);
-    } finally {
-      setSending(false);
-    }
-  }, [inputValue, uploadedFiles, sending, uploadFile, chatId]);
+    },
+    [inputValue, uploadedFiles, sending, uploadFile, chatId]
+  );
 
   // Stop message
   const stopMessage = useCallback((messageId: string) => {
@@ -264,7 +289,7 @@ const AppRun = () => {
       changes: { [key: string]: chrome.storage.StorageChange },
       areaName: string
     ) => {
-      if (areaName === "sync" && changes["llmConfig"]) {
+      if (areaName === "local" && changes["llmConfig"]) {
         handleNewSession();
       }
     };

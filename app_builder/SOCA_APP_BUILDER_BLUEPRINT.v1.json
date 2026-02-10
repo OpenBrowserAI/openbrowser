@@ -1,0 +1,133 @@
+{
+  "schema_version": "1.0",
+  "kind": "SOCA_APP_BUILDER_BLUEPRINT",
+  "id": "soca_app_builder_v1",
+  "policy": {
+    "lane": "L1_ASSISTED",
+    "network": "ALLOW_BUILDER_UI_ONLY",
+    "ssot_write": false,
+    "hil_required_for": [
+      "login_or_oauth",
+      "grant_browser_permissions",
+      "connect_github",
+      "download_or_export_code",
+      "run_external_commands"
+    ]
+  },
+  "inputs": {
+    "app_name": "NT2L",
+    "app_codename": "nt2l",
+    "primary_blueprint_files": [
+      "NT2L_APP_BLUEPRINT.json",
+      "NT2L_WORKFLOW_SCHEMA.json"
+    ],
+    "prompt_pack": {
+      "global_system_instructions": "SYSTEM_INSTRUCTIONS.txt",
+      "builder_first_message": "FIRST_MESSAGE.txt",
+      "post_export_fixup_prompt": "FIXUP_PROMPT.txt"
+    }
+  },
+  "builders": [
+    {
+      "id": "google_ai_studio_build",
+      "label": "Google AI Studio Build",
+      "type": "web_builder",
+      "url": "https://aistudio.google.com/apps",
+      "allowed_domains": ["aistudio.google.com", "accounts.google.com"],
+      "export_methods": ["download_zip", "github_sync"],
+      "adapter": {
+        "action_spec_template": "actions/google_ai_studio_build.actions.v1.json",
+        "ui_contract": {
+          "system_instructions_panel": "advanced_settings",
+          "build_button_text": "Build",
+          "download_button_text": "Download"
+        }
+      }
+    },
+    {
+      "id": "lovable",
+      "label": "Lovable",
+      "type": "web_builder",
+      "url": "https://lovable.dev",
+      "allowed_domains": ["lovable.dev", "github.com"],
+      "export_methods": ["github_sync", "download_zip"],
+      "adapter": {
+        "action_spec_template": "actions/lovable.actions.v1.json",
+        "ui_contract": {
+          "new_project": "New project",
+          "export_to_github": "Connect to GitHub",
+          "download_zip": "Download"
+        }
+      }
+    },
+    {
+      "id": "antigravity",
+      "label": "Antigravity",
+      "type": "agent_ide",
+      "url": "https://antigravity.google/",
+      "allowed_domains": ["antigravity.google"],
+      "export_methods": ["github_sync", "export_zip"],
+      "adapter": {
+        "mode": "workspace_isolated",
+        "artifacts_required": [
+          "task_list",
+          "implementation_plan",
+          "screenshots",
+          "recordings"
+        ],
+        "danger_mode": "OFF"
+      }
+    }
+  ],
+  "best_of_n": {
+    "n_per_builder": 3,
+    "variant_strategy": {
+      "prompt_variants": ["baseline", "strict_nextjs_only", "a11y_extreme"],
+      "temperature": [0.1, 0.2, 0.3]
+    }
+  },
+  "post_export": {
+    "normalize": {
+      "target_stack": "nextjs_app_router_ts",
+      "if_builder_outputs_vite_react": "run_fixup_prompt_then_codex_patchset"
+    },
+    "quality_gates": [
+      "dependency_install",
+      "lint",
+      "typecheck",
+      "unit_tests",
+      "a11y_smoke",
+      "security_audit"
+    ],
+    "scoring": {
+      "weights": {
+        "build_success": 40,
+        "tests_pass": 20,
+        "a11y": 15,
+        "security": 15,
+        "maintainability": 10
+      },
+      "min_requirements": {
+        "build_success": true,
+        "no_critical_vulns": true,
+        "a11y_smoke_pass": true
+      }
+    }
+  },
+  "evidence": {
+    "bundle_format": "SOCA_EVIDENCE_BUNDLE_V1",
+    "required_artifacts": [
+      "rendered_prompts",
+      "actions_log_jsonl",
+      "dom_snapshots",
+      "screenshots",
+      "downloaded_artifacts",
+      "sha256_manifest"
+    ]
+  },
+  "outputs": {
+    "runs_dir": "runs/app_builder",
+    "emit_candidate_bundles": true,
+    "emit_best_candidate_pointer": true
+  }
+}

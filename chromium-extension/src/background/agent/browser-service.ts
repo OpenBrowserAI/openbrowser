@@ -1,8 +1,14 @@
 import { BrowserService } from "@openbrowser-ai/core";
 import { PageTab, PageContent } from "@openbrowser-ai/core/types";
-import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import { bridgeFetchJson } from "../bridge-client";
 
-GlobalWorkerOptions.workerSrc = chrome.runtime.getURL("pdf.worker.min.js");
+type PdfExtractResponse = {
+  ok?: boolean;
+  text?: string;
+  pages?: number;
+  sha256?: string;
+  truncated?: boolean;
+};
 
 export class SimpleBrowserService implements BrowserService {
   async loadTabs(
@@ -54,7 +60,7 @@ export class SimpleBrowserService implements BrowserService {
       });
       let tabHtmls = frameResults[0].result as string;
       if (!tabHtmls) {
-        tabHtmls = await this.extractPdfContent(tab.url);
+        tabHtmls = await this.extractPdfContent(tab.url || "");
       }
       contents.push({
         tabId: tabId,
@@ -68,22 +74,60 @@ export class SimpleBrowserService implements BrowserService {
 
   private async extractPdfContent(pdfUrl: string): Promise<string> {
     try {
-      const loadingTask = getDocument(pdfUrl);
-      const pdf = await loadingTask.promise;
-      let textContent = "";
-
-      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const textData = await page.getTextContent();
-        const pageText = textData.items.map((item: any) => item.str).join(" ");
-        textContent += `PDF Page ${pageNum}:\n${pageText}\n\n`;
-      }
-
-      return textContent;
+      if (!pdfUrl) return "";
+      const resolvedUrl = resolvePdfSourceUrl(pdfUrl);
+      if (!resolvedUrl) return "";
+      // IMPORTANT: the extension does not fetch remote PDFs. All fetching/extraction happens in the Bridge.
+      const resp = await bridgeFetchJson<PdfExtractResponse>(
+        "/soca/pdf/extract",
+        {
+          method: "POST",
+          body: JSON.stringify({ url: resolvedUrl }),
+          withLane: true,
+          timeoutMs: 45_000
+        }
+      );
+      return String(resp?.text || "");
     } catch (error) {
       console.warn("Unable to load PDF:", error);
       return "";
     }
+  }
+}
+
+function resolvePdfSourceUrl(rawUrl: string): string {
+  const text = String(rawUrl || "").trim();
+  if (!text) return "";
+  try {
+    const u = new URL(text);
+    if (u.protocol === "http:" || u.protocol === "https:") return u.toString();
+
+    // Chrome PDF viewer: chrome-extension://<id>/index.html?file=<encoded_url>
+    if (u.protocol === "chrome-extension:") {
+      const file = u.searchParams.get("file");
+      if (!file) return "";
+      const decoded = (() => {
+        try {
+          return decodeURIComponent(file);
+        } catch {
+          return file;
+        }
+      })();
+      try {
+        const inner = new URL(decoded);
+        if (inner.protocol === "http:" || inner.protocol === "https:") {
+          return inner.toString();
+        }
+      } catch {
+        // Ignore.
+      }
+      return "";
+    }
+
+    // file:// and other schemes: bridge fetch is not supported here (fail-closed).
+    return "";
+  } catch {
+    return "";
   }
 }
 

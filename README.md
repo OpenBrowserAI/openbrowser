@@ -20,6 +20,13 @@ Join us and help shape the future of AI-powered browsing:
 
 We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to get started.
 
+## SOCA Official Operations Guides
+
+- Markdown operations guide: `../../../RESSOURCES/guides/SOCA_HOLOBIONT_OS_OPENBROWSER_PROMPTBUDDY_OFFICIAL_GUIDE.md`
+- HOLOS HTML guide: `../../../RESSOURCES/guides/SOCA_HOLOBIONT_OS_HOLOS_OPENBROWSER_GUIDE.html`
+- Official guides index: `../../../RESSOURCES/guides/SOCA_OFFICIAL_GUIDES_INDEX.html`
+- Bridge Prompt Buddy notes: `./bridge/PROMPTBUDDY.md`
+
 ## License
 
 OpenBrowser is open source under MIT licence

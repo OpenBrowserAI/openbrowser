@@ -145,6 +145,268 @@ export function getMimeType(data: string): string {
   return mediaType;
 }
 
+function normalizeMediaType(mediaType: string): string {
+  return (mediaType || "").split(";", 1)[0].trim().toLowerCase();
+}
+
+export function isTextLikeMediaType(mediaType: string): boolean {
+  const normalized = normalizeMediaType(mediaType);
+  if (!normalized) {
+    return false;
+  }
+  if (normalized.startsWith("text/")) {
+    return true;
+  }
+  if (
+    normalized === "application/json" ||
+    normalized.endsWith("+json") ||
+    normalized === "application/xml" ||
+    normalized.endsWith("+xml") ||
+    normalized === "application/yaml" ||
+    normalized === "application/x-yaml" ||
+    normalized === "application/csv"
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function inferCodeFenceLanguage(mediaType: string, filename?: string): string {
+  const normalized = normalizeMediaType(mediaType);
+  if (normalized === "text/markdown") return "markdown";
+  if (normalized === "application/json" || normalized.endsWith("+json"))
+    return "json";
+  if (normalized === "application/xml" || normalized.endsWith("+xml"))
+    return "xml";
+  if (normalized === "application/yaml" || normalized === "application/x-yaml")
+    return "yaml";
+  if (normalized === "text/csv" || normalized === "application/csv")
+    return "csv";
+  if (normalized === "text/plain") return "text";
+
+  const name = (filename || "").toLowerCase();
+  if (name.endsWith(".md")) return "markdown";
+  if (name.endsWith(".json")) return "json";
+  if (name.endsWith(".yaml") || name.endsWith(".yml")) return "yaml";
+  if (name.endsWith(".xml")) return "xml";
+  if (name.endsWith(".csv")) return "csv";
+  if (name.endsWith(".ts") || name.endsWith(".tsx")) return "typescript";
+  if (name.endsWith(".js") || name.endsWith(".jsx")) return "javascript";
+  if (name.endsWith(".py")) return "python";
+  if (name.endsWith(".sh")) return "bash";
+  return "text";
+}
+
+function concatChunks(chunks: Uint8Array[], totalLength: number): Uint8Array {
+  const out = new Uint8Array(totalLength);
+  let offset = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return out;
+}
+
+async function fetchBytesLimited(
+  url: URL,
+  maxBytes: number
+): Promise<{ bytes: Uint8Array; truncated: boolean; contentType?: string }> {
+  const response = await fetch(url.toString());
+  if (!response.ok) {
+    throw new Error(`fetch_failed: ${response.status} ${response.statusText}`);
+  }
+
+  const contentType = response.headers.get("content-type") || undefined;
+
+  if (!response.body) {
+    const buffer = new Uint8Array(await response.arrayBuffer());
+    if (buffer.length <= maxBytes) {
+      return { bytes: buffer, truncated: false, contentType };
+    }
+    return { bytes: buffer.slice(0, maxBytes), truncated: true, contentType };
+  }
+
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  let truncated = false;
+  try {
+    while (total < maxBytes) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (!value || value.length === 0) continue;
+
+      let chunk = value;
+      if (total + chunk.length > maxBytes) {
+        chunk = chunk.slice(0, maxBytes - total);
+        truncated = true;
+      }
+      chunks.push(chunk);
+      total += chunk.length;
+      if (truncated) break;
+    }
+  } finally {
+    try {
+      truncated && (await reader.cancel());
+    } catch {}
+    reader.releaseLock();
+  }
+
+  return { bytes: concatChunks(chunks, total), truncated, contentType };
+}
+
+function looksLikeBase64(value: string): boolean {
+  const s = value.trim().replace(/\s+/g, "");
+  if (s.length < 4) return false;
+  if (s.length % 4 === 1) return false;
+  return /^[A-Za-z0-9+/=]+$/.test(s);
+}
+
+function decodeBase64PrefixToBytes(
+  base64: string,
+  maxBytes: number
+): { bytes: Uint8Array; truncated: boolean } {
+  const compact = base64.trim().replace(/\s+/g, "");
+  const maxBase64Len = Math.ceil(maxBytes / 3) * 4;
+  const prefix = compact.slice(0, maxBase64Len);
+  let bytes: Uint8Array;
+  // @ts-ignore
+  if (typeof Buffer != "undefined") {
+    // @ts-ignore
+    bytes = Buffer.from(prefix, "base64");
+  } else {
+    const binaryString = atob(prefix);
+    const out = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      out[i] = binaryString.charCodeAt(i);
+    }
+    bytes = out;
+  }
+  const truncated = compact.length > prefix.length;
+  return { bytes, truncated };
+}
+
+function decodeUtf8(bytes: Uint8Array): string {
+  if (typeof TextDecoder !== "undefined") {
+    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  }
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) {
+    out += String.fromCharCode(bytes[i]);
+  }
+  return out;
+}
+
+function isProbablyBinaryText(text: string, bytes?: Uint8Array): boolean {
+  if (bytes) {
+    const sampleBytes = bytes.subarray(0, Math.min(bytes.length, 4096));
+    for (let i = 0; i < sampleBytes.length; i++) {
+      if (sampleBytes[i] === 0) return true;
+    }
+  }
+  const sampleText = text.slice(0, 2048);
+  if (!sampleText) return false;
+  const replacementCount = (sampleText.match(/\uFFFD/g) || []).length;
+  return replacementCount / sampleText.length > 0.05;
+}
+
+export async function inlineFilePartAsText(options: {
+  data: unknown;
+  mediaType: string;
+  filename?: string;
+  maxBytes?: number;
+  maxChars?: number;
+}): Promise<string> {
+  const maxBytes = options.maxBytes ?? 256_000;
+  const maxChars = options.maxChars ?? 20_000;
+  const filename = options.filename;
+  const mediaType = options.mediaType;
+  const language = inferCodeFenceLanguage(mediaType, filename);
+
+  let content = "";
+  let truncated = false;
+  let source: string = "unknown";
+  let bytesForBinaryCheck: Uint8Array | undefined = undefined;
+
+  try {
+    if (options.data instanceof URL) {
+      const fetched = await fetchBytesLimited(options.data, maxBytes);
+      content = decodeUtf8(fetched.bytes);
+      truncated = fetched.truncated;
+      source = "url";
+      bytesForBinaryCheck = fetched.bytes;
+    } else if (typeof options.data === "string") {
+      let data = options.data;
+      if (
+        data.startsWith("http://") ||
+        data.startsWith("https://") ||
+        (data.startsWith("//") && data.indexOf(".") > 0 && data.length < 1000)
+      ) {
+        const url = data.startsWith("//")
+          ? new URL("https:" + data)
+          : new URL(data);
+        const fetched = await fetchBytesLimited(url, maxBytes);
+        content = decodeUtf8(fetched.bytes);
+        truncated = fetched.truncated;
+        source = "url";
+        bytesForBinaryCheck = fetched.bytes;
+      } else {
+        if (data.startsWith("data:")) {
+          data = data.substring(data.indexOf(",") + 1);
+        }
+        if (looksLikeBase64(data)) {
+          const decoded = decodeBase64PrefixToBytes(data, maxBytes);
+          content = decodeUtf8(decoded.bytes);
+          truncated = decoded.truncated;
+          source = "base64";
+          bytesForBinaryCheck = decoded.bytes;
+        } else {
+          content = data;
+          source = "text";
+        }
+      }
+    } else if (options.data instanceof Uint8Array) {
+      const bytes = options.data.subarray(
+        0,
+        Math.min(options.data.length, maxBytes)
+      );
+      content = decodeUtf8(bytes);
+      truncated = options.data.length > bytes.length;
+      source = "bytes";
+      bytesForBinaryCheck = bytes;
+    } else if (options.data instanceof ArrayBuffer) {
+      const arr = new Uint8Array(options.data);
+      const bytes = arr.subarray(0, Math.min(arr.length, maxBytes));
+      content = decodeUtf8(bytes);
+      truncated = arr.length > bytes.length;
+      source = "bytes";
+      bytesForBinaryCheck = bytes;
+    } else {
+      content = String(options.data ?? "");
+      source = typeof options.data;
+    }
+  } catch (e: any) {
+    const err = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    const name = filename ? ` ${filename}` : "";
+    return `[file${name} (${mediaType}) could not be inlined as text: ${err}]`;
+  }
+
+  const binary = isProbablyBinaryText(content, bytesForBinaryCheck);
+  if (binary && !isTextLikeMediaType(mediaType)) {
+    const name = filename ? ` ${filename}` : "";
+    return `[file${name} (${mediaType}) is binary and was not inlined]`;
+  }
+
+  if (content.length > maxChars) {
+    content = content.slice(0, maxChars);
+    truncated = true;
+  }
+
+  const header = `[file${filename ? ` ${filename}` : ""} (${mediaType}, source=${source})]`;
+  const suffix = truncated ? "\n\n[truncated]" : "";
+  return `${header}\n\`\`\`${language}\n${content}\n\`\`\`${suffix}`;
+}
+
 export async function compressImageData(
   imageBase64: string,
   imageType: "image/jpeg" | "image/png",

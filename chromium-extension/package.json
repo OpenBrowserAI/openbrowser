@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "OpenBrowser Agent",
   "scripts": {
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js",
+    "check:drift": "bash scripts/assert_no_all_urls.sh && bash scripts/assert_no_models_dev.sh",
+    "test:e2e": "../../../../node_modules/.bin/playwright test -c playwright.config.ts"
   },
   "author": "OpenBrowserAI",
   "license": "MIT",

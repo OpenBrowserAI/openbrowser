@@ -203,6 +203,43 @@ export default abstract class BaseBrowserLabelsAgent extends BaseBrowserAgent {
           break;
         }
       }
+
+      // Observation snapshot (SSOT for deterministic write gating).
+      try {
+        const tabId = agentContext.variables.get("__ob_tabId") as
+          | number
+          | undefined;
+        const frameId =
+          (agentContext.variables.get("__ob_frameId") as number | undefined) ||
+          0;
+        const documentId = agentContext.variables.get("__ob_documentId") as
+          | string
+          | null
+          | undefined;
+        const pageSigHash = String(element_result?.pageSigHash || "");
+        const docInstanceId = String(element_result?.docInstanceId || "");
+        const pinHashByIndex = (element_result?.pinHashByIndex || {}) as Record<
+          string,
+          string
+        >;
+
+        // docInstanceId can be unavailable in some observation contexts; write gates can still
+        // fail-closed deterministically on pageSigHash + pinHash.
+        if (tabId && pageSigHash && pinHashByIndex) {
+          agentContext.variables.set("__ob_snapshot", {
+            tabId,
+            frameId,
+            documentId,
+            docInstanceId,
+            pageSigHash,
+            pinHashByIndex,
+            observedAt: Date.now()
+          });
+        }
+      } catch (e) {
+        // Fail-open for observation (writes will still fail-closed without a snapshot).
+      }
+
       await sleep(100);
       const screenshot =
         config.mode == "fast"

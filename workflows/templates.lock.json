@@ -1,0 +1,33 @@
+{
+  "schema_version": "2026-02-06",
+  "templates": {
+    "clawdbot-deploy.yaml": {
+      "bytes": 5339,
+      "sha256": "c3eba3916620e86d0c8e389aee3fee4a6d249edfa7a130de0feb2176df94465f"
+    },
+    "evidence-bundle.yaml": {
+      "bytes": 3979,
+      "sha256": "1eeb3785b8d0da01dca5315397163b24cb0e75f815021375fb11b97cb18f54d1"
+    },
+    "openbrowser-setup.yaml": {
+      "bytes": 3698,
+      "sha256": "31050c08c1e2d73bd2793673d4fee4e5665d576216e6d46886fee8fada2fb882"
+    },
+    "preflight.yaml": {
+      "bytes": 3625,
+      "sha256": "7467b18cae8993f7d26b2688bf860b7feb6884af88deec41cacde6fdc6c72edd"
+    },
+    "vps-capsule.yaml": {
+      "bytes": 5415,
+      "sha256": "871011a0cfe48f4e741dd9f599852715ba5e8e58c9b2bb5e82e0372b5badfd45"
+    },
+    "vps-preflight.yaml": {
+      "bytes": 4293,
+      "sha256": "60239304b1e0e90a3756d928e65be6b5f8b8781f1cc221a5029adc87db2776b4"
+    },
+    "vps-setup.yaml": {
+      "bytes": 6403,
+      "sha256": "34865e2bb5c9fb0e6c13de74392227cf9d6e8f4b3600cb1a44366021f807e07a"
+    }
+  }
+}

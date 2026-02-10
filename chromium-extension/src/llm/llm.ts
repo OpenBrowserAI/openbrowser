@@ -10,21 +10,183 @@ import type {
   ModelOption
 } from "./llm.interface";
 
-const MODELS_API_URL = "https://models.dev/api.json";
+export type SocaOpenBrowserLane = "OB_OFFLINE" | "OB_ONLINE_PULSE";
 
-/**
- * Fetch models data from models.dev API
- */
-export async function fetchModelsData(): Promise<ModelsData> {
-  try {
-    const response = await fetch(MODELS_API_URL);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch models: ${response.statusText}`);
+const MODELS_CACHE_STORAGE_KEY = "socaBridgeModelsCache";
+const BRIDGE_MODELS_MESSAGE_TYPE = "SOCA_BRIDGE_GET_MODELS";
+const LOCAL_OLLAMA_PROVIDER: ModelsData = {
+  ollama: {
+    id: "ollama",
+    name: "Ollama (Local)",
+    npm: "@ai-sdk/openai-compatible",
+    api: "http://127.0.0.1:11434/v1",
+    models: {
+      "qwen3-vl:2b": {
+        id: "qwen3-vl:2b",
+        name: "Qwen3-VL 2B",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "qwen3-vl:4b": {
+        id: "qwen3-vl:4b",
+        name: "Qwen3-VL 4B",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "qwen3-vl:8b": {
+        id: "qwen3-vl:8b",
+        name: "Qwen3-VL 8B",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      }
     }
-    return await response.json();
+  }
+};
+const LOCAL_SOCA_BRIDGE_PROVIDER: ModelsData = {
+  "soca-bridge": {
+    id: "soca-bridge",
+    name: "SOCA Bridge (Local)",
+    npm: "@ai-sdk/openai-compatible",
+    api: "http://127.0.0.1:9834/v1",
+    models: {
+      "soca/auto": {
+        id: "soca/auto",
+        name: "SOCA Auto (via Bridge)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "soca/fast": {
+        id: "soca/fast",
+        name: "SOCA Fast (via Bridge)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "soca/best": {
+        id: "soca/best",
+        name: "SOCA Best (via Bridge)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "qwen3-vl:2b": {
+        id: "qwen3-vl:2b",
+        name: "Qwen3-VL 2B (via Bridge)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "qwen3-vl:4b": {
+        id: "qwen3-vl:4b",
+        name: "Qwen3-VL 4B (via Bridge)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "qwen3-vl:8b": {
+        id: "qwen3-vl:8b",
+        name: "Qwen3-VL 8B (via Bridge)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      }
+    }
+  }
+};
+const DEFAULT_FALLBACK_MODELS: ModelsData = {
+  ...LOCAL_OLLAMA_PROVIDER,
+  ...LOCAL_SOCA_BRIDGE_PROVIDER
+};
+
+function guessVisionSupport(modelId: string): boolean {
+  const id = (modelId || "").toLowerCase();
+  // Heuristic: prefer false-positives (more models shown) over missing likely vision models.
+  return (
+    id.startsWith("soca/") ||
+    id.includes("vl") ||
+    id.includes("vision") ||
+    id.includes("llava") ||
+    id.includes("pixtral") ||
+    id.includes("gpt-4o") ||
+    id.includes("gpt-4.1") ||
+    id.includes("claude") ||
+    id.includes("gemini")
+  );
+}
+
+async function fetchBridgeModelIds(timeoutMs: number): Promise<string[]> {
+  if (typeof chrome === "undefined" || !chrome?.runtime?.sendMessage) return [];
+  const resp = (await Promise.race([
+    chrome.runtime.sendMessage({ type: BRIDGE_MODELS_MESSAGE_TYPE }),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("bridge_models_timeout")), timeoutMs)
+    )
+  ])) as any;
+
+  if (!resp?.ok) {
+    throw new Error(String(resp?.err || "bridge_models_failed"));
+  }
+  const list = resp?.data?.data;
+  if (!Array.isArray(list)) return [];
+  return list.map((m: any) => String(m?.id || "").trim()).filter(Boolean);
+}
+
+async function readModelsCache(): Promise<ModelsData | null> {
+  try {
+    if (typeof chrome === "undefined" || !chrome?.storage?.local) {
+      return null;
+    }
+    const result = await chrome.storage.local.get([MODELS_CACHE_STORAGE_KEY]);
+    const cached = result[MODELS_CACHE_STORAGE_KEY] as ModelsData | undefined;
+    if (!cached || typeof cached !== "object") {
+      return null;
+    }
+    return cached;
+  } catch (error) {
+    console.warn("Failed to read models cache:", error);
+    return null;
+  }
+}
+
+async function writeModelsCache(data: ModelsData): Promise<void> {
+  try {
+    if (typeof chrome === "undefined" || !chrome?.storage?.local) {
+      return;
+    }
+    await chrome.storage.local.set({ [MODELS_CACHE_STORAGE_KEY]: data });
+  } catch (error) {
+    console.warn("Failed to write models cache:", error);
+  }
+}
+
+export async function fetchModelsData(options?: {
+  lane?: SocaOpenBrowserLane;
+}): Promise<ModelsData> {
+  if (options?.lane !== "OB_ONLINE_PULSE") {
+    return DEFAULT_FALLBACK_MODELS;
+  }
+  try {
+    const ids = await fetchBridgeModelIds(8000);
+    if (!ids.length) {
+      return DEFAULT_FALLBACK_MODELS;
+    }
+
+    const bridgeModels: Record<string, Model> = {};
+    for (const id of ids) {
+      bridgeModels[id] = {
+        id,
+        name: id,
+        modalities: guessVisionSupport(id)
+          ? { input: ["text", "image"], output: ["text"] }
+          : { input: ["text"], output: ["text"] }
+      };
+    }
+
+    const data: ModelsData = {
+      ...LOCAL_OLLAMA_PROVIDER,
+      "soca-bridge": {
+        ...LOCAL_SOCA_BRIDGE_PROVIDER["soca-bridge"],
+        models: {
+          ...LOCAL_SOCA_BRIDGE_PROVIDER["soca-bridge"].models,
+          ...bridgeModels
+        }
+      }
+    };
+    await writeModelsCache(data);
+    return data;
   } catch (error) {
     console.error("Error fetching models:", error);
-    throw error;
+    const cached = await readModelsCache();
+    if (cached) {
+      return cached;
+    }
+    return DEFAULT_FALLBACK_MODELS;
   }
 }
 
@@ -113,7 +275,7 @@ export function modelsToOptions(
  * Get default base URL for a provider
  */
 export function getDefaultBaseURL(providerId: string, api?: string): string {
-  // Use API from models.dev data if available
+  // Use provider-advertised API base URL if available.
   if (api) {
     return api;
   }

@@ -122,15 +122,15 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       <div className="flex gap-3 mb-4">
         {/* User Icon */}
         <div className="flex-shrink-0">
-          <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-            <UserOutlined className="text-gray-600" />
+          <div className="w-6 h-6 rounded-full bg-theme-secondary border border-theme-input flex items-center justify-center">
+            <UserOutlined className="text-theme-icon" />
           </div>
         </div>
 
         {/* User Content */}
         <div className="flex-1 min-w-0">
           {message.content && (
-            <div className="text-gray-900 leading-relaxed text-sm">
+            <div className="text-theme-primary leading-relaxed text-sm">
               {userContent}
             </div>
           )}
@@ -151,13 +151,13 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                             : `data:${file.mimeType};base64,${file.base64Data}`
                         }
                         alt={file.filename}
-                        className="max-w-full max-h-[200px] rounded border border-gray-200"
+                        className="max-w-full max-h-[200px] radius-8px border border-theme-input"
                         preview={false}
                       />
                     ) : (
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded border border-gray-200">
-                        <FileOutlined className="text-gray-500" />
-                        <Text className="text-gray-700 text-sm">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-theme-secondary radius-8px border border-theme-input">
+                        <FileOutlined className="text-theme-icon" />
+                        <Text className="text-theme-primary text-sm">
                           {file.filename}
                         </Text>
                       </div>
@@ -177,8 +177,8 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     <div className="flex gap-3 mb-4">
       {/* AI Icon */}
       <div className="flex-shrink-0">
-        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-          <RobotOutlined className="text-gray-600" />
+        <div className="w-6 h-6 rounded-full bg-theme-secondary border border-theme-input flex items-center justify-center">
+          <RobotOutlined className="text-theme-icon" />
         </div>
       </div>
 
@@ -225,7 +225,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                       : `data:${item.mimeType};base64,${item.data}`
                   }
                   alt="Message file"
-                  className="max-w-full my-2 rounded border border-gray-200"
+                  className="max-w-full my-2 radius-8px border border-theme-input"
                 />
               );
             } else if (
@@ -253,7 +253,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
             return null;
           })
         ) : message.content ? (
-          <div className="mb-2 text-gray-900 leading-relaxed text-sm">
+          <div className="mb-2 text-theme-primary leading-relaxed text-sm">
             <MarkdownRenderer content={message.content} />
           </div>
         ) : message.status == "waiting" ? (

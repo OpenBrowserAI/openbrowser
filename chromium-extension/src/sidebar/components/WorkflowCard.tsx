@@ -66,8 +66,10 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({
         </div>
       )}
       {task.workflowConfirm === "pending" && (
-        <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded flex justify-between items-center">
-          <Text className="text-sm text-gray-700">Execute this workflow?</Text>
+        <div className="mb-3 p-3 bg-blue-50 border border-theme-input radius-8px flex justify-between items-center">
+          <Text className="text-sm text-theme-primary">
+            Execute this workflow?
+          </Text>
           <div className="flex gap-2">
             <Button
               size="small"
@@ -99,7 +101,10 @@ export const WorkflowCard: React.FC<WorkflowCardProps> = ({
             <AgentExecutionCard agentNode={group[0]} task={task} />
           ) : (
             <div>
-              <div className="mb-1 text-xs text-gray-500 italic">
+              <div
+                className="mb-1 text-xs text-theme-primary italic"
+                style={{ opacity: 0.7 }}
+              >
                 Running in parallel: {group.map((a) => a.name).join(", ")}
               </div>
               {group.map((agent) => (

@@ -20,25 +20,29 @@
     "page": "options.html",
     "open_in_tab": true
   },
-  "content_scripts": [
-    {
-      "run_at": "document_idle",
-      "matches": ["<all_urls>"],
-      "js": ["js/content_script.js"]
-    }
-  ],
   "permissions": [
-    "tabs",
     "activeTab",
-    "windows",
-    "sidePanel",
     "storage",
     "scripting",
-    "alarms",
-    "notifications",
-    "downloads"
+    "tabs",
+    "windows",
+    "sidePanel",
+    "downloads",
+    "declarativeNetRequest",
+    "webNavigation"
   ],
-  "host_permissions": ["<all_urls>"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://127.0.0.1/*",
+    "http://localhost/*",
+    "https://localhost/*",
+    "https://aistudio.google.com/*",
+    "https://accounts.google.com/*",
+    "https://lovable.dev/*",
+    "https://antigravity.google/*",
+    "https://github.com/*"
+  ],
+  "optional_host_permissions": [],
   "web_accessible_resources": [
     {
       "matches": ["<all_urls>"],

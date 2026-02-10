@@ -37,9 +37,9 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
           label: (
             <div className="flex items-center gap-2">
               {!streamDone ? (
-                <LoadingOutlined className="text-gray-400" spin />
+                <LoadingOutlined className="text-theme-icon" spin />
               ) : (
-                <BulbOutlined className="text-gray-400" />
+                <BulbOutlined className="text-theme-icon" />
               )}
               <Text type="secondary" className="text-sm">
                 Thinking
@@ -48,7 +48,10 @@ export const ThinkingItem: React.FC<ThinkingItemProps> = ({
           ),
           children: (
             <div className="pl-1">
-              <div className="text-sm text-gray-600">
+              <div
+                className="text-sm text-theme-primary"
+                style={{ opacity: 0.85 }}
+              >
                 <MarkdownRenderer content={text} secondary />
               </div>
               {!streamDone && <Spin size="small" className="mt-2" />}

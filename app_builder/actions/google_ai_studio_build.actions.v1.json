@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0",
+  "builder_id": "google_ai_studio_build",
+  "steps": [
+    { "op": "open_url", "url": "https://aistudio.google.com/apps" },
+    {
+      "op": "hil_pause",
+      "reason": "User must be logged in to Google if not already."
+    },
+
+    { "op": "wait_for_text", "text": "Build", "timeout_ms": 30000 },
+    { "op": "screenshot", "label": "aistudio_apps_loaded" },
+
+    {
+      "op": "click",
+      "selector": "[aria-label*='Advanced settings'], [aria-label*='Settings'], button[title*='Settings']"
+    },
+    {
+      "op": "wait_for_text",
+      "text": "System instructions",
+      "timeout_ms": 30000
+    },
+
+    {
+      "op": "paste_large_text",
+      "target": "system_instructions",
+      "from_file": "SYSTEM_INSTRUCTIONS.txt"
+    },
+    {
+      "op": "upload_files",
+      "files": ["NT2L_APP_BLUEPRINT.json", "NT2L_WORKFLOW_SCHEMA.json"]
+    },
+
+    {
+      "op": "paste_large_text",
+      "target": "main_prompt",
+      "from_file": "FIRST_MESSAGE.txt"
+    },
+    { "op": "click", "selector": "button:has-text('Build')" },
+
+    { "op": "wait_for_text", "text": "Checkpoint", "timeout_ms": 240000 },
+    { "op": "screenshot", "label": "build_complete" },
+
+    {
+      "op": "click",
+      "selector": "button[title*='Download'], button:has-text('Download')"
+    },
+    { "op": "download_click_and_capture", "label": "aistudio_zip_export" },
+
+    { "op": "read_dom_snapshot", "label": "final_dom" }
+  ]
+}

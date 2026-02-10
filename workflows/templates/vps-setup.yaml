@@ -1,0 +1,186 @@
+meta:
+  name: vps-setup
+  version: "1.0.0"
+  lane: L2_CONTROLLED_WRITE
+  network: ALLOW
+  description: "VPS initial setup for SOCA Holobiont OS deployment"
+
+# ==============================================================================
+# PHASE 1: SECURITY (Run immediately after first SSH)
+# ==============================================================================
+
+tasks:
+  - id: T00_secure_ssh
+    name: "Secure SSH access"
+    goal: "Create non-root user and setup SSH keys"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      # Create soca user
+      - adduser --disabled-password --gecos "SOCA Service" soca
+      - usermod -aG sudo soca
+      # Setup SSH directory
+      - mkdir -p /home/soca/.ssh
+      - chmod 700 /home/soca/.ssh
+      - chown -R soca:soca /home/soca/.ssh
+    verify:
+      - "User 'soca' exists"
+      - ".ssh directory has correct permissions (700)"
+
+  - id: T01_add_ssh_key
+    name: "Add SSH public key"
+    goal: "Enable key-based authentication"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      # User must paste their public key
+      - echo "PASTE_YOUR_PUBLIC_KEY_HERE" >> /home/soca/.ssh/authorized_keys
+      - chmod 600 /home/soca/.ssh/authorized_keys
+      - chown soca:soca /home/soca/.ssh/authorized_keys
+    verify:
+      - "authorized_keys file exists and has correct permissions (600)"
+
+  - id: T02_harden_ssh
+    name: "Harden SSH configuration"
+    goal: "Disable password auth after keys are setup"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      - sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+      - sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+      - sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin prohibit-password/' /etc/ssh/sshd_config
+      - systemctl restart sshd
+    verify:
+      - "PasswordAuthentication is no"
+      - "Can still SSH with key"
+    warning: "TEST SSH KEY LOGIN BEFORE RUNNING THIS - you may lock yourself out!"
+
+  # ==============================================================================
+  # PHASE 2: SYSTEM PACKAGES
+  # ==============================================================================
+
+  - id: T03_update_system
+    name: "Update system packages"
+    goal: "Ensure system is up to date"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - apt update
+      - apt upgrade -y
+    verify:
+      - "apt update succeeded"
+      - "No critical security updates pending"
+
+  - id: T04_install_essentials
+    name: "Install essential packages"
+    goal: "Install git, python, node, and utilities"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - apt install -y git git-core curl wget unzip jq python3 python3-pip python3-venv nodejs npm build-essential
+    verify:
+      - "git --version returns 2.x"
+      - "python3 --version returns 3.10+"
+      - "node --version returns 18+"
+
+  - id: T05_install_go
+    name: "Install Go (for OpenCode)"
+    goal: "Install Go 1.21+ for building OpenCode"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - wget https://go.dev/dl/go1.22.5.linux-amd64.tar.gz
+      - rm -rf /usr/local/go && tar -C /usr/local -xzf go1.22.5.linux-amd64.tar.gz
+      - rm go1.22.5.linux-amd64.tar.gz
+      - echo 'export PATH=$PATH:/usr/local/go/bin' >> /etc/profile.d/go.sh
+      - echo 'export PATH=$PATH:/root/go/bin' >> /etc/profile.d/go.sh
+    verify:
+      - "/usr/local/go/bin/go version returns 1.22"
+
+  # ==============================================================================
+  # PHASE 3: TAILSCALE (Secure Mesh Network)
+  # ==============================================================================
+
+  - id: T06_install_tailscale
+    name: "Install Tailscale"
+    goal: "Setup secure mesh networking"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: true
+    commands:
+      - curl -fsSL https://tailscale.com/install.sh | sh
+      - tailscale up --ssh
+    verify:
+      - "tailscale status shows connected"
+      - "tailscale ip -4 returns an IP"
+    note: "This will prompt for OAuth login - use your Gmail account"
+
+  # ==============================================================================
+  # PHASE 4: DOCKER
+  # ==============================================================================
+
+  - id: T07_install_docker
+    name: "Install Docker"
+    goal: "Setup Docker for containerized services"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - curl -fsSL https://get.docker.com | sh
+      - usermod -aG docker soca
+      - systemctl enable docker
+      - systemctl start docker
+    verify:
+      - "docker --version returns 24+"
+      - "docker ps works without sudo (after relogin)"
+
+  # ==============================================================================
+  # PHASE 5: OLLAMA (Local LLM)
+  # ==============================================================================
+
+  - id: T08_install_ollama
+    name: "Install Ollama"
+    goal: "Setup local LLM runtime for SOCA Bridge"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - curl -fsSL https://ollama.com/install.sh | sh
+      - systemctl enable ollama
+      - systemctl start ollama
+    verify:
+      - "ollama --version"
+      - "curl http://localhost:11434/api/tags returns JSON"
+
+  - id: T09_pull_qwen_models
+    name: "Pull Qwen3-VL models"
+    goal: "Download SOCA Bridge primary models"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - ollama pull qwen3-vl:2b
+      - ollama pull qwen3-vl:8b
+    verify:
+      - "ollama list shows qwen3-vl:2b"
+      - "ollama list shows qwen3-vl:8b"
+
+  # ==============================================================================
+  # PHASE 6: SOCA WORKSPACE
+  # ==============================================================================
+
+  - id: T10_create_workspace
+    name: "Create SOCA workspace"
+    goal: "Setup /opt/soca directory structure"
+    lane: L2_CONTROLLED_WRITE
+    hil_required: false
+    commands:
+      - mkdir -p /opt/soca
+      - mkdir -p /opt/soca/runs
+      - mkdir -p /opt/soca/logs
+      - mkdir -p /opt/soca/evidence
+      - chown -R soca:soca /opt/soca
+    verify:
+      - "/opt/soca exists with correct ownership"
+
+evidence:
+  output_dir: "runs/_local/vps-setup"
+  artifacts:
+    - setup_report.json
+    - sha256.txt

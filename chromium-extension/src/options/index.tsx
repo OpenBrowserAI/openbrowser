@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Form, Input, Button, message, Select, Checkbox, Spin } from "antd";
+import { Form, Input, Button, message, Select, Spin } from "antd";
 import { SaveOutlined, LoadingOutlined } from "@ant-design/icons";
 import "../sidebar/index.css";
 import { ThemeProvider } from "../sidebar/providers/ThemeProvider";
@@ -9,7 +9,8 @@ import {
   getProvidersWithImageSupport,
   providersToOptions,
   modelsToOptions,
-  getDefaultBaseURL
+  getDefaultBaseURL,
+  type SocaOpenBrowserLane
 } from "../llm/llm";
 import type {
   Provider,
@@ -18,23 +19,35 @@ import type {
 } from "../llm/llm.interface";
 
 const { Option } = Select;
+const SOCA_LANE_STORAGE_KEY = "socaOpenBrowserLane";
+const DEFAULT_SOCA_LANE: SocaOpenBrowserLane = "OB_OFFLINE";
+
+function runtimeSendMessage<TResp = any>(msg: any): Promise<TResp> {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(msg, (resp) => {
+      const err = chrome.runtime.lastError;
+      if (err) return reject(new Error(String(err.message || err)));
+      resolve(resp as TResp);
+    });
+  });
+}
 
 const OptionsPage = () => {
   const [form] = Form.useForm();
 
-  const [config, setConfig] = useState({
-    llm: "anthropic",
-    apiKey: "",
-    modelName: "claude-sonnet-4-5-20250929",
-    npm: "@ai-sdk/anthropic",
-    options: {
-      baseURL: "https://api.anthropic.com/v1"
-    }
-  });
+  const [laneLoaded, setLaneLoaded] = useState(false);
+  const [socaOpenBrowserLane, setSocaOpenBrowserLane] =
+    useState<SocaOpenBrowserLane>(DEFAULT_SOCA_LANE);
+  const [configLoaded, setConfigLoaded] = useState(false);
 
-  const [webSearchConfig, setWebSearchConfig] = useState({
-    enabled: false,
-    apiKey: ""
+  const [config, setConfig] = useState({
+    llm: "ollama",
+    apiKey: "",
+    modelName: "qwen3-vl:2b",
+    npm: "@ai-sdk/openai-compatible",
+    options: {
+      baseURL: "http://127.0.0.1:11434/v1"
+    }
   });
 
   const [historyLLMConfig, setHistoryLLMConfig] = useState<Record<string, any>>(
@@ -70,12 +83,36 @@ const OptionsPage = () => {
     }
   }, [isDarkMode]);
 
-  // Fetch models data on component mount
+  // Load lane on mount
   useEffect(() => {
+    const loadLane = async () => {
+      try {
+        const laneResult = await chrome.storage.local.get([
+          SOCA_LANE_STORAGE_KEY
+        ]);
+        const lane =
+          (laneResult[SOCA_LANE_STORAGE_KEY] as SocaOpenBrowserLane) ||
+          DEFAULT_SOCA_LANE;
+        setSocaOpenBrowserLane(lane);
+        form.setFieldsValue({ [SOCA_LANE_STORAGE_KEY]: lane });
+      } catch (error) {
+        console.error("Failed to load lane:", error);
+        message.error("Failed to load lane. Please refresh the page.");
+      }
+    };
+
+    loadLane().finally(() => setLaneLoaded(true));
+  }, []);
+
+  // Fetch models data whenever lane changes
+  useEffect(() => {
+    if (!laneLoaded) return;
+
     const loadModels = async () => {
       try {
         setLoading(true);
-        const data = await fetchModelsData();
+
+        const data = await fetchModelsData({ lane: socaOpenBrowserLane });
         const imageProviders = getProvidersWithImageSupport(data);
 
         setProvidersData(imageProviders);
@@ -99,79 +136,185 @@ const OptionsPage = () => {
     };
 
     loadModels();
-  }, []);
+  }, [laneLoaded, socaOpenBrowserLane]);
 
   // Load saved config from storage
   useEffect(() => {
+    if (!laneLoaded) return;
     if (Object.keys(providersData).length === 0) return; // Wait for providers to load
 
-    chrome.storage.sync.get(
-      ["llmConfig", "historyLLMConfig", "webSearchConfig"],
-      (result) => {
+    const loadSavedConfig = async () => {
+      form.setFieldsValue({ [SOCA_LANE_STORAGE_KEY]: socaOpenBrowserLane });
+
+      const fallbackProviderId =
+        Object.entries(providersData)
+          .map(([id, provider]) => ({ id, name: provider.name }))
+          .sort((a, b) => a.name.localeCompare(b.name))[0]?.id || "ollama";
+
+      if (!configLoaded) {
+        const result = await chrome.storage.local.get([
+          "llmConfig",
+          "historyLLMConfig",
+          "socaBridgeConfig"
+        ]);
+
+        if (result.historyLLMConfig) {
+          setHistoryLLMConfig(result.historyLLMConfig);
+        }
+
         if (result.llmConfig) {
           if (result.llmConfig.llm === "") {
-            result.llmConfig.llm = "anthropic";
+            result.llmConfig.llm = fallbackProviderId;
+          }
+
+          if (!providersData[result.llmConfig.llm]) {
+            result.llmConfig.llm = fallbackProviderId;
           }
 
           if (!result.llmConfig.npm && providersData[result.llmConfig.llm]) {
             result.llmConfig.npm = providersData[result.llmConfig.llm].npm;
           }
 
+          if (
+            !result.llmConfig.modelName ||
+            !modelOptions[result.llmConfig.llm]?.some(
+              (m) => m.value === result.llmConfig.modelName
+            )
+          ) {
+            result.llmConfig.modelName =
+              modelOptions[result.llmConfig.llm]?.[0]?.value || "";
+          }
+
+          if (!result.llmConfig.options?.baseURL) {
+            result.llmConfig.options = {
+              ...result.llmConfig.options,
+              baseURL: getDefaultBaseURL(
+                result.llmConfig.llm,
+                providersData[result.llmConfig.llm]?.api
+              )
+            };
+          }
+
+          if (
+            result.llmConfig.llm === "soca-bridge" &&
+            typeof result.socaBridgeConfig?.bridgeBaseURL === "string" &&
+            result.socaBridgeConfig.bridgeBaseURL.trim()
+          ) {
+            result.llmConfig.options = {
+              ...result.llmConfig.options,
+              baseURL: `${result.socaBridgeConfig.bridgeBaseURL.replace(/\/+$/, "")}/v1`
+            };
+          }
+
           setConfig(result.llmConfig);
           form.setFieldsValue(result.llmConfig);
         }
-        if (result.historyLLMConfig) {
-          setHistoryLLMConfig(result.historyLLMConfig);
+
+        // Session-only bridge token prefill (never persisted).
+        try {
+          const sess = await (chrome.storage as any).session.get([
+            "socaBridgeToken"
+          ]);
+          if (sess?.socaBridgeToken) {
+            form.setFieldValue("apiKey", String(sess.socaBridgeToken));
+          }
+        } catch (e) {
+          // ignore
         }
-        if (result.webSearchConfig) {
-          setWebSearchConfig(result.webSearchConfig);
-          form.setFieldsValue({
-            webSearchEnabled: result.webSearchConfig.enabled,
-            exaApiKey: result.webSearchConfig.apiKey
-          });
-        }
+
+        setConfigLoaded(true);
+        return;
       }
-    );
-  }, [providersData]);
+
+      // On lane/provider refresh: only adjust config if it's now invalid.
+      if (!providersData[config.llm]) {
+        handleLLMChange(fallbackProviderId);
+        return;
+      }
+      if (
+        config.modelName &&
+        !modelOptions[config.llm]?.some((m) => m.value === config.modelName)
+      ) {
+        const nextModel = modelOptions[config.llm]?.[0]?.value || "";
+        const nextConfig = { ...config, modelName: nextModel };
+        setConfig(nextConfig);
+        form.setFieldsValue(nextConfig);
+      }
+    };
+
+    loadSavedConfig().catch((error) => {
+      console.error("Failed to load saved config:", error);
+    });
+  }, [
+    laneLoaded,
+    providersData,
+    configLoaded,
+    socaOpenBrowserLane,
+    config,
+    modelOptions
+  ]);
+
+  const handleSocaLaneChange = (lane: SocaOpenBrowserLane) => {
+    setSocaOpenBrowserLane(lane);
+  };
 
   const handleSave = () => {
-    form
-      .validateFields()
-      .then((value) => {
-        const { webSearchEnabled, exaApiKey, ...llmConfigValue } = value;
+    (async () => {
+      try {
+        const value = await form.validateFields();
+        const { socaOpenBrowserLane, ...llmConfigValue } = value as any;
+        const lane =
+          (socaOpenBrowserLane as SocaOpenBrowserLane) || DEFAULT_SOCA_LANE;
+
+        // Session-only bridge token (never persisted to chrome.storage.local).
+        if (llmConfigValue.llm === "soca-bridge") {
+          const token = String(llmConfigValue.apiKey || "").trim();
+          const r1 = await runtimeSendMessage<any>({
+            type: "SOCA_SET_BRIDGE_TOKEN",
+            token
+          });
+          if (!r1?.ok)
+            throw new Error(String(r1?.err || "failed_to_set_bridge_token"));
+
+          const baseURL = String(llmConfigValue?.options?.baseURL || "").trim();
+          const bridgeBaseURL = baseURL
+            .replace(/\/+$/, "")
+            .replace(/\/v1$/, "");
+          const r2 = await runtimeSendMessage<any>({
+            type: "SOCA_SET_BRIDGE_CONFIG",
+            config: { bridgeBaseURL, dnrGuardrailsEnabled: true }
+          });
+          if (!r2?.ok)
+            throw new Error(String(r2?.err || "failed_to_set_bridge_config"));
+
+          // Persist a non-secret placeholder only.
+          llmConfigValue.apiKey = "";
+        }
 
         setConfig(llmConfigValue);
         setHistoryLLMConfig({
           ...historyLLMConfig,
           [llmConfigValue.llm]: llmConfigValue
         });
+        setSocaOpenBrowserLane(lane);
 
-        const newWebSearchConfig = {
-          enabled: webSearchEnabled || false,
-          apiKey: exaApiKey || ""
-        };
-        setWebSearchConfig(newWebSearchConfig);
-
-        chrome.storage.sync.set(
-          {
-            llmConfig: llmConfigValue,
-            historyLLMConfig: {
-              ...historyLLMConfig,
-              [llmConfigValue.llm]: llmConfigValue
-            },
-            webSearchConfig: newWebSearchConfig
+        await chrome.storage.local.set({
+          llmConfig: llmConfigValue,
+          historyLLMConfig: {
+            ...historyLLMConfig,
+            [llmConfigValue.llm]: llmConfigValue
           },
-          () => {
-            message.success({
-              content: "Save Success!",
-              className: "toast-text-black"
-            });
-          }
-        );
-      })
-      .catch(() => {
-        message.error("Please check the form field");
-      });
+          [SOCA_LANE_STORAGE_KEY]: lane
+        });
+
+        message.success({
+          content: "Save Success!",
+          className: "toast-text-black"
+        });
+      } catch (e: any) {
+        message.error(String(e?.message || e || "Please check the form field"));
+      }
+    })();
   };
 
   const handleLLMChange = (value: string) => {
@@ -180,10 +323,13 @@ const OptionsPage = () => {
 
     // Check if user has a saved config for this provider
     const savedConfig = historyLLMConfig[value];
+    const defaultApiKey =
+      savedConfig?.apiKey ||
+      (value === "ollama" ? "ollama" : value === "soca-bridge" ? "" : "");
 
     const newConfig = {
       llm: value,
-      apiKey: savedConfig?.apiKey || "",
+      apiKey: defaultApiKey,
       modelName:
         savedConfig?.modelName || modelOptions[value]?.[0]?.value || "",
       npm: provider?.npm,
@@ -195,6 +341,17 @@ const OptionsPage = () => {
 
     setConfig(newConfig);
     form.setFieldsValue(newConfig);
+
+    if (value === "soca-bridge") {
+      (chrome.storage as any).session
+        .get(["socaBridgeToken"])
+        .then((sess: any) => {
+          if (sess?.socaBridgeToken) {
+            form.setFieldValue("apiKey", String(sess.socaBridgeToken));
+          }
+        })
+        .catch(() => {});
+    }
   };
 
   const handleResetBaseURL = () => {
@@ -217,24 +374,21 @@ const OptionsPage = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-theme-primary flex items-center justify-center">
-        <Spin
-          indicator={
-            <LoadingOutlined
-              className="fill-theme-icon"
-              style={{ fontSize: 48 }}
-              spin
-            />
-          }
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-theme-primary">
+    <div className="min-h-screen bg-theme-primary relative">
+      {loading && (
+        <div className="absolute inset-0 bg-theme-primary flex items-center justify-center z-50">
+          <Spin
+            indicator={
+              <LoadingOutlined
+                className="fill-theme-icon"
+                style={{ fontSize: 48 }}
+                spin
+              />
+            }
+          />
+        </div>
+      )}
       {/* Header */}
       <div className="border-b border-theme-input bg-theme-primary">
         <div className="max-w-3xl mx-auto px-6 py-6">
@@ -265,7 +419,48 @@ const OptionsPage = () => {
           className="bg-theme-primary border-theme-input rounded-xl p-6"
           style={{ borderWidth: "1px", borderStyle: "solid" }}
         >
-          <Form form={form} layout="vertical" initialValues={config}>
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{
+              ...config,
+              [SOCA_LANE_STORAGE_KEY]: socaOpenBrowserLane
+            }}
+          >
+            <Form.Item
+              name={SOCA_LANE_STORAGE_KEY}
+              label={
+                <span className="text-sm font-medium text-theme-primary">
+                  SOCA Lane
+                </span>
+              }
+              rules={[
+                {
+                  required: true,
+                  message: "Please select a SOCA lane"
+                }
+              ]}
+            >
+              <Select
+                placeholder="Choose a SOCA lane"
+                onChange={handleSocaLaneChange}
+                size="large"
+                className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
+                classNames={{
+                  popup: {
+                    root: "bg-theme-input border-theme-input dropdown-theme-items"
+                  }
+                }}
+              >
+                <Option value="OB_OFFLINE">
+                  OB_OFFLINE (no network egress)
+                </Option>
+                <Option value="OB_ONLINE_PULSE">
+                  OB_ONLINE_PULSE (allowlisted domains only)
+                </Option>
+              </Select>
+            </Form.Item>
+
             <Form.Item
               name="llm"
               label={
@@ -285,7 +480,11 @@ const OptionsPage = () => {
                 onChange={handleLLMChange}
                 size="large"
                 className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
-                popupClassName="bg-theme-input border-theme-input dropdown-theme-items"
+                classNames={{
+                  popup: {
+                    root: "bg-theme-input border-theme-input dropdown-theme-items"
+                  }
+                }}
               >
                 {providerOptions.map((provider) => (
                   <Option key={provider.value} value={provider.value}>
@@ -319,7 +518,11 @@ const OptionsPage = () => {
                 placeholder="Select or enter model name"
                 size="large"
                 className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
-                popupClassName="bg-theme-input border-theme-input dropdown-theme-items"
+                classNames={{
+                  popup: {
+                    root: "bg-theme-input border-theme-input dropdown-theme-items"
+                  }
+                }}
                 showSearch
                 allowClear
                 searchValue={modelSearchValue}
@@ -345,18 +548,25 @@ const OptionsPage = () => {
               name="apiKey"
               label={
                 <span className="text-sm font-medium text-theme-primary">
-                  API Key
+                  Bridge Token (session-only)
                 </span>
               }
               rules={[
-                {
-                  required: true,
-                  message: "Please enter your API key"
-                }
+                ({ getFieldValue }) => ({
+                  validator: async (_rule, value) => {
+                    const provider = String(getFieldValue("llm") || "");
+                    const token = String(value || "").trim();
+                    if (provider === "soca-bridge" && !token) {
+                      throw new Error(
+                        "Bridge token required for this browser session"
+                      );
+                    }
+                  }
+                })
               ]}
             >
               <Input.Password
-                placeholder="Enter your API key"
+                placeholder="Paste bridge token"
                 size="large"
                 className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
               />
@@ -392,54 +602,6 @@ const OptionsPage = () => {
                 className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
               />
             </Form.Item>
-
-            <div className="border-t border-theme-input pt-6 mt-6">
-              <Form.Item
-                name="webSearchEnabled"
-                valuePropName="checked"
-                className="mb-4"
-              >
-                <Checkbox className="checkbox-theme text-theme-primary">
-                  <span className="text-sm font-medium text-theme-primary">
-                    Enable web search (Exa AI)
-                  </span>
-                </Checkbox>
-              </Form.Item>
-
-              <Form.Item
-                noStyle
-                shouldUpdate={(prevValues, currentValues) =>
-                  prevValues.webSearchEnabled !== currentValues.webSearchEnabled
-                }
-              >
-                {({ getFieldValue }) =>
-                  getFieldValue("webSearchEnabled") ? (
-                    <Form.Item
-                      name="exaApiKey"
-                      label={
-                        <span className="text-sm font-medium text-theme-primary">
-                          Exa API Key{" "}
-                          <span
-                            className="text-theme-primary"
-                            style={{ opacity: 0.5 }}
-                          >
-                            (Optional)
-                          </span>
-                        </span>
-                      }
-                      tooltip="Uses free tier if not provided"
-                    >
-                      <Input.Password
-                        placeholder="sk-..."
-                        size="large"
-                        className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
-                        allowClear
-                      />
-                    </Form.Item>
-                  ) : null
-                }
-              </Form.Item>
-            </div>
 
             <Form.Item className="mb-0 mt-6">
               <Button

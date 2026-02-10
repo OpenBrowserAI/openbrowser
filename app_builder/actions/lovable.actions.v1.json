@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0",
+  "builder_id": "lovable",
+  "steps": [
+    { "op": "open_url", "url": "https://lovable.dev" },
+    {
+      "op": "hil_pause",
+      "reason": "User must be logged in to Lovable if not already."
+    },
+
+    { "op": "wait_for_text", "text": "New project", "timeout_ms": 60000 },
+    { "op": "screenshot", "label": "lovable_loaded" },
+
+    { "op": "click", "selector": "text=New project" },
+    {
+      "op": "wait_for_selector",
+      "selector": "textarea, [contenteditable='true']",
+      "timeout_ms": 60000
+    },
+
+    {
+      "op": "paste_large_text",
+      "target": "main_prompt",
+      "from_file": "FIRST_MESSAGE.txt"
+    },
+    {
+      "op": "click",
+      "selector": "button:has-text('Create'), button:has-text('Generate'), button:has-text('Build')"
+    },
+
+    {
+      "op": "wait_for_text",
+      "text": "Connect to GitHub",
+      "timeout_ms": 240000
+    },
+    { "op": "screenshot", "label": "lovable_ready_to_export" },
+
+    {
+      "op": "hil_pause",
+      "reason": "HIL required to connect GitHub and/or authorize export."
+    },
+
+    { "op": "click", "selector": "text=Connect to GitHub" },
+    {
+      "op": "hil_pause",
+      "reason": "Complete GitHub OAuth/connection in the browser, then continue."
+    },
+
+    { "op": "wait_for_text", "text": "Download", "timeout_ms": 240000 },
+    {
+      "op": "download_click_and_capture",
+      "label": "lovable_zip_export",
+      "selector": "button:has-text('Download'), a:has-text('Download')"
+    },
+
+    { "op": "read_dom_snapshot", "label": "final_dom" }
+  ]
+}

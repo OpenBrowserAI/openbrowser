@@ -26,42 +26,77 @@ export function run_build_dom_tree() {
    *
    * @param {*} markHighlightElements Is mark highlighted
    * @param {*} includeAttributes [attr_names...]
-   * @returns { element_str, client_rect, selector_map, area_map }
+   * @param {*} options { mode?: "observe" | "guard" }  (guard mode skips pseudoHtml/area_map work)
+   * @returns { element_str, client_rect, selector_map, area_map, pageSigHash, pinHashByIndex, docInstanceId }
    */
   function get_clickable_elements(
     markHighlightElements = true,
-    includeAttributes
+    includeAttributes,
+    options
   ) {
+    (window as any).__openbrowser_highlight_mode = Boolean(
+      markHighlightElements
+    );
     window.clickable_elements = {};
     computedStyleCache = new WeakMap();
-    document
-      .querySelectorAll("[openbrowser-user-highlight-id]")
-      .forEach((ele) => ele.removeAttribute("openbrowser-user-highlight-id"));
+    if (markHighlightElements) {
+      // Only clean marker attributes when we are about to render highlights.
+      // In guard mode we avoid mutating the DOM.
+      document
+        .querySelectorAll("[openbrowser-user-highlight-id]")
+        .forEach((ele) => ele.removeAttribute("openbrowser-user-highlight-id"));
+    }
     let page_tree = build_dom_tree(markHighlightElements);
     let element_tree = parse_node(page_tree);
-    let element_str = clickable_elements_to_string(
-      element_tree,
-      includeAttributes
-    );
+    const mode =
+      options && typeof options === "object" ? options.mode : undefined;
+    let element_str =
+      mode === "guard"
+        ? ""
+        : clickable_elements_to_string(element_tree, includeAttributes);
     let client_rect = {
       width: window.innerWidth || document.documentElement.clientWidth,
       height: window.innerHeight || document.documentElement.clientHeight
     };
-    if (markHighlightElements) {
-      let selector_map = {};
-      // selector_map = create_selector_map(element_tree);
-      return { element_str, client_rect, selector_map };
-    } else {
+
+    const selector_map = create_selector_map_compact(element_tree);
+    const pinHashByIndex = create_pin_hash_map(selector_map);
+    const pageSigHash = compute_page_sig_hash();
+    const docInstanceId = ensure_doc_instance_id();
+
+    if (!markHighlightElements && mode !== "guard") {
       let area_map = create_area_map(element_tree);
-      return { element_str, client_rect, area_map };
+      return {
+        element_str,
+        client_rect,
+        selector_map,
+        area_map,
+        pageSigHash,
+        pinHashByIndex,
+        docInstanceId
+      };
     }
+
+    return {
+      element_str,
+      client_rect,
+      selector_map,
+      pageSigHash,
+      pinHashByIndex,
+      docInstanceId
+    };
   }
 
   function get_highlight_element(highlightIndex) {
-    let element = document.querySelector(
-      `[openbrowser-user-highlight-id="openbrowser-highlight-${highlightIndex}"]`
-    );
-    return element || window.clickable_elements[highlightIndex];
+    if ((window as any).__openbrowser_highlight_mode) {
+      let element = document.querySelector(
+        `[openbrowser-user-highlight-id="openbrowser-highlight-${highlightIndex}"]`
+      );
+      if (element) {
+        return element;
+      }
+    }
+    return window.clickable_elements[highlightIndex];
   }
 
   function remove_highlight() {
@@ -186,6 +221,144 @@ export function run_build_dom_tree() {
     }
     process_node(element_tree);
     return selector_map;
+  }
+
+  // Compact, JSON-serializable selector map (no parent pointers / cycles).
+  function create_selector_map_compact(element_tree) {
+    const selector_map = {};
+    const allowedAttrNames = [
+      "id",
+      "name",
+      "role",
+      "type",
+      "href",
+      "src",
+      "title",
+      "alt",
+      "placeholder",
+      "aria-label",
+      "aria-expanded"
+    ];
+
+    function normalizeText(text, maxLen) {
+      const s = String(text || "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!maxLen) return s;
+      return s.length > maxLen ? s.slice(0, maxLen) : s;
+    }
+
+    function normalizeAttrValue(key, value) {
+      if (value == null) return "";
+      let v = normalizeText(value, 200);
+      if (!v) return "";
+
+      if ((key === "href" || key === "src") && v.startsWith("/")) {
+        v = window.location.origin + v;
+      }
+      if ((key === "href" || key === "src") && v.length > 300) {
+        // Avoid enormous URL signatures (tracking params, signed URLs, etc).
+        return "";
+      }
+      if (key === "id" || key === "name" || key === "role" || key === "type") {
+        if (v.length > 120) v = v.slice(0, 120);
+      }
+      return v;
+    }
+
+    function process_node(node) {
+      if (!node || !node.tagName) return;
+
+      if (node.highlightIndex != null) {
+        const attrsIn = node.attributes || {};
+        const attrsOut = {};
+        for (let i = 0; i < allowedAttrNames.length; i++) {
+          const key = allowedAttrNames[i];
+          const value = normalizeAttrValue(key, attrsIn[key]);
+          if (value) attrsOut[key] = value;
+        }
+        selector_map[node.highlightIndex] = {
+          tagName: node.tagName,
+          xpath: node.xpath || "",
+          attributes: attrsOut
+        };
+      }
+
+      for (let i = 0; i < (node.children || []).length; i++) {
+        process_node(node.children[i]);
+      }
+    }
+
+    process_node(element_tree);
+    return selector_map;
+  }
+
+  function fnv1a64_hex(input) {
+    // 64-bit FNV-1a. Cheap + deterministic; sufficient for "fail closed" pinning.
+    let h = 0xcbf29ce484222325n;
+    const prime = 0x100000001b3n;
+    const str = String(input || "");
+    for (let i = 0; i < str.length; i++) {
+      h ^= BigInt(str.charCodeAt(i));
+      h = (h * prime) & 0xffffffffffffffffn;
+    }
+    return h.toString(16).padStart(16, "0");
+  }
+
+  function create_pin_hash_map(selector_map) {
+    const out = {};
+    const keys = Object.keys(selector_map || {}).sort(
+      (a, b) => Number(a) - Number(b)
+    );
+    for (let i = 0; i < keys.length; i++) {
+      const idx = keys[i];
+      const entry = selector_map[idx] || {};
+      const attrs = entry.attributes || {};
+      const attrKeys = Object.keys(attrs).sort();
+      const parts = [
+        `tag=${entry.tagName || ""}`,
+        `xpath=${entry.xpath || ""}`
+      ];
+      for (let j = 0; j < attrKeys.length; j++) {
+        const k = attrKeys[j];
+        parts.push(`${k}=${String(attrs[k] || "")}`);
+      }
+      out[idx] = fnv1a64_hex(parts.join("|"));
+    }
+    return out;
+  }
+
+  function compute_page_sig_hash() {
+    function normalizeText(text, maxLen) {
+      const s = String(text || "")
+        .replace(/\s+/g, " ")
+        .trim();
+      if (!maxLen) return s;
+      return s.length > maxLen ? s.slice(0, maxLen) : s;
+    }
+
+    const originPath = `${window.location.origin}${window.location.pathname}`;
+    const title = normalizeText(document.title || "", 160);
+    const h1 =
+      normalizeText(document.querySelector("h1")?.textContent || "", 160) ||
+      normalizeText(document.querySelector("h2")?.textContent || "", 160);
+
+    const src = `v1|${originPath}|t=${title}|h=${h1}`;
+    return fnv1a64_hex(src);
+  }
+
+  function ensure_doc_instance_id() {
+    const w = window as any;
+    if (w.__SOCA_OB_DOC_INSTANCE_ID)
+      return String(w.__SOCA_OB_DOC_INSTANCE_ID || "");
+    try {
+      w.__SOCA_OB_DOC_INSTANCE_ID =
+        (crypto as any)?.randomUUID?.() ||
+        `doc_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    } catch (e) {
+      w.__SOCA_OB_DOC_INSTANCE_ID = `doc_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    }
+    return String(w.__SOCA_OB_DOC_INSTANCE_ID || "");
   }
 
   function create_area_map(element_tree) {

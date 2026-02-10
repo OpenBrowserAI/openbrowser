@@ -285,7 +285,8 @@ export class OpenBrowserMemory {
                     return {
                       type: "file",
                       data: toFile(part.data),
-                      mediaType: part.mimeType || getMimeType(part.data)
+                      mediaType: part.mimeType || getMimeType(part.data),
+                      filename: part.filename
                     };
                   }
                 })

@@ -21,7 +21,12 @@ import {
 import config from "../config";
 import Log from "../common/log";
 import { RetryLanguageModel } from "./rlm";
-import { sleep, uuidv4 } from "../common/utils";
+import {
+  inlineFilePartAsText,
+  isTextLikeMediaType,
+  sleep,
+  uuidv4
+} from "../common/utils";
 import {
   LanguageModelV2StreamPart,
   LanguageModelV2ReasoningPart
@@ -205,6 +210,26 @@ export async function callLLM(
   let reader: ReadableStreamDefaultReader<LanguageModelV2StreamPart> | null =
     null;
   try {
+    // Some providers do not support non-image file parts (e.g. text/markdown). Inline them as text for compatibility.
+    for (const message of request.messages) {
+      if (message.role !== "user") continue;
+      if (!Array.isArray(message.content)) continue;
+      for (let i = 0; i < message.content.length; i++) {
+        const part = message.content[i];
+        if (part.type !== "file") continue;
+        if (!isTextLikeMediaType(part.mediaType)) continue;
+        message.content[i] = {
+          type: "text",
+          text: await inlineFilePartAsText({
+            data: part.data,
+            filename: (part as any).filename,
+            mediaType: part.mediaType,
+            maxChars: config.fileTextMaxLength
+          })
+        };
+      }
+    }
+
     const result = await rlm.callStream(request);
     reader = result.stream.getReader();
     let toolPart: LanguageModelV2ToolCallPart | null = null;

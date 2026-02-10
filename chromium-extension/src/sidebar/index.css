@@ -178,6 +178,30 @@
   }
 }
 
+/* Popover Styling (Tool connections) */
+.soca-tools-popover .ant-popover-inner {
+  background-color: var(--chrome-bg-secondary) !important;
+  border: 1px solid var(--chrome-input-border) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35) !important;
+}
+
+.soca-tools-popover .ant-popover-inner-content {
+  color: var(--chrome-text-primary) !important;
+}
+
+.soca-tools-popover .ant-popover-arrow::before,
+.soca-tools-popover .ant-popover-arrow::after {
+  background: var(--chrome-bg-secondary) !important;
+}
+
+.soca-tools-popover code {
+  background-color: rgba(127, 127, 127, 0.18) !important;
+  border-radius: 4px !important;
+  padding: 1px 4px !important;
+  color: var(--chrome-text-primary) !important;
+}
+
 /* Dropdown Item States */
 .dropdown-theme-items .ant-select-item-option-selected,
 .dropdown-theme-items .ant-select-item-option-selected *,
