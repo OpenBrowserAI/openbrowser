@@ -14,7 +14,7 @@ OpenBrowser is an open-source, AI-native browser built on Chromium — a truly p
 Join us and help shape the future of AI-powered browsing:
 
 - **Discord**: [Join our community](https://discord.gg/FTq7WwYYJp)
-- **X (Twitter)**: [Follow us @openbrowserai](https://x.com/openbrowserai)
+- **X (Twitter)**: [Follow us @openbrowserai](https://x.com/openbrowser_ai)
 
 ## Contributing
 
