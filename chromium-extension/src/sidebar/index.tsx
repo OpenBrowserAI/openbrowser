@@ -5,12 +5,14 @@ import { ChatInput } from "./components/ChatInput";
 import { SessionHistory } from "./components/SessionHistory";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { MessageItem } from "./components/MessageItem";
+import { SidebarErrorBoundary } from "./components/SidebarErrorBoundary";
 import type { ChatMessage, UploadedFile } from "./types";
 import { useChatCallbacks } from "./hooks/useChatCallbacks";
 import { useSessionManagement } from "./hooks/useSessionManagement";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { message as AntdMessage } from "antd";
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { clampText } from "./utils/sanitize";
 
 const AppRun = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -25,14 +27,20 @@ const AppRun = () => {
 
   // Keep MV3 service worker alive while the sidebar is open (active automation).
   useEffect(() => {
-    const port = chrome.runtime.connect({ name: "SOCA_KEEPALIVE" });
+    let port: chrome.runtime.Port | null = null;
+    try {
+      port = chrome.runtime.connect({ name: "SOCA_KEEPALIVE" });
+    } catch (error) {
+      console.warn("sidebar_keepalive_connect_failed", error);
+      return;
+    }
     const ping = () => port.postMessage({ type: "PING" });
     ping();
     const id = window.setInterval(ping, 20_000);
     return () => {
       window.clearInterval(id);
       try {
-        port.disconnect();
+        port?.disconnect();
       } catch {}
     };
   }, []);
@@ -117,7 +125,7 @@ const AppRun = () => {
         }
       } else if (message.type === "log") {
         const level = message.data.level;
-        const msg = message.data.message;
+        const msg = clampText(String(message.data.message || ""), 800);
         const showMessage =
           level === "error"
             ? AntdMessage.error
@@ -273,8 +281,17 @@ const AppRun = () => {
   }, [currentMessageId, stopMessage]);
 
   const handleNewSession = useCallback(() => {
-    newSession(setMessages, setCurrentMessageId, messages.length);
-  }, [newSession, messages.length]);
+    const shouldReset =
+      messages.length > 0 ||
+      inputValue.trim().length > 0 ||
+      uploadedFiles.length > 0;
+    if (shouldReset) {
+      setInputValue("");
+      setUploadedFiles([]);
+    }
+    const effectiveLength = shouldReset ? Math.max(messages.length, 1) : 0;
+    newSession(setMessages, setCurrentMessageId, effectiveLength);
+  }, [newSession, messages.length, inputValue, uploadedFiles.length]);
 
   const handleSelectSession = useCallback(
     (sessionId: string) => {
@@ -300,11 +317,11 @@ const AppRun = () => {
   }, [handleNewSession]);
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-theme-primary text-theme-primary">
       {/* Message area */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-gray-100 relative"
+        className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-theme-secondary relative"
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -367,7 +384,9 @@ const root = createRoot(document.getElementById("root")!);
 root.render(
   <React.StrictMode>
     <ThemeProvider>
-      <AppRun />
+      <SidebarErrorBoundary>
+        <AppRun />
+      </SidebarErrorBoundary>
     </ThemeProvider>
   </React.StrictMode>
 );

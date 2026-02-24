@@ -1,6 +1,6 @@
 {
   "name": "@openbrowser-ai/openbrowser",
-  "version": "1.0.0",
+  "version": "1.0.7",
   "description": "OpenBrowser Agent",
   "scripts": {
     "build": "webpack --config webpack.config.js",
