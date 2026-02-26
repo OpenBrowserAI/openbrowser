@@ -1,5 +1,25 @@
 # OpenBrowser Chromium Extension Releases
 
+## [1.1.1] - 2026-02-26
+
+### Added
+
+- **Endpoint policy module**: Added `src/llm/endpointPolicy.ts` as single source of truth for URL normalization, host classification, bridge trust rules, direct URL policy, and bridge candidate ordering.
+- **SOCA gate automation**: Added `scripts/release/soca_gate_v1_1_1.sh` to generate RSI/ZHV/ZHDEEV/TRUST reports in `reports/v1.1.1/`.
+- **Lean composer components**: Added `ComposerCore`, `ComposerAdvanced`, `QuickActionsMenu`, and `SocaKitPanel` for modular sidebar composition.
+
+### Changed
+
+- **Provider routing split**: Bridge-routed providers are now strictly `soca-bridge` and `vps-holo`; OpenRouter is direct-cloud again.
+- **Catalog partitioning**: Added provider `catalogMode` + model `modelOrigin` contract and filtering so local/bridge providers only expose local/VPS models while cloud providers expose cloud models.
+- **Bridge health probing**: Bridge checks now probe ordered candidate URLs and return actionable status (reachable, token missing/rejected, host permission missing, unreachable).
+- **Manifest tightening**: Removed broad private-IP wildcard host permissions from source manifest while retaining localhost and Tailscale support.
+- **Chat UX simplification**: Default composer now focuses on input + send + core actions; advanced controls moved behind explicit expand.
+
+### Archive
+
+- Added immutable version pack: `core/tools/openbrowser/chromium-extension-versions/v1.1.1`.
+
 ## [1.1.0] - 2026-02-26
 
 ### Added

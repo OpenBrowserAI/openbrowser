@@ -1,3 +1,9 @@
+import {
+  buildBridgeCandidates,
+  isTrustedBridgeURL,
+  normalizeBaseURL
+} from "../llm/endpointPolicy";
+
 export type SocaOpenBrowserLane = "OB_OFFLINE" | "OB_ONLINE_PULSE";
 export type SocaProviderPolicyMode =
   | "local_only"
@@ -74,42 +80,24 @@ function hostnameFromBaseURL(baseURL?: string): string | null {
   }
 }
 
-function parseIPv4(hostname: string): [number, number, number, number] | null {
-  const parts = hostname.split(".");
-  if (parts.length !== 4) return null;
-  const nums = parts.map((p) => Number(p));
-  if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
-  return nums as [number, number, number, number];
-}
-
-function isPrivateIPv4(hostname: string): boolean {
-  const ip = parseIPv4(hostname);
-  if (!ip) return false;
-  const [a, b] = ip;
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  // Tailscale CGNAT range (commonly used for tailnet IPv4 addresses)
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  return false;
-}
-
 function isLocalHost(hostname: string): boolean {
-  if (hostname === "localhost" || hostname === "::1") return true;
-  return hostname === "127.0.0.1" || isPrivateIPv4(hostname);
+  if (!hostname) return false;
+  if (hostname === "::1") return true;
+  return isTrustedBridgeURL(`http://${hostname}`);
 }
 
 function assertAllowedBridgeUrl(urlStr: string) {
-  const u = new URL(urlStr);
-  const host = u.hostname;
-  const ok = isLocalHost(host) || host.endsWith(".ts.net");
-  if (!ok) throw new Error(`bridgeBaseURL_not_allowed:${host}`);
-  if (u.protocol !== "http:" && u.protocol !== "https:") {
-    throw new Error("bridgeBaseURL_bad_scheme");
-  }
-  if (u.username || u.password) {
-    throw new Error("bridgeBaseURL_no_userinfo");
+  const normalized = normalizeBaseURL(urlStr)
+    .replace(/\/+$/, "")
+    .replace(/\/v1$/, "");
+  if (!isTrustedBridgeURL(normalized)) {
+    let host = "";
+    try {
+      host = new URL(normalized).hostname;
+    } catch {
+      host = "";
+    }
+    throw new Error(`bridgeBaseURL_not_allowed:${host || "invalid"}`);
   }
 }
 
@@ -119,14 +107,15 @@ export async function getBridgeConfig(): Promise<BridgeConfig> {
   )[SOCA_BRIDGE_CONFIG_STORAGE_KEY] as BridgeConfig | undefined;
   const cfg =
     stored && typeof stored === "object" ? stored : DEFAULT_BRIDGE_CONFIG;
-  assertAllowedBridgeUrl(cfg.bridgeBaseURL);
-  return cfg;
+  const bridgeBaseURL = normalizeBaseURL(String(cfg.bridgeBaseURL || ""))
+    .replace(/\/+$/, "")
+    .replace(/\/v1$/, "");
+  assertAllowedBridgeUrl(bridgeBaseURL);
+  return { ...cfg, bridgeBaseURL };
 }
 
 export async function getAllowDirectProviders(): Promise<boolean> {
-  return (
-    (await getProviderPolicyMode()) === "all_providers_bridge_governed"
-  );
+  return (await getProviderPolicyMode()) === "all_providers_bridge_governed";
 }
 
 export function normalizeProviderPolicyMode(
@@ -143,10 +132,7 @@ export async function getProviderPolicyMode(): Promise<SocaProviderPolicyMode> {
     SOCA_DIRECT_PROVIDER_GATE_KEY
   ]);
   const stored = result[SOCA_PROVIDER_POLICY_MODE_KEY];
-  if (
-    stored === "local_only" ||
-    stored === "all_providers_bridge_governed"
-  ) {
+  if (stored === "local_only" || stored === "all_providers_bridge_governed") {
     return stored;
   }
 
@@ -178,15 +164,22 @@ export async function getBridgeAutoFallbackOllama(): Promise<boolean> {
   return stored !== false;
 }
 
-export async function setBridgeAutoFallbackOllama(enabled: boolean): Promise<void> {
+export async function setBridgeAutoFallbackOllama(
+  enabled: boolean
+): Promise<void> {
   await chrome.storage.local.set({
     [SOCA_BRIDGE_AUTO_FALLBACK_OLLAMA_KEY]: Boolean(enabled)
   });
 }
 
 export async function setBridgeConfig(cfg: BridgeConfig): Promise<void> {
-  assertAllowedBridgeUrl(cfg.bridgeBaseURL);
-  await chrome.storage.local.set({ [SOCA_BRIDGE_CONFIG_STORAGE_KEY]: cfg });
+  const bridgeBaseURL = normalizeBaseURL(String(cfg.bridgeBaseURL || ""))
+    .replace(/\/+$/, "")
+    .replace(/\/v1$/, "");
+  assertAllowedBridgeUrl(bridgeBaseURL);
+  await chrome.storage.local.set({
+    [SOCA_BRIDGE_CONFIG_STORAGE_KEY]: { ...cfg, bridgeBaseURL }
+  });
 }
 
 /** Default bridge token matching the server-side fallback in app.py. */
@@ -211,15 +204,15 @@ export async function setBridgeToken(token: string): Promise<void> {
   });
 }
 
-function normalizeProviderSecrets(
-  value: unknown
-): Record<string, string> {
+function normalizeProviderSecrets(value: unknown): Record<string, string> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return {};
   const out: Record<string, string> = {};
   for (const [providerId, secretValue] of Object.entries(
     value as Record<string, unknown>
   )) {
-    const key = String(providerId || "").trim().toLowerCase();
+    const key = String(providerId || "")
+      .trim()
+      .toLowerCase();
     const secret = String(secretValue || "").trim();
     if (!key) continue;
     if (!secret) continue;
@@ -228,15 +221,21 @@ function normalizeProviderSecrets(
   return out;
 }
 
-export async function getProviderSecretsSession(): Promise<Record<string, string>> {
+export async function getProviderSecretsSession(): Promise<
+  Record<string, string>
+> {
   const sessionStore = await (chrome.storage as any).session.get([
     SOCA_PROVIDER_SECRETS_SESSION_KEY
   ]);
-  return normalizeProviderSecrets(sessionStore[SOCA_PROVIDER_SECRETS_SESSION_KEY]);
+  return normalizeProviderSecrets(
+    sessionStore[SOCA_PROVIDER_SECRETS_SESSION_KEY]
+  );
 }
 
 export async function getProviderSecret(providerId: string): Promise<string> {
-  const key = String(providerId || "").trim().toLowerCase();
+  const key = String(providerId || "")
+    .trim()
+    .toLowerCase();
   if (!key) return "";
   const map = await getProviderSecretsSession();
   return String(map[key] || "").trim();
@@ -246,7 +245,9 @@ export async function setProviderSecret(
   providerId: string,
   secret: string
 ): Promise<void> {
-  const key = String(providerId || "").trim().toLowerCase();
+  const key = String(providerId || "")
+    .trim()
+    .toLowerCase();
   if (!key) throw new Error("provider_id_missing");
   const map = await getProviderSecretsSession();
   const next = { ...map };
@@ -262,7 +263,9 @@ export async function setProviderSecret(
 }
 
 export async function clearProviderSecret(providerId: string): Promise<void> {
-  const key = String(providerId || "").trim().toLowerCase();
+  const key = String(providerId || "")
+    .trim()
+    .toLowerCase();
   if (!key) return;
   const map = await getProviderSecretsSession();
   if (!map[key]) return;
@@ -298,7 +301,9 @@ export async function getGoogleOAuthSession(): Promise<SocaGoogleOAuthSession | 
   const sessionStore = await (chrome.storage as any).session.get([
     SOCA_GOOGLE_OAUTH_SESSION_KEY
   ]);
-  const oauth = normalizeOAuthSession(sessionStore[SOCA_GOOGLE_OAUTH_SESSION_KEY]);
+  const oauth = normalizeOAuthSession(
+    sessionStore[SOCA_GOOGLE_OAUTH_SESSION_KEY]
+  );
   if (!oauth) return null;
   if (oauth.expiresAt <= Date.now() + 10_000) {
     await clearGoogleOAuthSession();
@@ -378,7 +383,12 @@ export async function resolveSocaBridgeConnection(): Promise<{
   const cfg = await getBridgeConfig();
   const token = await getBridgeToken();
   const allowlistDomains = await getEffectiveAllowlistDomains();
-  return { lane, token, bridgeBaseURL: cfg.bridgeBaseURL, allowlistDomains };
+  const candidate = buildBridgeCandidates({
+    savedBaseURL: `${cfg.bridgeBaseURL}/v1`,
+    fallbackBaseURL: `${DEFAULT_BRIDGE_CONFIG.bridgeBaseURL}/v1`
+  })[0];
+  const bridgeBaseURL = candidate.replace(/\/+$/, "").replace(/\/v1$/, "");
+  return { lane, token, bridgeBaseURL, allowlistDomains };
 }
 
 export async function bridgeFetchJson<T>(

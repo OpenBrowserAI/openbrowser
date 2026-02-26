@@ -21,6 +21,7 @@ export interface ModelLimit {
 export interface Model {
   id: string;
   name: string;
+  modelOrigin?: ModelOrigin;
   family?: string;
   attachment?: boolean;
   reasoning?: boolean;
@@ -37,6 +38,8 @@ export interface Model {
 
 export type ProviderAuthMode = "api_key" | "oauth";
 export type ProviderModelSource = "static" | "bridge" | "direct_api";
+export type ModelOrigin = "local" | "vps_holo" | "cloud";
+export type ProviderCatalogMode = "local_only" | "cloud_only";
 
 export interface Provider {
   id: string;
@@ -47,6 +50,7 @@ export interface Provider {
   doc?: string;
   authModes?: ProviderAuthMode[];
   modelSource?: ProviderModelSource;
+  catalogMode?: ProviderCatalogMode;
   requiresBaseURL?: boolean;
   supportsLiveCatalog?: boolean;
   models: Record<string, Model>;
@@ -68,6 +72,7 @@ export interface ProviderOption {
   api?: string;
   authModes?: ProviderAuthMode[];
   modelSource?: ProviderModelSource;
+  catalogMode?: ProviderCatalogMode;
   requiresBaseURL?: boolean;
   supportsLiveCatalog?: boolean;
 }

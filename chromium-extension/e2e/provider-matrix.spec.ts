@@ -1,4 +1,6 @@
 import http from "http";
+import fs from "fs";
+import path from "path";
 import { test, expect } from "./fixtures";
 
 async function extSendMessage(extPage: any, msg: any): Promise<any> {
@@ -24,6 +26,27 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
   extPage
 }) => {
   const bridgeServer = http.createServer((req, res) => {
+    if (req.url === "/health") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+    if (req.url === "/soca/bridge/status") {
+      const auth = String(req.headers["authorization"] || "");
+      if (auth !== "Bearer bridge-good-token") {
+        res.writeHead(403, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "invalid_token" }));
+        return;
+      }
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(
+        JSON.stringify({
+          ok: true,
+          merged_models_count: 4
+        })
+      );
+      return;
+    }
     if (req.url === "/v1/models") {
       const auth = String(req.headers["authorization"] || "");
       if (auth !== "Bearer bridge-good-token") {
@@ -37,14 +60,28 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
           object: "list",
           data: [
             {
-              id: "openrouter/auto",
-              name: "OpenRouter Auto",
-              provider: "openrouter"
+              id: "soca/auto",
+              name: "SOCA Auto",
+              provider: "soca-bridge",
+              model_origin: "local"
             },
             {
-              id: "openrouter/anthropic/claude-3.5-sonnet",
-              name: "Claude 3.5 Sonnet",
-              provider: "openrouter"
+              id: "qwen3-vl:8b",
+              name: "Qwen3-VL 8B",
+              provider: "ollama",
+              model_origin: "local"
+            },
+            {
+              id: "soca/vps-best",
+              name: "SOCA VPS Best",
+              provider: "vps-holo",
+              model_origin: "vps_holo"
+            },
+            {
+              id: "openrouter/auto",
+              name: "OpenRouter Auto",
+              provider: "openrouter",
+              model_origin: "cloud"
             }
           ]
         })
@@ -83,6 +120,26 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
             {
               id: "claude-3-7-sonnet-latest",
               display_name: "Claude 3.7 Sonnet"
+            }
+          ]
+        })
+      );
+      return;
+    }
+
+    if (
+      req.url === "/openrouter/v1/models" &&
+      auth === "Bearer openrouter-key"
+    ) {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(
+        JSON.stringify({
+          object: "list",
+          data: [
+            {
+              id: "openrouter/auto",
+              name: "OpenRouter Auto",
+              provider: "openrouter"
             }
           ]
         })
@@ -145,7 +202,9 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
   });
 
   await Promise.all([
-    new Promise<void>((resolve) => bridgeServer.listen(0, "127.0.0.1", resolve)),
+    new Promise<void>((resolve) =>
+      bridgeServer.listen(0, "127.0.0.1", resolve)
+    ),
     new Promise<void>((resolve) => directServer.listen(0, "127.0.0.1", resolve))
   ]);
 
@@ -172,20 +231,16 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
     });
     expect(setBridgeConfig?.ok).toBe(true);
 
-    await extSendMessage(extPage, {
-      type: "SOCA_SET_BRIDGE_TOKEN",
-      token: ""
-    });
-
-    const missingBridgeToken = await extSendMessage(extPage, {
+    const missingOpenrouterKey = await extSendMessage(extPage, {
       type: "SOCA_PROVIDER_MODELS_REFRESH",
       providerId: "openrouter",
       authMode: "api_key",
+      baseURL: `${directBaseURL}/openrouter/v1`,
       force: true
     });
-    expect(missingBridgeToken?.ok).toBe(false);
-    expect(String(missingBridgeToken?.err || "")).toContain(
-      "bridge_token_missing"
+    expect(missingOpenrouterKey?.ok).toBe(false);
+    expect(String(missingOpenrouterKey?.err || "")).toContain(
+      "api_key_missing"
     );
 
     const setBridgeToken = await extSendMessage(extPage, {
@@ -194,9 +249,17 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
     });
     expect(setBridgeToken?.ok).toBe(true);
 
+    const bridgeStatus = await extSendMessage(extPage, {
+      type: "SOCA_BRIDGE_GET_STATUS",
+      baseURL: `${bridgeBaseURL}/v1`,
+      token: "bridge-good-token"
+    });
+    expect(bridgeStatus?.ok).toBe(true);
+    expect(String(bridgeStatus?.data?.state || "")).toBe("ok");
+
     const bridgeModels = await extSendMessage(extPage, {
       type: "SOCA_PROVIDER_MODELS_REFRESH",
-      providerId: "openrouter",
+      providerId: "soca-bridge",
       authMode: "api_key",
       force: true
     });
@@ -204,7 +267,51 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
     expect(Array.isArray(bridgeModels?.data?.models)).toBe(true);
     expect(
       bridgeModels?.data?.models?.some(
+        (m: any) => String(m?.id || "") === "soca/auto"
+      )
+    ).toBe(true);
+    expect(
+      bridgeModels?.data?.models?.every(
+        (m: any) => String(m?.model_origin || "") !== "cloud"
+      )
+    ).toBe(true);
+
+    const vpsModels = await extSendMessage(extPage, {
+      type: "SOCA_PROVIDER_MODELS_REFRESH",
+      providerId: "vps-holo",
+      authMode: "api_key",
+      force: true
+    });
+    expect(vpsModels?.ok).toBe(true);
+    expect(
+      vpsModels?.data?.models?.some(
+        (m: any) => String(m?.id || "") === "soca/vps-best"
+      )
+    ).toBe(true);
+
+    const setOpenRouterSecret = await extSendMessage(extPage, {
+      type: "SOCA_PROVIDER_SECRET_SET",
+      providerId: "openrouter",
+      secret: "openrouter-key"
+    });
+    expect(setOpenRouterSecret?.ok).toBe(true);
+
+    const openrouterModels = await extSendMessage(extPage, {
+      type: "SOCA_PROVIDER_MODELS_REFRESH",
+      providerId: "openrouter",
+      authMode: "api_key",
+      baseURL: `${directBaseURL}/openrouter/v1`,
+      force: true
+    });
+    expect(openrouterModels?.ok).toBe(true);
+    expect(
+      openrouterModels?.data?.models?.some(
         (m: any) => String(m?.id || "") === "openrouter/auto"
+      )
+    ).toBe(true);
+    expect(
+      openrouterModels?.data?.models?.every(
+        (m: any) => String(m?.model_origin || "") === "cloud"
       )
     ).toBe(true);
 
@@ -339,6 +446,18 @@ test("Provider model refresh matrix covers bridge/api-key/oauth modes", async ({
         (m: any) => String(m?.id || "") === "zen-oauth"
       )
     ).toBe(true);
+
+    const evidenceScreenshotPath = String(
+      process.env.SOCA_EVIDENCE_SCREENSHOT_PATH || ""
+    ).trim();
+    if (evidenceScreenshotPath) {
+      fs.mkdirSync(path.dirname(evidenceScreenshotPath), { recursive: true });
+      await extPage.setViewportSize({ width: 1280, height: 1800 });
+      await extPage.screenshot({
+        path: evidenceScreenshotPath,
+        fullPage: true
+      });
+    }
   } finally {
     bridgeServer.close();
     directServer.close();

@@ -1,0 +1,15 @@
+ chromium-extension-versions/CATALOG.json           |  10 +
+ chromium-extension/RELEASES.md                     |  20 ++
+ chromium-extension/e2e/fixtures.ts                 |  15 +-
+ chromium-extension/e2e/provider-matrix.spec.ts     | 145 ++++++++-
+ chromium-extension/package.json                    |   2 +-
+ chromium-extension/public/manifest.json            |   7 +-
+ chromium-extension/src/background/bridge-client.ts |  75 ++---
+ chromium-extension/src/background/index.ts         | 344 +++++++++++++++++----
+ chromium-extension/src/background/soca-bridge.ts   |   8 +
+ chromium-extension/src/llm/llm.interface.ts        |   5 +
+ chromium-extension/src/llm/llm.ts                  | 241 +++++++++++++--
+ chromium-extension/src/options/index.tsx           | 314 ++++++++++---------
+ .../src/sidebar/components/ChatInput.tsx           | 267 ++++------------
+ chromium-extension/src/sidebar/index.css           |   7 +
+ 14 files changed, 974 insertions(+), 486 deletions(-)

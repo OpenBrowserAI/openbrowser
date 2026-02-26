@@ -47,6 +47,11 @@ import {
   type BridgeConfig,
   type SocaOpenBrowserLane
 } from "./bridge-client";
+import {
+  buildBridgeCandidates,
+  classifyHost,
+  isAllowedDirectURL
+} from "../llm/endpointPolicy";
 
 var chatAgent: ChatAgent | null = null;
 var currentChatId: string | null = null;
@@ -137,7 +142,8 @@ function sanitizeLogMessage(raw: unknown, maxChars = MAX_LOG_CHARS) {
 function normalizeProviderError(raw: unknown): string {
   const text = sanitizeLogMessage(raw, 2000);
   const normalized = text.toLowerCase();
-  if (normalized.includes("bridge_token_missing")) return "bridge_token_missing";
+  if (normalized.includes("bridge_token_missing"))
+    return "bridge_token_missing";
   if (
     normalized.includes("bridge_http_401") ||
     normalized.includes("invalid bearer token")
@@ -150,9 +156,11 @@ function normalizeProviderError(raw: unknown): string {
   ) {
     return "bridge_token_rejected";
   }
-  if (normalized.includes("provider_not_allowed")) return "provider_not_allowed";
+  if (normalized.includes("provider_not_allowed"))
+    return "provider_not_allowed";
   if (normalized.includes("api_key_missing")) return "api_key_missing";
-  if (normalized.includes("google_oauth_missing")) return "google_oauth_missing";
+  if (normalized.includes("google_oauth_missing"))
+    return "google_oauth_missing";
   if (
     normalized.includes("openrouter_api_key missing") ||
     normalized.includes("openrouter_api_key_missing")
@@ -344,31 +352,13 @@ function hostnameFromBaseURL(baseURL?: string): string | null {
   }
 }
 
-function parseIPv4(hostname: string): [number, number, number, number] | null {
-  const parts = hostname.split(".");
-  if (parts.length !== 4) return null;
-  const nums = parts.map((p) => Number(p));
-  if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
-  return nums as [number, number, number, number];
-}
-
-function isPrivateIPv4(hostname: string): boolean {
-  const ip = parseIPv4(hostname);
-  if (!ip) return false;
-  const [a, b] = ip;
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  // Tailscale CGNAT range (commonly used for tailnet IPv4 addresses)
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  return false;
-}
-
 function isLocalHost(hostname: string): boolean {
-  if (hostname === "localhost" || hostname === "::1") return true;
-  if (hostname.endsWith(".ts.net")) return true;
-  return hostname === "127.0.0.1" || isPrivateIPv4(hostname);
+  const hostClass = classifyHost(hostname);
+  return (
+    hostClass === "localhost" ||
+    hostClass === "private" ||
+    hostClass === "tailscale"
+  );
 }
 
 function parseAllowlistDomains(allowlistText: unknown): string[] {
@@ -391,7 +381,7 @@ function isAllowlistedHost(hostname: string, allowlist: string[]): boolean {
   );
 }
 
-const BRIDGE_ROUTED_PROVIDER_IDS = new Set(["soca-bridge", "openrouter"]);
+const BRIDGE_ROUTED_PROVIDER_IDS = new Set(["soca-bridge", "vps-holo"]);
 const OLLAMA_FALLBACK_MODEL = "qwen3-vl:2b";
 const OLLAMA_FALLBACK_BASE_URL = "http://127.0.0.1:11434/v1";
 
@@ -400,15 +390,10 @@ function isBridgeRoutedProvider(providerId: string): boolean {
 }
 
 function normalizeBridgeModelName(
-  providerId: string,
+  _providerId: string,
   modelName: string
 ): string {
   const raw = String(modelName || "").trim();
-  if (providerId === "openrouter") {
-    if (!raw || raw === "custom") return "openrouter/auto";
-    if (raw.startsWith("openrouter/")) return raw;
-    return `openrouter/${raw}`;
-  }
   return raw || "soca/auto";
 }
 
@@ -434,8 +419,9 @@ function buildRuntimeLLMSelection(rawLLMConfig: any): RuntimeLLMSelection {
   const rawNpm = String(rawLLMConfig?.npm || "@ai-sdk/openai-compatible");
   const rawBaseURL = String(rawLLMConfig?.options?.baseURL || "").trim();
   const rawAuthMode =
-    String(rawLLMConfig?.authMode || "api_key").trim().toLowerCase() ===
-    "oauth"
+    String(rawLLMConfig?.authMode || "api_key")
+      .trim()
+      .toLowerCase() === "oauth"
       ? "oauth"
       : "api_key";
 
@@ -590,10 +576,10 @@ async function loadLLMs(options?: {
             if (mode !== "all_providers_bridge_governed") {
               throw new Error("provider_not_allowed");
             }
-            if (u.protocol !== "https:") {
-              throw new Error("direct_baseURL_requires_https");
-            }
-            if (isLocalHost(u.hostname)) {
+            if (!isAllowedDirectURL(compatURL)) {
+              if (u.protocol !== "https:") {
+                throw new Error("direct_baseURL_requires_https");
+              }
               throw new Error("direct_baseURL_local_host");
             }
             return compatURL;
@@ -603,10 +589,10 @@ async function loadLLMs(options?: {
             throw new Error("direct_baseURL_missing");
           }
           const url = new URL(currentBaseURL);
-          if (url.protocol !== "https:") {
-            throw new Error("direct_baseURL_requires_https");
-          }
-          if (isLocalHost(url.hostname)) {
+          if (!isAllowedDirectURL(currentBaseURL)) {
+            if (url.protocol !== "https:") {
+              throw new Error("direct_baseURL_requires_https");
+            }
             throw new Error("direct_baseURL_local_host");
           }
           const mode = await getProviderPolicyMode();
@@ -653,6 +639,7 @@ type ProviderModelDescriptor = {
   id: string;
   name?: string;
   provider?: string;
+  model_origin?: "local" | "vps_holo" | "cloud";
   input_modalities?: string[];
   output_modalities?: string[];
 };
@@ -678,12 +665,26 @@ type ProviderModelsRefreshResult = {
   models: ProviderModelDescriptor[];
 };
 
+const LOCAL_CATALOG_PROVIDER_IDS = new Set([
+  "soca-bridge",
+  "vps-holo",
+  "ollama",
+  "openai-compatible",
+  "lmstudio",
+  "vllm",
+  "localai"
+]);
+
 function normalizeProviderId(value: unknown): string {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeProviderAuthMode(value: unknown): ProviderAuthMode {
-  return String(value || "").trim().toLowerCase() === "oauth"
+  return String(value || "")
+    .trim()
+    .toLowerCase() === "oauth"
     ? "oauth"
     : "api_key";
 }
@@ -696,10 +697,78 @@ function normalizeModelModalities(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   const out: string[] = [];
   for (const item of value) {
-    const normalized = String(item || "").trim().toLowerCase();
+    const normalized = String(item || "")
+      .trim()
+      .toLowerCase();
     if (normalized && !out.includes(normalized)) out.push(normalized);
   }
   return out;
+}
+
+function normalizeModelOrigin(
+  value: unknown
+): "local" | "vps_holo" | "cloud" | undefined {
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (raw === "local") return "local";
+  if (raw === "vps_holo" || raw === "vps-holo" || raw === "vps") {
+    return "vps_holo";
+  }
+  if (raw === "cloud") return "cloud";
+  return undefined;
+}
+
+function inferModelOrigin(
+  modelId: string,
+  providerHint: string
+): "local" | "vps_holo" | "cloud" {
+  const id = String(modelId || "")
+    .trim()
+    .toLowerCase();
+  const provider = String(providerHint || "")
+    .trim()
+    .toLowerCase();
+  if (
+    provider === "openrouter" ||
+    provider === "openai" ||
+    provider === "anthropic" ||
+    provider === "google" ||
+    provider === "azure" ||
+    provider === "bedrock" ||
+    id.startsWith("openrouter/") ||
+    id.startsWith("openai/") ||
+    id.startsWith("anthropic/") ||
+    id.startsWith("google/")
+  ) {
+    return "cloud";
+  }
+  if (provider === "vps-holo" || provider === "vps_holo") {
+    return "vps_holo";
+  }
+  return "local";
+}
+
+function filterModelsByCatalogMode(
+  providerId: string,
+  models: ProviderModelDescriptor[]
+): ProviderModelDescriptor[] {
+  if (!LOCAL_CATALOG_PROVIDER_IDS.has(providerId)) {
+    return models.map((model) => ({
+      ...model,
+      model_origin: model.model_origin || "cloud"
+    }));
+  }
+
+  return models
+    .map((model) => ({
+      ...model,
+      model_origin: model.model_origin || "local"
+    }))
+    .filter(
+      (model) =>
+        model.model_origin === "local" || model.model_origin === "vps_holo"
+    );
 }
 
 function normalizeModelDescriptor(
@@ -711,13 +780,18 @@ function normalizeModelDescriptor(
   const name = String(
     item?.name || item?.display_name || item?.displayName || id
   ).trim();
-  const provider = String(item?.provider || providerHint || "").trim() || undefined;
+  const provider =
+    String(item?.provider || providerHint || "").trim() || undefined;
+  const model_origin =
+    normalizeModelOrigin(item?.model_origin ?? item?.modelOrigin) ||
+    inferModelOrigin(id, provider || String(providerHint || ""));
   const input = normalizeModelModalities(item?.input_modalities);
   const output = normalizeModelModalities(item?.output_modalities);
   return {
     id,
     name,
     provider,
+    model_origin,
     input_modalities: input,
     output_modalities: output
   };
@@ -749,7 +823,9 @@ function normalizeAnthropicModels(payload: any): ProviderModelDescriptor[] {
 }
 
 function buildModelsURL(baseURL: string): string {
-  const trimmed = String(baseURL || "").trim().replace(/\/+$/, "");
+  const trimmed = String(baseURL || "")
+    .trim()
+    .replace(/\/+$/, "");
   if (!trimmed) return "";
   if (trimmed.endsWith("/models")) return trimmed;
   return `${trimmed}/models`;
@@ -765,6 +841,8 @@ function normalizeBaseURL(providerId: string, baseURL: string): string {
       return "https://api.anthropic.com/v1";
     case "google":
       return "https://generativelanguage.googleapis.com/v1beta/openai";
+    case "openrouter":
+      return "https://openrouter.ai/api/v1";
     default:
       return "";
   }
@@ -804,7 +882,10 @@ async function fetchJsonWithTimeout(
   timeoutMs: number
 ): Promise<any> {
   const ac = new AbortController();
-  const timer = setTimeout(() => ac.abort("provider_models_timeout"), timeoutMs);
+  const timer = setTimeout(
+    () => ac.abort("provider_models_timeout"),
+    timeoutMs
+  );
   try {
     const resp = await fetch(url, {
       ...init,
@@ -828,9 +909,13 @@ async function fetchJsonWithTimeout(
 async function getProviderCredential(providerId: string): Promise<string> {
   const sessionSecret = await getProviderSecret(providerId);
   if (sessionSecret) return sessionSecret;
-  const llmConfig = ((await chrome.storage.local.get(["llmConfig"])).llmConfig ||
-    {}) as any;
-  if (String(llmConfig?.llm || "").trim().toLowerCase() === providerId) {
+  const llmConfig = ((await chrome.storage.local.get(["llmConfig"]))
+    .llmConfig || {}) as any;
+  if (
+    String(llmConfig?.llm || "")
+      .trim()
+      .toLowerCase() === providerId
+  ) {
     return String(llmConfig?.apiKey || "").trim();
   }
   return "";
@@ -845,16 +930,23 @@ function assertAllowedDirectModelsBaseURL(baseURL: string): void {
     }
     return;
   }
-  if (url.protocol !== "https:") {
-    throw new Error("direct_baseURL_requires_https");
+  if (!isAllowedDirectURL(baseURL)) {
+    if (url.protocol !== "https:") {
+      throw new Error("direct_baseURL_requires_https");
+    }
+    throw new Error("direct_baseURL_local_host");
   }
 }
 
 function fallbackCustomModel(providerId: string): ProviderModelDescriptor {
+  const model_origin = LOCAL_CATALOG_PROVIDER_IDS.has(providerId)
+    ? "local"
+    : "cloud";
   return {
     id: "custom",
     name: "Custom (enter model name)",
     provider: providerId,
+    model_origin,
     input_modalities: ["text", "image"],
     output_modalities: ["text"]
   };
@@ -889,26 +981,35 @@ async function refreshProviderModelsCatalog(input: {
       baseURL,
       fromCache: true,
       updatedAt: Number(cachedEntry.updatedAt || now),
-      expiresAt: Number(cachedEntry.expiresAt || now + PROVIDER_MODEL_CACHE_TTL_MS),
+      expiresAt: Number(
+        cachedEntry.expiresAt || now + PROVIDER_MODEL_CACHE_TTL_MS
+      ),
       models: cachedEntry.models
     };
   }
 
   let models: ProviderModelDescriptor[] = [];
-  if (providerId === "soca-bridge" || providerId === "openrouter") {
+  if (providerId === "soca-bridge" || providerId === "vps-holo") {
     const bridgeModels = await bridgeFetchJson<{ data?: any[] }>("/v1/models", {
       method: "GET",
       timeoutMs: 12_000
     });
-    const normalized = normalizeOpenAIStyleModels(bridgeModels, providerId);
-    models =
-      providerId === "openrouter"
-        ? normalized.filter(
-            (m) =>
-              String(m.provider || "").toLowerCase() === "openrouter" ||
-              m.id.startsWith("openrouter/")
-          )
-        : normalized;
+    models = normalizeOpenAIStyleModels(bridgeModels, providerId);
+  } else if (providerId === "openrouter") {
+    const token = await getProviderCredential(providerId);
+    if (!token) throw new Error("api_key_missing");
+    assertAllowedDirectModelsBaseURL(baseURL);
+    models = normalizeOpenAIStyleModels(
+      await fetchJsonWithTimeout(
+        buildModelsURL(baseURL),
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` }
+        },
+        12_000
+      ),
+      providerId
+    );
   } else if (providerId === "openai") {
     const token = await getProviderCredential(providerId);
     if (!token) throw new Error("api_key_missing");
@@ -984,6 +1085,10 @@ async function refreshProviderModelsCatalog(input: {
   if (!models.length) {
     models = [fallbackCustomModel(providerId)];
   }
+  models = filterModelsByCatalogMode(providerId, models);
+  if (!models.length) {
+    models = [fallbackCustomModel(providerId)];
+  }
 
   const updatedAt = Date.now();
   const expiresAt = updatedAt + PROVIDER_MODEL_CACHE_TTL_MS;
@@ -1004,6 +1109,167 @@ async function refreshProviderModelsCatalog(input: {
     updatedAt,
     expiresAt,
     models
+  };
+}
+
+type BridgeProbeState = "ok" | "warn" | "error";
+
+type BridgeProbeResult = {
+  state: BridgeProbeState;
+  message: string;
+  candidate?: string;
+  modelsCount?: number;
+  tokenRequired?: boolean;
+  hostPermissionMissing?: boolean;
+};
+
+async function fetchWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(
+    () => controller.abort("bridge_probe_timeout"),
+    timeoutMs
+  );
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function probeBridgeStatus(input: {
+  baseURL?: string;
+  token?: string;
+  tailscaleHost?: string;
+}): Promise<BridgeProbeResult> {
+  const cfg = await getBridgeConfig();
+  const savedBaseURL =
+    String(input.baseURL || "").trim() || `${cfg.bridgeBaseURL}/v1`;
+  const candidates = buildBridgeCandidates({
+    savedBaseURL,
+    tailscaleHost: String(input.tailscaleHost || "").trim(),
+    fallbackBaseURL: `${cfg.bridgeBaseURL}/v1`
+  });
+  const token =
+    input.token === undefined
+      ? await getBridgeToken()
+      : String(input.token || "").trim();
+
+  let lastError = "";
+  let missingPermissionOrigin = "";
+
+  for (const candidate of candidates) {
+    const root = candidate.replace(/\/+$/, "").replace(/\/v1$/, "");
+    let originPattern = "";
+    try {
+      originPattern = `${new URL(root).origin}/*`;
+    } catch {
+      continue;
+    }
+
+    if (chrome.permissions?.contains) {
+      const hasOriginPermission = await new Promise<boolean>((resolve) => {
+        chrome.permissions.contains({ origins: [originPattern] }, (result) =>
+          resolve(Boolean(result))
+        );
+      });
+      if (!hasOriginPermission) {
+        missingPermissionOrigin = originPattern;
+        continue;
+      }
+    }
+
+    try {
+      const health = await fetchWithTimeout(`${root}/health`, {}, 4_000);
+      if (!health.ok) {
+        lastError = `health_http_${health.status}`;
+        continue;
+      }
+
+      if (!token) {
+        return {
+          state: "warn",
+          message: `Bridge reachable at ${candidate}, but token is missing.`,
+          candidate,
+          tokenRequired: true
+        };
+      }
+
+      const headers = { Authorization: `Bearer ${token}` };
+      const statusResp = await fetchWithTimeout(
+        `${root}/soca/bridge/status`,
+        { headers },
+        6_000
+      );
+      if (statusResp.ok) {
+        const payload = await statusResp.json();
+        const modelsCount = Number(
+          payload?.merged_models_count ??
+            payload?.models_count ??
+            payload?.model_count ??
+            0
+        );
+        return {
+          state: "ok",
+          message: `Bridge reachable at ${candidate}. ${modelsCount} models reported.`,
+          candidate,
+          modelsCount
+        };
+      }
+      if (statusResp.status === 401 || statusResp.status === 403) {
+        return {
+          state: "warn",
+          message: `Bridge reachable at ${candidate}, but token rejected.`,
+          candidate,
+          tokenRequired: true
+        };
+      }
+
+      const modelsResp = await fetchWithTimeout(
+        `${root}/v1/models`,
+        { headers },
+        6_000
+      );
+      if (modelsResp.ok) {
+        const payload = await modelsResp.json();
+        const modelsCount = Array.isArray(payload?.data)
+          ? payload.data.length
+          : 0;
+        return {
+          state: "ok",
+          message: `Bridge reachable at ${candidate}. Token accepted. ${modelsCount} models returned.`,
+          candidate,
+          modelsCount
+        };
+      }
+      if (modelsResp.status === 401 || modelsResp.status === 403) {
+        return {
+          state: "warn",
+          message: `Bridge reachable at ${candidate}, but token rejected.`,
+          candidate,
+          tokenRequired: true
+        };
+      }
+      lastError = `status_http_${statusResp.status}|models_http_${modelsResp.status}`;
+    } catch (error: any) {
+      lastError = String(error?.message || error || "unknown_error");
+    }
+  }
+
+  if (missingPermissionOrigin) {
+    return {
+      state: "warn",
+      message: `Host permission missing for ${missingPermissionOrigin}.`,
+      hostPermissionMissing: true
+    };
+  }
+
+  return {
+    state: "error",
+    message: `Bridge unreachable across candidate URLs. Last error: ${lastError || "unknown"}.`
   };
 }
 
@@ -1976,9 +2242,13 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
           return;
         }
         if (request.type === "SOCA_BRIDGE_GET_STATUS") {
-          const data = await bridgeFetchJson("/soca/bridge/status", {
-            method: "GET",
-            timeoutMs: 10_000
+          const data = await probeBridgeStatus({
+            baseURL: String(request.baseURL || "").trim(),
+            token:
+              request.token === undefined
+                ? undefined
+                : String(request.token || "").trim(),
+            tailscaleHost: String(request.tailscaleHost || "").trim()
           });
           sendResponse({ ok: true, data });
           return;

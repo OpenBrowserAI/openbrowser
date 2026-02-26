@@ -1,6 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { createRoot } from "react-dom/client";
-import { Form, Input, Button, message, Select, Spin, Switch, Alert } from "antd";
+import {
+  Form,
+  Input,
+  Button,
+  message,
+  Select,
+  Spin,
+  Switch,
+  Alert
+} from "antd";
 import { SaveOutlined, LoadingOutlined } from "@ant-design/icons";
 import "../sidebar/index.css";
 import { ThemeProvider } from "../sidebar/providers/ThemeProvider";
@@ -12,6 +21,12 @@ import {
   getDefaultBaseURL,
   type SocaOpenBrowserLane
 } from "../llm/llm";
+import {
+  buildBridgeCandidates,
+  isAllowedDirectURL,
+  isTrustedBridgeURL,
+  normalizeBaseURL
+} from "../llm/endpointPolicy";
 import type {
   Provider,
   ProviderOption,
@@ -35,15 +50,17 @@ const DIRECT_PROVIDER_HOST_PERMISSIONS = [
   "https://api.openai.com/*",
   "https://api.anthropic.com/*",
   "https://generativelanguage.googleapis.com/*",
+  "https://openrouter.ai/*",
   "https://oauth2.googleapis.com/*",
   "https://*.openai.azure.com/*",
   "https://bedrock-runtime.*.amazonaws.com/*"
 ];
-const BRIDGE_ROUTED_PROVIDER_IDS = new Set(["soca-bridge", "openrouter"]);
+const BRIDGE_ROUTED_PROVIDER_IDS = new Set(["soca-bridge", "vps-holo"]);
 const DIRECT_PROVIDER_IDS = new Set([
   "openai",
   "anthropic",
   "google",
+  "openrouter",
   "opencode-zen",
   "azure",
   "bedrock"
@@ -76,13 +93,17 @@ type GoogleOAuthStatus = {
 };
 
 function normalizeAuthMode(value: unknown): ProviderAuthMode {
-  return String(value || "").trim().toLowerCase() === "oauth"
+  return String(value || "")
+    .trim()
+    .toLowerCase() === "oauth"
     ? "oauth"
     : "api_key";
 }
 
 async function getProviderSessionSecret(providerId: string): Promise<string> {
-  const key = String(providerId || "").trim().toLowerCase();
+  const key = String(providerId || "")
+    .trim()
+    .toLowerCase();
   if (!key) return "";
   const sess = await (chrome.storage as any).session.get([
     SOCA_PROVIDER_SECRETS_SESSION_KEY
@@ -98,7 +119,9 @@ async function setProviderSessionSecret(
   providerId: string,
   secret: string
 ): Promise<void> {
-  const key = String(providerId || "").trim().toLowerCase();
+  const key = String(providerId || "")
+    .trim()
+    .toLowerCase();
   if (!key) return;
   const sess = await (chrome.storage as any).session.get([
     SOCA_PROVIDER_SECRETS_SESSION_KEY
@@ -120,42 +143,13 @@ async function setProviderSessionSecret(
   });
 }
 
-function parseIPv4(hostname: string): [number, number, number, number] | null {
-  const parts = hostname.split(".");
-  if (parts.length !== 4) return null;
-  const nums = parts.map((p) => Number(p));
-  if (nums.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
-  return nums as [number, number, number, number];
-}
-
-function isPrivateIPv4(hostname: string): boolean {
-  const ip = parseIPv4(hostname);
-  if (!ip) return false;
-  const [a, b] = ip;
-  if (a === 10) return true;
-  if (a === 127) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  return false;
-}
-
-function isLocalHost(hostname: string): boolean {
-  if (hostname === "localhost" || hostname === "::1") return true;
-  return hostname === "127.0.0.1" || isPrivateIPv4(hostname);
-}
-
-function isLocalBaseURL(url: string): boolean {
-  try {
-    const u = new URL(url);
-    return isLocalHost(u.hostname);
-  } catch {
-    return false;
-  }
-}
+// isLocalBaseURL is delegated to endpoint policy, including
+// localhost/private/Tailscale (.ts.net and 100.64-127.x) addresses.
+const isLocalBaseURL = isTrustedBridgeURL;
 
 async function ensureOriginPermission(baseURL: string): Promise<boolean> {
-  if (!chrome.permissions?.contains || !chrome.permissions?.request) return true;
+  if (!chrome.permissions?.contains || !chrome.permissions?.request)
+    return true;
   let originPattern = "";
   try {
     const url = new URL(baseURL);
@@ -282,14 +276,15 @@ const OptionsPage = () => {
           type: "SOCA_GET_PROVIDER_POLICY_STATE"
         });
         if (runtimeState?.ok) {
-          setProviderPolicyMode(
-            normalizeProviderPolicyMode(runtimeState.mode)
-          );
+          setProviderPolicyMode(normalizeProviderPolicyMode(runtimeState.mode));
           setAutoFallbackOllama(runtimeState.autoFallbackOllama !== false);
           return;
         }
       } catch (error) {
-        console.warn("Failed to load provider policy state from runtime:", error);
+        console.warn(
+          "Failed to load provider policy state from runtime:",
+          error
+        );
       }
 
       // Fallback path when runtime bridge API is unavailable.
@@ -307,9 +302,7 @@ const OptionsPage = () => {
         ) {
           const legacy = result[SOCA_DIRECT_PROVIDER_GATE_KEY];
           if (typeof legacy === "boolean") {
-            mode = legacy
-              ? "all_providers_bridge_governed"
-              : "local_only";
+            mode = legacy ? "all_providers_bridge_governed" : "local_only";
           }
         }
         setProviderPolicyMode(mode);
@@ -333,13 +326,21 @@ const OptionsPage = () => {
 
         const data = await fetchModelsData({ lane: socaOpenBrowserLane });
         const imageProviders = getProvidersWithImageSupport(data);
+        const filteredProviders = Object.fromEntries(
+          Object.entries(imageProviders).filter(([, provider]) => {
+            if (providerPolicyMode === "all_providers_bridge_governed") {
+              return true;
+            }
+            return provider.catalogMode !== "cloud_only";
+          })
+        );
 
-        setProvidersData(imageProviders);
-        setProviderOptions(providersToOptions(imageProviders));
+        setProvidersData(filteredProviders);
+        setProviderOptions(providersToOptions(filteredProviders));
 
         // Convert all provider models to options
         const allModelOptions: Record<string, ModelOption[]> = {};
-        Object.entries(imageProviders).forEach(([providerId, provider]) => {
+        Object.entries(filteredProviders).forEach(([providerId, provider]) => {
           allModelOptions[providerId] = modelsToOptions(
             provider.models,
             providerId
@@ -355,7 +356,7 @@ const OptionsPage = () => {
     };
 
     loadModels();
-  }, [laneLoaded, socaOpenBrowserLane]);
+  }, [laneLoaded, socaOpenBrowserLane, providerPolicyMode]);
 
   // Load saved config from storage
   useEffect(() => {
@@ -411,7 +412,8 @@ const OptionsPage = () => {
               (m) => m.value === nextConfig.modelName
             )
           ) {
-            nextConfig.modelName = modelOptions[nextConfig.llm]?.[0]?.value || "";
+            nextConfig.modelName =
+              modelOptions[nextConfig.llm]?.[0]?.value || "";
           }
 
           if (!nextConfig.options?.baseURL) {
@@ -553,8 +555,7 @@ const OptionsPage = () => {
           expiresAt: Number(resp?.data?.expiresAt || 0),
           issuedAt: Number(resp?.data?.issuedAt || 0),
           scope:
-            String(resp?.data?.scope || "").trim() ||
-            GOOGLE_OAUTH_DEFAULT_SCOPE
+            String(resp?.data?.scope || "").trim() || GOOGLE_OAUTH_DEFAULT_SCOPE
         });
       })
       .catch(() => {});
@@ -628,6 +629,7 @@ const OptionsPage = () => {
     models: Array<{
       id?: string;
       name?: string;
+      model_origin?: unknown;
       input_modalities?: unknown;
       output_modalities?: unknown;
     }>
@@ -637,9 +639,16 @@ const OptionsPage = () => {
     const nextProviderModels = {
       ...provider.models
     };
+    const catalogMode = provider.catalogMode || "local_only";
     for (const m of models || []) {
       const id = String(m?.id || "").trim();
       if (!id) continue;
+      const origin = String(m?.model_origin || "")
+        .trim()
+        .toLowerCase();
+      if (catalogMode === "local_only" && origin === "cloud") continue;
+      if (catalogMode === "cloud_only" && origin && origin !== "cloud")
+        continue;
       const name = String(m?.name || id).trim() || id;
       const input = Array.isArray(m?.input_modalities)
         ? (m.input_modalities as unknown[]).map((v) => String(v))
@@ -647,9 +656,16 @@ const OptionsPage = () => {
       const output = Array.isArray(m?.output_modalities)
         ? (m.output_modalities as unknown[]).map((v) => String(v))
         : ["text"];
+      const normalizedOrigin =
+        origin === "cloud" || origin === "vps_holo" || origin === "local"
+          ? origin
+          : catalogMode === "cloud_only"
+            ? "cloud"
+            : "local";
       nextProviderModels[id] = {
         id,
         name,
+        modelOrigin: normalizedOrigin as "cloud" | "vps_holo" | "local",
         modalities: {
           input,
           output
@@ -775,7 +791,9 @@ const OptionsPage = () => {
       if (!resp?.ok) {
         throw new Error(String(resp?.err || "google_oauth_clear_failed"));
       }
-      await (chrome.storage as any).session.remove([SOCA_GOOGLE_OAUTH_SESSION_KEY]);
+      await (chrome.storage as any).session.remove([
+        SOCA_GOOGLE_OAUTH_SESSION_KEY
+      ]);
       setGoogleOAuthStatus({
         connected: false,
         expiresAt: 0,
@@ -814,17 +832,18 @@ const OptionsPage = () => {
           .replace(/\s+/g, " ");
 
         const baseURL = String(llmConfigValue?.options?.baseURL || "").trim();
-        if (baseURL) {
+        const normalizedBaseURL = normalizeBaseURL(baseURL);
+        if (normalizedBaseURL) {
           const providerMeta = providersData[providerId];
           const providerNpm = String(
             providerMeta?.npm || llmConfigValue.npm || ""
           );
           const bridgeRouted = BRIDGE_ROUTED_PROVIDER_IDS.has(providerId);
           const isCompatProvider = providerNpm === "@ai-sdk/openai-compatible";
-          const compatLocal = isCompatProvider && isLocalBaseURL(baseURL);
+          const compatLocal =
+            isCompatProvider && isLocalBaseURL(normalizedBaseURL);
           const isDirectProvider =
-            (!bridgeRouted &&
-              DIRECT_PROVIDER_IDS.has(providerId)) ||
+            (!bridgeRouted && DIRECT_PROVIDER_IDS.has(providerId)) ||
             (isCompatProvider && !compatLocal);
 
           if (isDirectProvider && !allProvidersEnabled) {
@@ -832,13 +851,31 @@ const OptionsPage = () => {
               "Cloud providers are disabled by policy mode. Enable 'All providers' to continue."
             );
           }
+          if (bridgeRouted && !isLocalBaseURL(normalizedBaseURL)) {
+            throw new Error(
+              "Bridge URL must be localhost/private IP/Tailscale (*.ts.net or 100.64.0.0/10)."
+            );
+          }
+          if (
+            isDirectProvider &&
+            !compatLocal &&
+            !isAllowedDirectURL(normalizedBaseURL)
+          ) {
+            throw new Error(
+              "Direct provider Base URL must use https:// and a public host."
+            );
+          }
 
-          const granted = await ensureOriginPermission(baseURL);
+          const granted = await ensureOriginPermission(normalizedBaseURL);
           if (!granted) {
             throw new Error(
               "Host permission required for this Base URL. Please allow the permission prompt."
             );
           }
+          llmConfigValue.options = {
+            ...llmConfigValue.options,
+            baseURL: normalizedBaseURL
+          };
         }
 
         // Session-only bridge token (never persisted to chrome.storage.local).
@@ -862,14 +899,14 @@ const OptionsPage = () => {
               "http://127.0.0.1:9834"
           ).trim();
 
-          const candidateBridgeBaseURL = currentBaseURL
+          const bridgeCandidates = buildBridgeCandidates({
+            savedBaseURL: currentBaseURL,
+            fallbackBaseURL: `${previousBridgeBaseURL}/v1`
+          });
+          const bridgeV1BaseURL = bridgeCandidates[0];
+          const bridgeBaseURL = bridgeV1BaseURL
             .replace(/\/+$/, "")
             .replace(/\/v1$/, "");
-          const bridgeBaseURL =
-            candidateBridgeBaseURL &&
-            isLocalBaseURL(candidateBridgeBaseURL)
-              ? candidateBridgeBaseURL
-              : previousBridgeBaseURL;
 
           const r2 = await runtimeSendMessage<any>({
             type: "SOCA_SET_BRIDGE_CONFIG",
@@ -883,9 +920,6 @@ const OptionsPage = () => {
             baseURL: `${bridgeBaseURL.replace(/\/+$/, "")}/v1`
           };
           await setProviderSessionSecret(providerId, token);
-          if (providerId === "openrouter") {
-            await setProviderSessionSecret("soca-bridge", token);
-          }
         } else {
           const token = String(llmConfigValue.apiKey || "").trim();
           const providerNpm = String(llmConfigValue.npm || "").trim();
@@ -1065,10 +1099,13 @@ const OptionsPage = () => {
         config.options?.baseURL ||
         ""
     ).trim();
-    if (!baseURL) {
+    const token = String(form.getFieldValue("apiKey") || "").trim();
+    const hasExplicitBaseURL = Boolean(baseURL);
+    if (hasExplicitBaseURL && !isLocalBaseURL(baseURL)) {
       setBridgeStatus({
         state: "error",
-        message: "Bridge Base URL is missing."
+        message:
+          "URL invalid for bridge mode. Use localhost/private IP/Tailscale (*.ts.net or 100.64.0.0/10)."
       });
       return;
     }
@@ -1087,87 +1124,85 @@ const OptionsPage = () => {
       }
     };
 
-    const trimmed = baseURL.replace(/\/+$/, "");
-    const root = trimmed.endsWith("/v1")
-      ? trimmed.slice(0, -3).replace(/\/+$/, "")
-      : trimmed;
-    const healthUrl = `${root}/health`;
-    const modelsUrl = trimmed.endsWith("/v1")
-      ? `${trimmed}/models`
-      : `${root}/v1/models`;
-    const statusUrl = `${root}/soca/bridge/status`;
-
     setBridgeStatus({ state: "checking", message: "Checking bridge..." });
 
-    const summarizeBridgeStatus = (payload: any) => {
-      const openrouterKeyPresent = Boolean(payload?.openrouter_key_present);
-      const openrouterCount = Number(payload?.openrouter_models_count || 0);
-      const mergedCount = Number(payload?.merged_models_count || 0);
-      if (!openrouterKeyPresent) {
-        return {
-          state: "warn" as const,
-          message:
-            "Bridge reachable, but OPENROUTER_API_KEY is missing on the bridge host."
-        };
-      }
-      if (openrouterCount <= 0) {
-        return {
-          state: "warn" as const,
-          message:
-            "Bridge reachable, but OpenRouter model catalog is empty. Check bridge host network/key."
-        };
-      }
-      return {
-        state: "ok" as const,
-        message: `Bridge reachable. ${mergedCount} models available (${openrouterCount} from OpenRouter).`
-      };
-    };
-
     try {
-      const formToken = String(form.getFieldValue("apiKey") || "").trim();
-      if (!formToken) {
+      const candidates = buildBridgeCandidates({
+        savedBaseURL: baseURL,
+        tailscaleHost: normalizeBaseURL(baseURL),
+        fallbackBaseURL: "http://127.0.0.1:9834/v1"
+      });
+      const missingPermissionOrigins: string[] = [];
+      let lastError = "";
+
+      for (const candidate of candidates) {
+        const root = candidate.replace(/\/+$/, "").replace(/\/v1$/, "");
+        let originPattern = "";
         try {
-          const runtimeStatus = await runtimeSendMessage<any>({
-            type: "SOCA_BRIDGE_GET_STATUS"
-          });
-          if (runtimeStatus?.ok && runtimeStatus?.data) {
-            setBridgeStatus(summarizeBridgeStatus(runtimeStatus.data));
-            return;
-          }
+          const candidateURL = new URL(root);
+          originPattern = `${candidateURL.origin}/*`;
         } catch {
-          // Fallback to direct HTTP checks below.
+          continue;
         }
-      }
 
-      const healthResp = await fetchWithTimeout(healthUrl, {}, 4000);
-      if (!healthResp.ok) {
-        throw new Error(`health_http_${healthResp.status}`);
-      }
+        if (chrome.permissions?.contains && originPattern) {
+          const hasOriginPermission = await new Promise<boolean>((resolve) => {
+            chrome.permissions.contains(
+              { origins: [originPattern] },
+              (result) => resolve(Boolean(result))
+            );
+          });
+          if (!hasOriginPermission) {
+            missingPermissionOrigins.push(originPattern);
+            continue;
+          }
+        }
 
-      const token = formToken;
-      if (!token) {
-        setBridgeStatus({
-          state: "warn",
-          message:
-            "Bridge reachable. Bridge token missing in this form or session."
-        });
-        return;
-      }
+        const healthResp = await fetchWithTimeout(`${root}/health`, {}, 4000);
+        if (!healthResp.ok) {
+          lastError = `health_http_${healthResp.status}`;
+          continue;
+        }
 
-      const statusResp = await fetchWithTimeout(
-        statusUrl,
-        { headers: { Authorization: `Bearer ${token}` } },
-        6000
-      );
-      if (statusResp.ok) {
-        const payload = await statusResp.json();
-        setBridgeStatus(summarizeBridgeStatus(payload));
-        return;
-      }
-      if (statusResp.status === 404) {
+        if (!token) {
+          setBridgeStatus({
+            state: "warn",
+            message: `Bridge reachable at ${candidate}, but token is missing.`
+          });
+          return;
+        }
+
+        const headers = { Authorization: `Bearer ${token}` };
+        const statusResp = await fetchWithTimeout(
+          `${root}/soca/bridge/status`,
+          { headers },
+          6000
+        );
+        if (statusResp.ok) {
+          const payload = await statusResp.json();
+          const mergedCount = Number(
+            payload?.merged_models_count ??
+              payload?.models_count ??
+              payload?.model_count ??
+              0
+          );
+          setBridgeStatus({
+            state: "ok",
+            message: `Bridge reachable at ${candidate}. ${mergedCount} models reported.`
+          });
+          return;
+        }
+        if (statusResp.status === 401 || statusResp.status === 403) {
+          setBridgeStatus({
+            state: "warn",
+            message: `Bridge reachable at ${candidate}, but token rejected.`
+          });
+          return;
+        }
+
         const modelsResp = await fetchWithTimeout(
-          modelsUrl,
-          { headers: { Authorization: `Bearer ${token}` } },
+          `${root}/v1/models`,
+          { headers },
           6000
         );
         if (modelsResp.ok) {
@@ -1175,39 +1210,36 @@ const OptionsPage = () => {
           const count = Array.isArray(payload?.data) ? payload.data.length : 0;
           setBridgeStatus({
             state: "ok",
-            message: `Bridge reachable. Token accepted. ${count} models returned.`
+            message: `Bridge reachable at ${candidate}. Token accepted. ${count} models returned.`
           });
           return;
         }
         if (modelsResp.status === 401 || modelsResp.status === 403) {
           setBridgeStatus({
             state: "warn",
-            message: "Bridge reachable but token rejected."
+            message: `Bridge reachable at ${candidate}, but token rejected.`
           });
           return;
         }
+        lastError = `status_http_${statusResp.status}|models_http_${modelsResp.status}`;
+      }
+
+      if (missingPermissionOrigins.length > 0) {
         setBridgeStatus({
           state: "warn",
-          message: `Bridge reachable but models endpoint returned ${modelsResp.status}.`
+          message: `Host permission missing for ${missingPermissionOrigins[0]}. Save settings and approve permission prompt, then retry.`
         });
         return;
       }
-      if (statusResp.status === 401 || statusResp.status === 403) {
-        setBridgeStatus({
-          state: "warn",
-          message: "Bridge reachable but token rejected."
-        });
-        return;
-      }
-      setBridgeStatus({
-        state: "warn",
-        message: `Bridge reachable but status endpoint returned ${statusResp.status}.`
-      });
-    } catch (error) {
+
       setBridgeStatus({
         state: "error",
-        message:
-          "Bridge unreachable. Ensure SOCA Bridge is running and Base URL is correct."
+        message: `Bridge unreachable across candidate URLs. Last error: ${lastError || "unknown"}.`
+      });
+    } catch (error: any) {
+      setBridgeStatus({
+        state: "error",
+        message: `Bridge check failed: ${String(error?.message || error || "unknown_error")}`
       });
     }
   };
@@ -1235,26 +1267,25 @@ const OptionsPage = () => {
     (!bridgeRoutedProvider && DIRECT_PROVIDER_IDS.has(providerId)) ||
     (isCompatProvider && !openaiCompatLocal);
   const directProviderBlocked = isDirectProvider && !allProvidersEnabled;
-  const googleOAuthMode = providerId === "google" && selectedAuthMode === "oauth";
+  const googleOAuthMode =
+    providerId === "google" && selectedAuthMode === "oauth";
   const zenTokenMode =
     providerId === "opencode-zen" && selectedAuthMode === "oauth";
   const requiresApiKey =
     bridgeRoutedProvider ||
     (isDirectProvider && !openaiCompatLocal && !googleOAuthMode);
-  const apiKeyLabel =
-    bridgeRoutedProvider
-      ? "Bridge Token (session-only)"
-      : zenTokenMode
-        ? "OAuth Bearer Token (session-only)"
+  const apiKeyLabel = bridgeRoutedProvider
+    ? "Bridge Token (session-only)"
+    : zenTokenMode
+      ? "OAuth Bearer Token (session-only)"
       : requiresApiKey
         ? "API Key"
         : "API Key (optional)";
-  const apiKeyPlaceholder =
-    bridgeRoutedProvider
-      ? "Paste bridge token"
-      : zenTokenMode
-        ? "Paste OAuth bearer token"
-        : "Paste API key";
+  const apiKeyPlaceholder = bridgeRoutedProvider
+    ? "Paste bridge token"
+    : zenTokenMode
+      ? "Paste OAuth bearer token"
+      : "Paste API key";
   const oauthExpiresLabel = useMemo(() => {
     if (!googleOAuthStatus?.expiresAt) return "";
     try {
@@ -1366,7 +1397,7 @@ const OptionsPage = () => {
                 style={{ opacity: 0.7 }}
               >
                 {allProvidersEnabled
-                  ? "Cloud providers enabled (OpenAI, Anthropic, Gemini, etc). OpenRouter stays bridge-routed."
+                  ? "Cloud providers enabled (OpenAI, Anthropic, Gemini, OpenRouter, etc)."
                   : "Local-only mode. Only Ollama, SOCA Bridge, and local providers are available. Switch on to use cloud APIs."}
               </div>
             </div>
@@ -1524,10 +1555,7 @@ const OptionsPage = () => {
                     style={{ opacity: 0.7 }}
                   >
                     Click “Check Bridge” to verify the local SOCA Bridge
-                    endpoint used by {providerId === "openrouter"
-                      ? "OpenRouter routing"
-                      : "this provider"}
-                    .
+                    endpoint used by this provider.
                   </div>
                 )}
               </div>
@@ -1551,10 +1579,16 @@ const OptionsPage = () => {
                   className="text-xs text-theme-primary mt-2"
                   style={{ opacity: 0.7 }}
                 >
-                  Fetches live models for this provider and updates the local cache.
+                  Fetches live models for this provider and updates the local
+                  cache.
                 </div>
                 {modelsCacheStatus && (
-                  <Alert className="mt-2" type="info" showIcon message={modelsCacheStatus} />
+                  <Alert
+                    className="mt-2"
+                    type="info"
+                    showIcon
+                    message={modelsCacheStatus}
+                  />
                 )}
               </div>
             )}
@@ -1643,9 +1677,7 @@ const OptionsPage = () => {
                     Model Name
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-theme-primary">
-                      Custom
-                    </span>
+                    <span className="text-xs text-theme-primary">Custom</span>
                     <Switch
                       checked={useCustomModelName}
                       onChange={handleCustomModelToggle}
@@ -1739,16 +1771,14 @@ const OptionsPage = () => {
                     const providerNpm = String(
                       providerMeta?.npm || config.npm || ""
                     );
-                    const bridgeRouted = BRIDGE_ROUTED_PROVIDER_IDS.has(
-                      provider
-                    );
+                    const bridgeRouted =
+                      BRIDGE_ROUTED_PROVIDER_IDS.has(provider);
                     const isCompatProvider =
                       providerNpm === "@ai-sdk/openai-compatible";
                     const isCompatLocal =
                       isCompatProvider && isLocalBaseURL(currentBaseURL);
                     const isDirect =
-                      (!bridgeRouted &&
-                        DIRECT_PROVIDER_IDS.has(provider)) ||
+                      (!bridgeRouted && DIRECT_PROVIDER_IDS.has(provider)) ||
                       (isCompatProvider && !isCompatLocal);
                     const googleOAuth =
                       provider === "google" && authMode === "oauth";
@@ -1821,6 +1851,30 @@ const OptionsPage = () => {
                     const base = String(value || "").trim();
                     if (mustHaveBaseURL && !base) {
                       throw new Error("Base URL required for this provider");
+                    }
+                    if (!base) return;
+                    const providerMeta = providersData[provider];
+                    const providerNpm = String(
+                      providerMeta?.npm || config.npm || ""
+                    );
+                    const bridgeRouted =
+                      BRIDGE_ROUTED_PROVIDER_IDS.has(provider);
+                    const isCompatProvider =
+                      providerNpm === "@ai-sdk/openai-compatible";
+                    const compatLocal =
+                      isCompatProvider && isLocalBaseURL(base);
+                    const isDirect =
+                      (!bridgeRouted && DIRECT_PROVIDER_IDS.has(provider)) ||
+                      (isCompatProvider && !compatLocal);
+                    if (bridgeRouted && !isLocalBaseURL(base)) {
+                      throw new Error(
+                        "Bridge URL must target localhost/private/Tailscale host."
+                      );
+                    }
+                    if (isDirect && !compatLocal && !isAllowedDirectURL(base)) {
+                      throw new Error(
+                        "Direct provider URL must be https:// on a public host."
+                      );
                     }
                   }
                 })

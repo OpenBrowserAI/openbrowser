@@ -393,6 +393,13 @@
   font-weight: 600 !important;
 }
 
+.soca-composer-advanced {
+  border: 1px solid var(--chrome-input-border) !important;
+  background-color: var(--chrome-bg-secondary) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+}
+
 .soca-socakit {
   border: 1px solid var(--chrome-input-border) !important;
   background-color: var(--chrome-bg-secondary) !important;

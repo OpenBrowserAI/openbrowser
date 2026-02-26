@@ -1,0 +1,18 @@
+{
+  "version": "1.1.1",
+  "generated_at_utc": "2026-02-26T22:52:03Z",
+  "metrics": {
+    "RSI": 100,
+    "ZHV": 100,
+    "ZHDEEV": 100,
+    "TRUST_SCORE": 100
+  },
+  "runs": {
+    "total": 4,
+    "passed": 4
+  },
+  "artifacts": {
+    "total": 6,
+    "present": 6
+  }
+}

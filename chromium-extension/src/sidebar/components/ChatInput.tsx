@@ -1,37 +1,33 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-  SendOutlined,
-  StopOutlined,
   FileOutlined,
   DeleteOutlined,
-  PaperClipOutlined,
-  PlusOutlined,
-  HistoryOutlined,
-  SettingOutlined,
-  ApiOutlined,
-  BookOutlined,
   StarFilled,
   StarOutlined
 } from "@ant-design/icons";
 import { uuidv4 } from "@openbrowser-ai/core";
 import type { UploadedFile } from "../types";
 import {
-  Badge,
   Button,
   Checkbox,
   Divider,
   Input,
-  Popover,
   Space,
   Image,
   Typography,
   Modal,
-  Select,
   message,
   List,
   Tooltip
 } from "antd";
-import { WebpageMentionInput } from "./WebpageMentionInput";
+import { ComposerCore } from "./chat/ComposerCore";
+import {
+  ComposerAdvanced,
+  type PromptBuddyMode,
+  type PromptBuddyProfile
+} from "./chat/ComposerAdvanced";
+import { QuickActionsMenu } from "./chat/QuickActionsMenu";
+import { SocaKitPanel } from "./chat/SocaKitPanel";
 
 const { Text } = Typography;
 
@@ -50,13 +46,6 @@ const SOCA_TOOLS_CONFIG_STORAGE_KEY = "socaOpenBrowserToolsConfig";
 const SOCA_PROMPTBUDDY_SETTINGS_KEY = "socaPromptBuddySettings";
 const SOCA_PROMPTBUDDY_LIBRARY_KEY = "socaPromptBuddyLibraryV1";
 
-type PromptBuddyMode =
-  | "clarify"
-  | "structure"
-  | "compress"
-  | "persona"
-  | "safe_exec";
-type PromptBuddyProfile = { id: string; name: string };
 type PromptBuddySettings = {
   mode?: PromptBuddyMode;
   profileId?: string;
@@ -364,6 +353,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   const [toolsConfig, setToolsConfig] = useState<SocaToolsConfig>(
     DEFAULT_SOCA_TOOLS_CONFIG
   );
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [toolsPopoverOpen, setToolsPopoverOpen] = useState(false);
   const [pbMode, setPbMode] = useState<PromptBuddyMode>("structure");
   const [pbProfileId, setPbProfileId] = useState<string | undefined>(undefined);
@@ -940,202 +930,59 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
-      <details className="soca-socakit mb-3" open>
-        <summary className="text-xs font-medium text-theme-primary">
-          SOCaKit 15 Steps (embedded)
-        </summary>
-        <ol className="mt-2 text-xs text-theme-primary">
-          {SOCAKIT_STEPS.map((step) => (
-            <li key={step}>{step}</li>
-          ))}
-        </ol>
-      </details>
+      <SocaKitPanel steps={SOCAKIT_STEPS} />
 
-      <div className="mb-3">
-        <div
-          className="text-xs text-theme-primary"
-          style={{ opacity: 0.7, marginBottom: 6 }}
-        >
-          Quick Actions
-        </div>
-        <Space size="small" wrap>
-          {QUICK_ACTIONS.map((action) => (
-            <Button
-              key={action.id}
-              size="small"
-              onClick={() => onInputChange(action.prompt)}
-              disabled={sending || currentMessageId !== null}
-              className="soca-quick-action-btn"
-            >
-              {action.label}
-            </Button>
-          ))}
-        </Space>
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        accept="image/*,.pdf,.docx,.xlsx,.txt,.md,.json"
+        onChange={onFileSelect}
+        className="hidden"
+      />
 
-      {/* Floating Chat Input Box */}
-      <div
-        className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px"
-        style={{ borderWidth: "1px", borderStyle: "solid", overflow: "hidden" }}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/*,.pdf,.docx,.xlsx,.txt,.md,.json"
-          onChange={onFileSelect}
-          className="hidden"
+      {advancedOpen && (
+        <ComposerAdvanced
+          pbMode={pbMode}
+          pbProfileId={pbProfileId}
+          pbProfiles={pbProfiles}
+          pbBusy={pbBusy}
+          sending={sending}
+          currentMessageId={currentMessageId}
+          inputValue={inputValue}
+          toolsPopoverOpen={toolsPopoverOpen}
+          toolsPopoverContent={toolsPopoverContent}
+          enabledToolsCount={enabledToolsCount}
+          onSetPbMode={setPbMode}
+          onSetPbProfileId={setPbProfileId}
+          onSetToolsPopoverOpen={setToolsPopoverOpen}
+          onOpenPromptLibrary={() => setPbLibraryOpen(true)}
+          onEnhance={handlePromptBuddyEnhance}
         />
+      )}
 
-        {/* Input Area */}
-        <div className="px-4 pt-3 pb-12">
-          <WebpageMentionInput
-            value={inputValue}
-            onChange={onInputChange}
+      <ComposerCore
+        inputValue={inputValue}
+        onInputChange={onInputChange}
+        onSend={() => onSend()}
+        onStop={onStop}
+        onOpenFilePicker={() => fileInputRef.current?.click()}
+        onShowSessionHistory={onShowSessionHistory}
+        onOpenSettings={() => chrome.runtime.openOptionsPage()}
+        onNewSession={onNewSession}
+        onToggleAdvanced={() => setAdvancedOpen((current) => !current)}
+        advancedOpen={advancedOpen}
+        sending={sending}
+        currentMessageId={currentMessageId}
+        isEmpty={isEmpty}
+        quickActionsNode={
+          <QuickActionsMenu
+            actions={QUICK_ACTIONS}
             disabled={sending || currentMessageId !== null}
-            onSend={() => onSend()}
+            onSelect={(prompt) => onInputChange(prompt)}
           />
-        </div>
-
-        {/* Bottom Action Bar */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between px-3 py-2">
-          {/* Left: Attachment, History, and Settings Buttons */}
-          <Space size="small">
-            <Button
-              type="text"
-              icon={<PaperClipOutlined />}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={sending || currentMessageId !== null}
-              className="text-theme-icon"
-            />
-            <Button
-              type="text"
-              icon={<HistoryOutlined />}
-              onClick={onShowSessionHistory}
-              disabled={sending || currentMessageId !== null}
-              className="text-theme-icon"
-            />
-            <Popover
-              content={toolsPopoverContent}
-              trigger="click"
-              open={toolsPopoverOpen}
-              onOpenChange={setToolsPopoverOpen}
-              placement="topLeft"
-              overlayClassName="soca-tools-popover"
-            >
-              <Badge dot={enabledToolsCount > 0} offset={[-2, 2]}>
-                <Button
-                  type="text"
-                  icon={<ApiOutlined />}
-                  disabled={sending || currentMessageId !== null}
-                  className="text-theme-icon"
-                />
-              </Badge>
-            </Popover>
-            <Button
-              type="text"
-              icon={<SettingOutlined />}
-              onClick={() => chrome.runtime.openOptionsPage()}
-              disabled={sending || currentMessageId !== null}
-              className="text-theme-icon"
-            />
-          </Space>
-
-          <Space size="small">
-            <Select
-              size="small"
-              value={pbMode}
-              onChange={(value) => setPbMode(value as PromptBuddyMode)}
-              disabled={sending || currentMessageId !== null || pbBusy}
-              style={{ width: 112 }}
-              className="bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
-              classNames={{
-                popup: {
-                  root: "bg-theme-input border-theme-input dropdown-theme-items"
-                }
-              }}
-              options={PROMPTBUDDY_MODES.map((mode) => ({
-                value: mode,
-                label: mode
-              }))}
-            />
-            <Select
-              size="small"
-              allowClear
-              placeholder="profile"
-              value={pbProfileId}
-              onChange={(value) => setPbProfileId(value)}
-              disabled={sending || currentMessageId !== null || pbBusy}
-              style={{ width: 120 }}
-              className="bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
-              classNames={{
-                popup: {
-                  root: "bg-theme-input border-theme-input dropdown-theme-items"
-                }
-              }}
-              options={pbProfiles.map((profile) => ({
-                value: profile.id,
-                label: profile.name
-              }))}
-            />
-            <Tooltip title="Prompt Library (local)">
-              <Button
-                type="text"
-                icon={<BookOutlined />}
-                onClick={() => setPbLibraryOpen(true)}
-                disabled={sending || currentMessageId !== null || pbBusy}
-                className="text-theme-icon"
-                aria-label="Open Prompt Library"
-              />
-            </Tooltip>
-            <Button
-              type="text"
-              onClick={handlePromptBuddyEnhance}
-              disabled={
-                sending ||
-                currentMessageId !== null ||
-                pbBusy ||
-                !inputValue.trim()
-              }
-              className="text-theme-icon"
-            >
-              {pbBusy ? "Enhancing..." : "Enhance"}
-            </Button>
-
-            <Button
-              size="small"
-              icon={<PlusOutlined />}
-              onClick={onNewSession}
-              disabled={sending || currentMessageId !== null}
-              className="soca-secondary-btn"
-            >
-              New (+)
-            </Button>
-            {currentMessageId ? (
-              <Button
-                size="small"
-                danger
-                icon={<StopOutlined />}
-                onClick={onStop}
-                className="soca-danger-btn"
-              >
-                Stop
-              </Button>
-            ) : (
-              <Button
-                size="small"
-                icon={<SendOutlined />}
-                onClick={() => onSend()}
-                loading={sending}
-                disabled={sending || isEmpty}
-                className="soca-primary-btn"
-              >
-                Send (Enter)
-              </Button>
-            )}
-          </Space>
-        </div>
-      </div>
+        }
+      />
 
       <Modal
         title="Prompt Buddy Preview"

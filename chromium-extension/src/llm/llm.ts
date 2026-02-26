@@ -7,10 +7,13 @@ import type {
   Provider,
   Model,
   ProviderOption,
-  ModelOption
+  ModelOption,
+  ProviderCatalogMode
 } from "./llm.interface";
+import { isTrustedBridgeURL } from "./endpointPolicy";
 
 export type SocaOpenBrowserLane = "OB_OFFLINE" | "OB_ONLINE_PULSE";
+export { isTrustedBridgeURL };
 
 const MODELS_CACHE_STORAGE_KEY = "socaBridgeModelsCache";
 const PROVIDER_MODELS_CACHE_STORAGE_KEY = "socaProviderModelsCatalogCache";
@@ -26,6 +29,7 @@ type BridgeModelDescriptor = {
   id: string;
   name?: string;
   provider?: string;
+  model_origin?: unknown;
   input_modalities?: unknown;
   output_modalities?: unknown;
 };
@@ -39,6 +43,81 @@ type ProviderModelsCacheEntry = {
 
 type ProviderModelsCachePayload = Record<string, ProviderModelsCacheEntry>;
 
+type ModelOrigin = Model["modelOrigin"];
+
+function normalizeModelOrigin(value: unknown): ModelOrigin | undefined {
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (raw === "local") return "local";
+  if (raw === "vps_holo" || raw === "vps-holo" || raw === "vps") {
+    return "vps_holo";
+  }
+  if (raw === "cloud") return "cloud";
+  return undefined;
+}
+
+function inferModelOrigin(
+  modelId: string,
+  providerHint: string
+): ModelOrigin | undefined {
+  const id = String(modelId || "")
+    .trim()
+    .toLowerCase();
+  const provider = String(providerHint || "")
+    .trim()
+    .toLowerCase();
+  if (
+    provider === "openrouter" ||
+    provider === "openai" ||
+    provider === "anthropic" ||
+    provider === "google" ||
+    provider === "azure" ||
+    provider === "bedrock" ||
+    id.startsWith("openrouter/") ||
+    id.startsWith("openai/") ||
+    id.startsWith("anthropic/") ||
+    id.startsWith("google/")
+  ) {
+    return "cloud";
+  }
+  if (provider === "vps-holo" || provider === "vps_holo") {
+    return "vps_holo";
+  }
+  if (!id) return undefined;
+  return "local";
+}
+
+function withCatalogDefaultOrigin(model: Model, provider: Provider): Model {
+  if (model.modelOrigin) return model;
+  const defaultOrigin =
+    provider.catalogMode === "cloud_only" ? "cloud" : "local";
+  return { ...model, modelOrigin: defaultOrigin };
+}
+
+function modelAllowedByCatalog(model: Model, provider: Provider): boolean {
+  if (provider.catalogMode === "cloud_only") {
+    return model.modelOrigin === "cloud";
+  }
+  if (provider.catalogMode === "local_only") {
+    return model.modelOrigin === "local" || model.modelOrigin === "vps_holo";
+  }
+  return true;
+}
+
+function projectProviderModels(
+  provider: Provider,
+  models: Record<string, Model>
+): Record<string, Model> {
+  const projected: Record<string, Model> = {};
+  for (const [modelId, model] of Object.entries(models || {})) {
+    const withOrigin = withCatalogDefaultOrigin(model, provider);
+    if (!modelAllowedByCatalog(withOrigin, provider)) continue;
+    projected[modelId] = withOrigin;
+  }
+  return projected;
+}
+
 const LOCAL_OLLAMA_PROVIDER: ModelsData = {
   ollama: {
     id: "ollama",
@@ -47,6 +126,7 @@ const LOCAL_OLLAMA_PROVIDER: ModelsData = {
     api: "http://127.0.0.1:11434/v1",
     authModes: ["api_key"],
     modelSource: "static",
+    catalogMode: "local_only",
     requiresBaseURL: false,
     supportsLiveCatalog: true,
     models: {
@@ -76,6 +156,7 @@ const LOCAL_SOCA_BRIDGE_PROVIDER: ModelsData = {
     api: "http://127.0.0.1:9834/v1",
     authModes: ["api_key"],
     modelSource: "bridge",
+    catalogMode: "local_only",
     requiresBaseURL: false,
     supportsLiveCatalog: true,
     models: {
@@ -120,6 +201,7 @@ const OPENAI_COMPAT_PROVIDER = (
   options?: {
     authModes?: ("api_key" | "oauth")[];
     modelSource?: "static" | "bridge" | "direct_api";
+    catalogMode?: ProviderCatalogMode;
     requiresBaseURL?: boolean;
     supportsLiveCatalog?: boolean;
   }
@@ -130,6 +212,7 @@ const OPENAI_COMPAT_PROVIDER = (
   api,
   authModes: options?.authModes || ["api_key"],
   modelSource: options?.modelSource || "static",
+  catalogMode: options?.catalogMode || "local_only",
   requiresBaseURL: options?.requiresBaseURL ?? false,
   supportsLiveCatalog: options?.supportsLiveCatalog ?? false,
   models: {
@@ -169,9 +252,25 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     api: "https://api.openai.com/v1",
     authModes: ["api_key"],
     modelSource: "direct_api",
+    catalogMode: "cloud_only",
     requiresBaseURL: false,
     supportsLiveCatalog: true,
     models: {
+      "gpt-4.1": {
+        id: "gpt-4.1",
+        name: "GPT-4.1",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "gpt-4.1-mini": {
+        id: "gpt-4.1-mini",
+        name: "GPT-4.1 Mini",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "gpt-4.1-nano": {
+        id: "gpt-4.1-nano",
+        name: "GPT-4.1 Nano",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
       "gpt-4o": {
         id: "gpt-4o",
         name: "GPT-4o",
@@ -182,20 +281,25 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
         name: "GPT-4o Mini",
         modalities: { input: ["text", "image"], output: ["text"] }
       },
-      "o1": {
-        id: "o1",
-        name: "o1",
+      o3: {
+        id: "o3",
+        name: "o3",
         modalities: { input: ["text", "image"], output: ["text"] }
-      },
-      "o1-preview": {
-        id: "o1-preview",
-        name: "o1 Preview",
-        modalities: { input: ["text"], output: ["text"] }
       },
       "o3-mini": {
         id: "o3-mini",
         name: "o3 Mini",
-        modalities: { input: ["text"], output: ["text"] }
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "o4-mini": {
+        id: "o4-mini",
+        name: "o4 Mini",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      o1: {
+        id: "o1",
+        name: "o1",
+        modalities: { input: ["text", "image"], output: ["text"] }
       },
       "gpt-4-turbo": {
         id: "gpt-4-turbo",
@@ -212,9 +316,25 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     api: "https://api.anthropic.com/v1",
     authModes: ["api_key"],
     modelSource: "direct_api",
+    catalogMode: "cloud_only",
     requiresBaseURL: false,
     supportsLiveCatalog: true,
     models: {
+      "claude-opus-4-20250514": {
+        id: "claude-opus-4-20250514",
+        name: "Claude Opus 4",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "claude-sonnet-4-20250514": {
+        id: "claude-sonnet-4-20250514",
+        name: "Claude Sonnet 4",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "claude-3-7-sonnet-latest": {
+        id: "claude-3-7-sonnet-latest",
+        name: "Claude 3.7 Sonnet",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
       "claude-3-5-sonnet-latest": {
         id: "claude-3-5-sonnet-latest",
         name: "Claude 3.5 Sonnet",
@@ -240,6 +360,7 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     api: "https://generativelanguage.googleapis.com/v1beta/openai",
     authModes: ["api_key", "oauth"],
     modelSource: "direct_api",
+    catalogMode: "cloud_only",
     requiresBaseURL: false,
     supportsLiveCatalog: true,
     models: {
@@ -253,6 +374,11 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
         name: "Gemini 2.5 Flash",
         modalities: { input: ["text", "image"], output: ["text"] }
       },
+      "gemini-2.0-flash": {
+        id: "gemini-2.0-flash",
+        name: "Gemini 2.0 Flash",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
       "gemini-1.5-pro": {
         id: "gemini-1.5-pro",
         name: "Gemini 1.5 Pro",
@@ -261,11 +387,6 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
       "gemini-1.5-flash": {
         id: "gemini-1.5-flash",
         name: "Gemini 1.5 Flash",
-        modalities: { input: ["text", "image"], output: ["text"] }
-      },
-      "gemini-2.0-flash-exp": {
-        id: "gemini-2.0-flash-exp",
-        name: "Gemini 2.0 Flash Exp",
         modalities: { input: ["text", "image"], output: ["text"] }
       },
       custom: GENERIC_CUSTOM_MODEL
@@ -278,6 +399,7 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     api: "https://YOUR_RESOURCE_NAME.openai.azure.com",
     authModes: ["api_key"],
     modelSource: "direct_api",
+    catalogMode: "cloud_only",
     requiresBaseURL: true,
     supportsLiveCatalog: false,
     models: {
@@ -291,6 +413,7 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     api: "https://bedrock-runtime.us-west-2.amazonaws.com",
     authModes: ["api_key"],
     modelSource: "direct_api",
+    catalogMode: "cloud_only",
     requiresBaseURL: false,
     supportsLiveCatalog: false,
     models: {
@@ -304,6 +427,7 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     {
       authModes: ["api_key", "oauth"],
       modelSource: "direct_api",
+      catalogMode: "cloud_only",
       requiresBaseURL: true,
       supportsLiveCatalog: true
     }
@@ -315,12 +439,18 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
     api: "https://openrouter.ai/api/v1",
     authModes: ["api_key"],
     modelSource: "direct_api",
+    catalogMode: "cloud_only",
     requiresBaseURL: false,
     supportsLiveCatalog: true,
     models: {
       "openrouter/auto": {
         id: "openrouter/auto",
         name: "OpenRouter Auto",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "anthropic/claude-sonnet-4": {
+        id: "anthropic/claude-sonnet-4",
+        name: "Claude Sonnet 4 (OpenRouter)",
         modalities: { input: ["text", "image"], output: ["text"] }
       },
       "anthropic/claude-3.5-sonnet": {
@@ -333,9 +463,67 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
         name: "Gemini 2.5 Pro (OpenRouter)",
         modalities: { input: ["text", "image"], output: ["text"] }
       },
+      "google/gemini-2.5-flash": {
+        id: "google/gemini-2.5-flash",
+        name: "Gemini 2.5 Flash (OpenRouter)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "openai/gpt-4.1": {
+        id: "openai/gpt-4.1",
+        name: "GPT-4.1 (OpenRouter)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
       "openai/gpt-4o": {
         id: "openai/gpt-4o",
         name: "GPT-4o (OpenRouter)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "openai/o3": {
+        id: "openai/o3",
+        name: "o3 (OpenRouter)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      custom: GENERIC_CUSTOM_MODEL
+    }
+  }
+};
+
+/**
+ * VPS HOLO provider — connects to the SOCA Bridge via Tailscale.
+ * The base URL is a Tailscale MagicDNS address (*.ts.net) or a
+ * Tailscale IP (100.x.y.z) pointing to the VPS HOLO bridge.
+ * Users MUST set their Tailscale hostname in the Base URL field.
+ */
+const VPS_HOLO_PROVIDER: ModelsData = {
+  "vps-holo": {
+    id: "vps-holo",
+    name: "VPS HOLO (Tailscale Bridge)",
+    npm: "@ai-sdk/openai-compatible",
+    api: "http://127.0.0.1:9834/v1",
+    authModes: ["api_key"],
+    modelSource: "bridge",
+    catalogMode: "local_only",
+    requiresBaseURL: true,
+    supportsLiveCatalog: true,
+    models: {
+      "soca/auto": {
+        id: "soca/auto",
+        name: "SOCA Auto (VPS HOLO)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "soca/fast": {
+        id: "soca/fast",
+        name: "SOCA Fast (VPS HOLO)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "soca/best": {
+        id: "soca/best",
+        name: "SOCA Best (VPS HOLO)",
+        modalities: { input: ["text", "image"], output: ["text"] }
+      },
+      "qwen3-vl:8b": {
+        id: "qwen3-vl:8b",
+        name: "Qwen3-VL 8B (VPS HOLO)",
         modalities: { input: ["text", "image"], output: ["text"] }
       },
       custom: GENERIC_CUSTOM_MODEL
@@ -346,6 +534,7 @@ const DIRECT_PROVIDER_CATALOG: ModelsData = {
 const DEFAULT_FALLBACK_MODELS: ModelsData = {
   ...LOCAL_OLLAMA_PROVIDER,
   ...LOCAL_SOCA_BRIDGE_PROVIDER,
+  ...VPS_HOLO_PROVIDER,
   ...LOCAL_OPENAI_COMPAT_PROVIDERS,
   ...DIRECT_PROVIDER_CATALOG
 };
@@ -406,13 +595,21 @@ function normalizeModalities(value: unknown): string[] {
 function modelFromBridgeDescriptor(desc: BridgeModelDescriptor): Model {
   const modelId = String(desc.id || "").trim();
   const name = String(desc.name || modelId || "").trim() || modelId;
+  const providerHint = String(desc.provider || "").trim();
+  const modelOrigin =
+    normalizeModelOrigin(desc.model_origin) ||
+    inferModelOrigin(modelId, providerHint);
   const input = normalizeModalities(desc.input_modalities);
   const output = normalizeModalities(desc.output_modalities);
   const fallbackHasVision = guessVisionSupport(modelId);
   const modalities =
     input.length || output.length
       ? {
-          input: input.length ? input : fallbackHasVision ? ["text", "image"] : ["text"],
+          input: input.length
+            ? input
+            : fallbackHasVision
+              ? ["text", "image"]
+              : ["text"],
           output: output.length ? output : ["text"]
         }
       : fallbackHasVision
@@ -421,6 +618,7 @@ function modelFromBridgeDescriptor(desc: BridgeModelDescriptor): Model {
   return {
     id: modelId,
     name,
+    modelOrigin,
     modalities
   };
 }
@@ -428,17 +626,23 @@ function modelFromBridgeDescriptor(desc: BridgeModelDescriptor): Model {
 function cloneModelsData(data: ModelsData): ModelsData {
   const cloned: ModelsData = {};
   for (const [providerId, provider] of Object.entries(data)) {
-    cloned[providerId] = {
+    const nextProvider = {
       ...provider,
       models: {
         ...(provider.models || {})
       }
     };
+    cloned[providerId] = {
+      ...nextProvider,
+      models: projectProviderModels(nextProvider, nextProvider.models)
+    };
   }
   return cloned;
 }
 
-async function fetchBridgeModels(timeoutMs: number): Promise<BridgeModelDescriptor[]> {
+async function fetchBridgeModels(
+  timeoutMs: number
+): Promise<BridgeModelDescriptor[]> {
   if (typeof chrome === "undefined" || !chrome?.runtime?.sendMessage) return [];
   const resp = (await Promise.race([
     chrome.runtime.sendMessage({ type: BRIDGE_MODELS_MESSAGE_TYPE }),
@@ -457,6 +661,7 @@ async function fetchBridgeModels(timeoutMs: number): Promise<BridgeModelDescript
       id: String(m?.id || "").trim(),
       name: typeof m?.name === "string" ? m.name : undefined,
       provider: typeof m?.provider === "string" ? m.provider : undefined,
+      model_origin: m?.model_origin ?? m?.modelOrigin,
       input_modalities: m?.input_modalities,
       output_modalities: m?.output_modalities
     }))
@@ -499,9 +704,9 @@ async function readProviderCatalogCache(): Promise<ProviderModelsCachePayload | 
     const result = await chrome.storage.local.get([
       PROVIDER_MODELS_CACHE_STORAGE_KEY
     ]);
-    const cached = result[
-      PROVIDER_MODELS_CACHE_STORAGE_KEY
-    ] as ProviderModelsCachePayload | undefined;
+    const cached = result[PROVIDER_MODELS_CACHE_STORAGE_KEY] as
+      | ProviderModelsCachePayload
+      | undefined;
     if (!cached || typeof cached !== "object") {
       return null;
     }
@@ -512,7 +717,9 @@ async function readProviderCatalogCache(): Promise<ProviderModelsCachePayload | 
   }
 }
 
-async function mergeProviderCatalogCache(data: ModelsData): Promise<ModelsData> {
+async function mergeProviderCatalogCache(
+  data: ModelsData
+): Promise<ModelsData> {
   const payload = await readProviderCatalogCache();
   if (!payload) return data;
 
@@ -533,9 +740,10 @@ async function mergeProviderCatalogCache(data: ModelsData): Promise<ModelsData> 
       if (!normalized.id) continue;
       nextModels[normalized.id] = normalized;
     }
+    const nextProvider = merged[providerId];
     merged[providerId] = {
-      ...merged[providerId],
-      models: nextModels
+      ...nextProvider,
+      models: projectProviderModels(nextProvider, nextModels)
     };
   }
   return merged;
@@ -567,10 +775,17 @@ export async function fetchModelsData(options?: {
       ...fallbackModels,
       "soca-bridge": {
         ...fallbackModels["soca-bridge"],
-        models: {
+        models: projectProviderModels(fallbackModels["soca-bridge"], {
           ...(fallbackModels["soca-bridge"]?.models || {}),
           ...bridgeModels
-        }
+        })
+      },
+      "vps-holo": {
+        ...fallbackModels["vps-holo"],
+        models: projectProviderModels(fallbackModels["vps-holo"], {
+          ...(fallbackModels["vps-holo"]?.models || {}),
+          ...bridgeModels
+        })
       }
     };
     await writeModelsCache(data);
@@ -648,6 +863,7 @@ export function providersToOptions(
       api: provider.api,
       authModes: provider.authModes,
       modelSource: provider.modelSource,
+      catalogMode: provider.catalogMode,
       requiresBaseURL: provider.requiresBaseURL,
       supportsLiveCatalog: provider.supportsLiveCatalog
     }))

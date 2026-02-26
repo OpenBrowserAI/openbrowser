@@ -44,12 +44,23 @@ export const test = base.extend<Fixtures>({
         );
       }
     }
+    const runtimeHome = path.join(userDataDir, "home");
+    fs.mkdirSync(runtimeHome, { recursive: true });
+    const launchHeadless = process.env.PW_HEADLESS !== "0";
     const context = await chromium.launchPersistentContext(userDataDir, {
-      headless: false,
+      headless: launchHeadless,
       executablePath,
+      env: {
+        ...process.env,
+        HOME: runtimeHome,
+        XDG_CONFIG_HOME: path.join(runtimeHome, ".config"),
+        XDG_CACHE_HOME: path.join(runtimeHome, ".cache")
+      },
       args: [
         `--disable-extensions-except=${extPath}`,
-        `--load-extension=${extPath}`
+        `--load-extension=${extPath}`,
+        "--disable-crash-reporter",
+        "--disable-crashpad-for-testing"
       ]
     });
 
