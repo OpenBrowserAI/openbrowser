@@ -1,6 +1,14 @@
 {
   "schema_version": "2026-02-06",
   "templates": {
+    "aa-email-triage.yaml": {
+      "bytes": 1930,
+      "sha256": "0cc524a9484b7f4752541cb4f72b90753ce86fd855dc003fb8c236db21457cfe"
+    },
+    "aa-second-brain.yaml": {
+      "bytes": 1810,
+      "sha256": "fd8921af27199479373a396ce89cc3400fcdc30e5ee53d67e4781ae8db3d29e8"
+    },
     "clawdbot-deploy.yaml": {
       "bytes": 5339,
       "sha256": "c3eba3916620e86d0c8e389aee3fee4a6d249edfa7a130de0feb2176df94465f"
@@ -16,6 +24,10 @@
     "preflight.yaml": {
       "bytes": 3625,
       "sha256": "7467b18cae8993f7d26b2688bf860b7feb6884af88deec41cacde6fdc6c72edd"
+    },
+    "soca-pulse-daily.yaml": {
+      "bytes": 1710,
+      "sha256": "e2c273b1a3e1831c4b12b7433e3e51784156073bcef4ab21eaa25ef648e5d4d0"
     },
     "vps-capsule.yaml": {
       "bytes": 5415,

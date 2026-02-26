@@ -1,0 +1,66 @@
+# SOCA OpenBrowser Workflow: AA Daily Email Triage (Manual Paste)
+# Goal: Provide a consistent triage prompt for AA daily inbox processing.
+# Lane: L1_ASSISTED (writes only to local evidence output)
+
+meta:
+  name: aa-email-triage
+  version: "1.0.0"
+  lane: L1_ASSISTED
+  network: DENY
+  description: "Prepare AA email triage prompt and evidence placeholders"
+  tags: [aa, triage, email, second-brain]
+
+inputs:
+  output_dir:
+    type: string
+    default: "runs/_local/aa-email-triage"
+    description: "Directory to store prompt template and outputs"
+
+tasks:
+  - id: T00_prepare
+    name: "Prepare Output Directory"
+    goal: "Create output directory for prompts and results"
+    lane: L1_ASSISTED
+    commands:
+      - mkdir -p "${output_dir}"
+    verify:
+      - "output_dir exists"
+
+  - id: T01_write_prompt
+    name: "Write Triage Prompt"
+    goal: "Create a reusable triage prompt file"
+    lane: L1_ASSISTED
+    commands:
+      - |
+        cat > "${output_dir}/triage_prompt.txt" <<'PROMPT'
+        AA Daily Email Triage (paste emails below)
+
+        Return a table with columns: From | Subject | Priority (Urgent/Today/Week/Later/Archive) | Decision | Next Action | Owner | Due Date | Draft Reply.
+        Rules:
+        - If unclear, list questions in a final 'Open Questions' section.
+        - Keep draft replies concise and action-oriented.
+
+        Emails:
+        PROMPT
+    verify:
+      - "triage_prompt.txt created"
+
+  - id: T02_run_in_openbrowser
+    name: "Run in OpenBrowser"
+    goal: "Paste emails into OpenBrowser and run the triage prompt"
+    lane: L1_ASSISTED
+    manual_check:
+      - "Open OpenBrowser sidebar"
+      - "Paste email batch into prompt"
+      - "Save output to ${output_dir}/triage_output.md"
+
+outputs:
+  prompt: "${output_dir}/triage_prompt.txt"
+  output: "${output_dir}/triage_output.md"
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: aa-email-triage
+# version: 1.0.0
+# lane: L1_ASSISTED

@@ -29,14 +29,20 @@ import {
   ensureDnrGuardrailsInstalled,
   getBridgeAutoFallbackOllama,
   getBridgeConfig,
+  getGoogleOAuthSession,
   getProviderPolicyMode,
+  getProviderSecret,
+  getProviderSecretsSession,
   getBridgeToken,
   loadSocaToolsConfig,
   normalizeLane,
+  setGoogleOAuthSession,
+  setProviderSecret,
   setBridgeConfig,
   setBridgeAutoFallbackOllama,
   setBridgeToken,
   setProviderPolicyMode,
+  clearGoogleOAuthSession,
   type SocaProviderPolicyMode,
   type BridgeConfig,
   type SocaOpenBrowserLane
@@ -54,6 +60,10 @@ type PromptBuddyMode =
   | "safe_exec";
 
 const MAX_LOG_CHARS = 1200;
+const PROVIDER_MODEL_CACHE_STORAGE_KEY = "socaProviderModelsCatalogCache";
+const PROVIDER_MODEL_CACHE_TTL_MS = 5 * 60 * 1000;
+const GOOGLE_OAUTH_DEFAULT_SCOPE =
+  "https://www.googleapis.com/auth/generative-language";
 
 function clampText(value: string, maxChars: number) {
   if (value.length <= maxChars) return value;
@@ -122,6 +132,41 @@ function sanitizeLogMessage(raw: unknown, maxChars = MAX_LOG_CHARS) {
     text = String(raw);
   }
   return clampText(compressNumericSpam(text), maxChars);
+}
+
+function normalizeProviderError(raw: unknown): string {
+  const text = sanitizeLogMessage(raw, 2000);
+  const normalized = text.toLowerCase();
+  if (normalized.includes("bridge_token_missing")) return "bridge_token_missing";
+  if (
+    normalized.includes("bridge_http_401") ||
+    normalized.includes("invalid bearer token")
+  ) {
+    return "bridge_token_rejected";
+  }
+  if (
+    normalized.includes("bridge_http_403") &&
+    normalized.includes("/v1/models")
+  ) {
+    return "bridge_token_rejected";
+  }
+  if (normalized.includes("provider_not_allowed")) return "provider_not_allowed";
+  if (normalized.includes("api_key_missing")) return "api_key_missing";
+  if (normalized.includes("google_oauth_missing")) return "google_oauth_missing";
+  if (
+    normalized.includes("openrouter_api_key missing") ||
+    normalized.includes("openrouter_api_key_missing")
+  ) {
+    return "openrouter_api_key_missing";
+  }
+  if (
+    normalized.includes("forbidden") ||
+    normalized.includes("provider_http_403") ||
+    normalized.includes("ai_apicallerror: forbidden")
+  ) {
+    return "provider_forbidden";
+  }
+  return sanitizeLogMessage(raw, 1000);
 }
 
 function logAgentMessage(label: string, message: any) {
@@ -322,6 +367,7 @@ function isPrivateIPv4(hostname: string): boolean {
 
 function isLocalHost(hostname: string): boolean {
   if (hostname === "localhost" || hostname === "::1") return true;
+  if (hostname.endsWith(".ts.net")) return true;
   return hostname === "127.0.0.1" || isPrivateIPv4(hostname);
 }
 
@@ -370,10 +416,12 @@ type RuntimeLLMSelection = {
   rawProviderId: string;
   rawNpm: string;
   rawBaseURL: string;
+  rawAuthMode: "api_key" | "oauth";
   runtimeProvider: string;
   runtimeNpm: string;
   runtimeModel: string;
   isOllamaProvider: boolean;
+  isGoogleProvider: boolean;
   isOpenAICompatNpm: boolean;
   isOpenAICompatLocal: boolean;
   isLocalProvider: boolean;
@@ -385,6 +433,11 @@ function buildRuntimeLLMSelection(rawLLMConfig: any): RuntimeLLMSelection {
   const rawModelName = String(rawLLMConfig?.modelName || "soca/auto");
   const rawNpm = String(rawLLMConfig?.npm || "@ai-sdk/openai-compatible");
   const rawBaseURL = String(rawLLMConfig?.options?.baseURL || "").trim();
+  const rawAuthMode =
+    String(rawLLMConfig?.authMode || "api_key").trim().toLowerCase() ===
+    "oauth"
+      ? "oauth"
+      : "api_key";
 
   let baseURLHost = "";
   if (rawBaseURL) {
@@ -398,6 +451,7 @@ function buildRuntimeLLMSelection(rawLLMConfig: any): RuntimeLLMSelection {
 
   const isOpenAICompatNpm = rawNpm === "@ai-sdk/openai-compatible";
   const isOllamaProvider = rawProviderId === "ollama";
+  const isGoogleProvider = rawProviderId === "google";
   const isOpenAICompatLocal =
     isOpenAICompatNpm && Boolean(baseURLHost) && isLocalHost(baseURLHost);
   const bridgeRouted = isBridgeRoutedProvider(rawProviderId);
@@ -409,12 +463,14 @@ function buildRuntimeLLMSelection(rawLLMConfig: any): RuntimeLLMSelection {
     rawProviderId,
     rawNpm,
     rawBaseURL,
+    rawAuthMode,
     runtimeProvider: bridgeRouted ? "soca-bridge" : rawProviderId,
     runtimeNpm: bridgeRouted ? "@ai-sdk/openai-compatible" : rawNpm,
     runtimeModel: bridgeRouted
       ? normalizeBridgeModelName(rawProviderId, rawModelName)
       : rawModelName,
     isOllamaProvider,
+    isGoogleProvider,
     isOpenAICompatNpm,
     isOpenAICompatLocal,
     isLocalProvider,
@@ -475,7 +531,16 @@ async function loadLLMs(options?: {
         ) {
           throw new Error("provider_not_allowed");
         }
-        const key = String(raw?.apiKey || "").trim();
+        if (current.isGoogleProvider && current.rawAuthMode === "oauth") {
+          const googleOAuth = await getGoogleOAuthSession();
+          if (!googleOAuth?.accessToken) {
+            throw new Error("google_oauth_missing");
+          }
+          return googleOAuth.accessToken;
+        }
+        const sessionSecret = await getProviderSecret(current.rawProviderId);
+        const legacyKey = String(raw?.apiKey || "").trim();
+        const key = sessionSecret || legacyKey;
         if (current.isDirectProvider && !key) {
           throw new Error("api_key_missing");
         }
@@ -580,6 +645,457 @@ async function loadLLMs(options?: {
   }
 
   return llms;
+}
+
+type ProviderAuthMode = "api_key" | "oauth";
+
+type ProviderModelDescriptor = {
+  id: string;
+  name?: string;
+  provider?: string;
+  input_modalities?: string[];
+  output_modalities?: string[];
+};
+
+type ProviderModelsCacheEntry = {
+  providerId: string;
+  authMode: ProviderAuthMode;
+  baseURL: string;
+  updatedAt: number;
+  expiresAt: number;
+  models: ProviderModelDescriptor[];
+};
+
+type ProviderModelsCacheMap = Record<string, ProviderModelsCacheEntry>;
+
+type ProviderModelsRefreshResult = {
+  providerId: string;
+  authMode: ProviderAuthMode;
+  baseURL: string;
+  fromCache: boolean;
+  updatedAt: number;
+  expiresAt: number;
+  models: ProviderModelDescriptor[];
+};
+
+function normalizeProviderId(value: unknown): string {
+  return String(value || "").trim().toLowerCase();
+}
+
+function normalizeProviderAuthMode(value: unknown): ProviderAuthMode {
+  return String(value || "").trim().toLowerCase() === "oauth"
+    ? "oauth"
+    : "api_key";
+}
+
+function normalizeModelModalities(value: unknown): string[] {
+  if (typeof value === "string") {
+    const one = value.trim().toLowerCase();
+    return one ? [one] : [];
+  }
+  if (!Array.isArray(value)) return [];
+  const out: string[] = [];
+  for (const item of value) {
+    const normalized = String(item || "").trim().toLowerCase();
+    if (normalized && !out.includes(normalized)) out.push(normalized);
+  }
+  return out;
+}
+
+function normalizeModelDescriptor(
+  item: any,
+  providerHint?: string
+): ProviderModelDescriptor | null {
+  const id = String(item?.id || "").trim();
+  if (!id) return null;
+  const name = String(
+    item?.name || item?.display_name || item?.displayName || id
+  ).trim();
+  const provider = String(item?.provider || providerHint || "").trim() || undefined;
+  const input = normalizeModelModalities(item?.input_modalities);
+  const output = normalizeModelModalities(item?.output_modalities);
+  return {
+    id,
+    name,
+    provider,
+    input_modalities: input,
+    output_modalities: output
+  };
+}
+
+function normalizeOpenAIStyleModels(
+  payload: any,
+  providerHint?: string
+): ProviderModelDescriptor[] {
+  const raw = Array.isArray(payload?.data) ? payload.data : [];
+  const out: ProviderModelDescriptor[] = [];
+  for (const item of raw) {
+    const normalized = normalizeModelDescriptor(item, providerHint);
+    if (!normalized) continue;
+    out.push(normalized);
+  }
+  return out;
+}
+
+function normalizeAnthropicModels(payload: any): ProviderModelDescriptor[] {
+  const raw = Array.isArray(payload?.data) ? payload.data : [];
+  const out: ProviderModelDescriptor[] = [];
+  for (const item of raw) {
+    const normalized = normalizeModelDescriptor(item, "anthropic");
+    if (!normalized) continue;
+    out.push(normalized);
+  }
+  return out;
+}
+
+function buildModelsURL(baseURL: string): string {
+  const trimmed = String(baseURL || "").trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  if (trimmed.endsWith("/models")) return trimmed;
+  return `${trimmed}/models`;
+}
+
+function normalizeBaseURL(providerId: string, baseURL: string): string {
+  const explicit = String(baseURL || "").trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+  switch (providerId) {
+    case "openai":
+      return "https://api.openai.com/v1";
+    case "anthropic":
+      return "https://api.anthropic.com/v1";
+    case "google":
+      return "https://generativelanguage.googleapis.com/v1beta/openai";
+    default:
+      return "";
+  }
+}
+
+function makeProviderModelsCacheKey(
+  providerId: string,
+  authMode: ProviderAuthMode,
+  baseURL: string
+): string {
+  return `${providerId}|${authMode}|${baseURL.toLowerCase()}`;
+}
+
+async function readProviderModelsCache(): Promise<ProviderModelsCacheMap> {
+  try {
+    const stored = (
+      await chrome.storage.local.get([PROVIDER_MODEL_CACHE_STORAGE_KEY])
+    )[PROVIDER_MODEL_CACHE_STORAGE_KEY] as ProviderModelsCacheMap | undefined;
+    if (!stored || typeof stored !== "object") return {};
+    return stored;
+  } catch {
+    return {};
+  }
+}
+
+async function writeProviderModelsCache(
+  cache: ProviderModelsCacheMap
+): Promise<void> {
+  await chrome.storage.local.set({
+    [PROVIDER_MODEL_CACHE_STORAGE_KEY]: cache
+  });
+}
+
+async function fetchJsonWithTimeout(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number
+): Promise<any> {
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort("provider_models_timeout"), timeoutMs);
+  try {
+    const resp = await fetch(url, {
+      ...init,
+      signal: ac.signal
+    });
+    const rawText = await resp.text();
+    if (!resp.ok) {
+      throw new Error(`provider_http_${resp.status}:${rawText.slice(0, 500)}`);
+    }
+    if (!rawText) return {};
+    try {
+      return JSON.parse(rawText);
+    } catch {
+      return { raw: rawText };
+    }
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function getProviderCredential(providerId: string): Promise<string> {
+  const sessionSecret = await getProviderSecret(providerId);
+  if (sessionSecret) return sessionSecret;
+  const llmConfig = ((await chrome.storage.local.get(["llmConfig"])).llmConfig ||
+    {}) as any;
+  if (String(llmConfig?.llm || "").trim().toLowerCase() === providerId) {
+    return String(llmConfig?.apiKey || "").trim();
+  }
+  return "";
+}
+
+function assertAllowedDirectModelsBaseURL(baseURL: string): void {
+  if (!baseURL) throw new Error("direct_baseURL_missing");
+  const url = new URL(baseURL);
+  if (isLocalHost(url.hostname)) {
+    if (url.protocol !== "http:" && url.protocol !== "https:") {
+      throw new Error("openai_compatible_baseURL_bad_scheme");
+    }
+    return;
+  }
+  if (url.protocol !== "https:") {
+    throw new Error("direct_baseURL_requires_https");
+  }
+}
+
+function fallbackCustomModel(providerId: string): ProviderModelDescriptor {
+  return {
+    id: "custom",
+    name: "Custom (enter model name)",
+    provider: providerId,
+    input_modalities: ["text", "image"],
+    output_modalities: ["text"]
+  };
+}
+
+async function refreshProviderModelsCatalog(input: {
+  providerId: string;
+  authMode?: ProviderAuthMode;
+  baseURL?: string;
+  force?: boolean;
+}): Promise<ProviderModelsRefreshResult> {
+  const providerId = normalizeProviderId(input.providerId);
+  if (!providerId) throw new Error("provider_id_missing");
+  const authMode = normalizeProviderAuthMode(input.authMode);
+  const baseURL = normalizeBaseURL(providerId, String(input.baseURL || ""));
+  const cacheKey = makeProviderModelsCacheKey(providerId, authMode, baseURL);
+  const force = Boolean(input.force);
+
+  const cache = await readProviderModelsCache();
+  const cachedEntry = cache[cacheKey];
+  const now = Date.now();
+  if (
+    !force &&
+    cachedEntry &&
+    Array.isArray(cachedEntry.models) &&
+    cachedEntry.models.length &&
+    Number(cachedEntry.expiresAt || 0) > now
+  ) {
+    return {
+      providerId,
+      authMode,
+      baseURL,
+      fromCache: true,
+      updatedAt: Number(cachedEntry.updatedAt || now),
+      expiresAt: Number(cachedEntry.expiresAt || now + PROVIDER_MODEL_CACHE_TTL_MS),
+      models: cachedEntry.models
+    };
+  }
+
+  let models: ProviderModelDescriptor[] = [];
+  if (providerId === "soca-bridge" || providerId === "openrouter") {
+    const bridgeModels = await bridgeFetchJson<{ data?: any[] }>("/v1/models", {
+      method: "GET",
+      timeoutMs: 12_000
+    });
+    const normalized = normalizeOpenAIStyleModels(bridgeModels, providerId);
+    models =
+      providerId === "openrouter"
+        ? normalized.filter(
+            (m) =>
+              String(m.provider || "").toLowerCase() === "openrouter" ||
+              m.id.startsWith("openrouter/")
+          )
+        : normalized;
+  } else if (providerId === "openai") {
+    const token = await getProviderCredential(providerId);
+    if (!token) throw new Error("api_key_missing");
+    assertAllowedDirectModelsBaseURL(baseURL);
+    models = normalizeOpenAIStyleModels(
+      await fetchJsonWithTimeout(
+        buildModelsURL(baseURL),
+        { method: "GET", headers: { Authorization: `Bearer ${token}` } },
+        12_000
+      ),
+      providerId
+    );
+  } else if (providerId === "anthropic") {
+    const token = await getProviderCredential(providerId);
+    if (!token) throw new Error("api_key_missing");
+    assertAllowedDirectModelsBaseURL(baseURL);
+    models = normalizeAnthropicModels(
+      await fetchJsonWithTimeout(
+        buildModelsURL(baseURL),
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": token,
+            "anthropic-version": "2023-06-01"
+          }
+        },
+        12_000
+      )
+    );
+  } else if (providerId === "google") {
+    let token = "";
+    if (authMode === "oauth") {
+      const oauth = await getGoogleOAuthSession();
+      if (!oauth?.accessToken) {
+        throw new Error("google_oauth_missing");
+      }
+      token = oauth.accessToken;
+    } else {
+      token = await getProviderCredential(providerId);
+      if (!token) throw new Error("api_key_missing");
+    }
+    assertAllowedDirectModelsBaseURL(baseURL);
+    models = normalizeOpenAIStyleModels(
+      await fetchJsonWithTimeout(
+        buildModelsURL(baseURL),
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` }
+        },
+        12_000
+      ),
+      providerId
+    );
+  } else if (providerId === "opencode-zen") {
+    const token = await getProviderCredential(providerId);
+    if (!token) throw new Error("api_key_missing");
+    assertAllowedDirectModelsBaseURL(baseURL);
+    models = normalizeOpenAIStyleModels(
+      await fetchJsonWithTimeout(
+        buildModelsURL(baseURL),
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` }
+        },
+        12_000
+      ),
+      providerId
+    );
+  } else {
+    throw new Error("provider_models_refresh_unsupported");
+  }
+
+  if (!models.length) {
+    models = [fallbackCustomModel(providerId)];
+  }
+
+  const updatedAt = Date.now();
+  const expiresAt = updatedAt + PROVIDER_MODEL_CACHE_TTL_MS;
+  cache[cacheKey] = {
+    providerId,
+    authMode,
+    baseURL,
+    models,
+    updatedAt,
+    expiresAt
+  };
+  await writeProviderModelsCache(cache);
+  return {
+    providerId,
+    authMode,
+    baseURL,
+    fromCache: false,
+    updatedAt,
+    expiresAt,
+    models
+  };
+}
+
+function parseOAuthHash(url: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  const hash = String(url.split("#")[1] || "");
+  const params = new URLSearchParams(hash);
+  for (const [k, v] of params.entries()) {
+    out[k] = v;
+  }
+  return out;
+}
+
+async function startGoogleOAuth(input: {
+  clientId: string;
+  scopes?: string | string[];
+}): Promise<{
+  connected: boolean;
+  expiresAt: number;
+  issuedAt: number;
+  scope?: string;
+}> {
+  const clientId = String(input.clientId || "").trim();
+  if (!clientId) throw new Error("google_oauth_client_id_missing");
+  const requestedScopes =
+    Array.isArray(input.scopes) && input.scopes.length
+      ? input.scopes
+      : String(input.scopes || GOOGLE_OAUTH_DEFAULT_SCOPE)
+          .split(/[,\s]+/)
+          .map((v) => v.trim())
+          .filter(Boolean);
+  const scopes = requestedScopes.length
+    ? requestedScopes
+    : [GOOGLE_OAUTH_DEFAULT_SCOPE];
+  const redirectUri = chrome.identity.getRedirectURL("google-oauth");
+  const params = new URLSearchParams({
+    client_id: clientId,
+    response_type: "token",
+    redirect_uri: redirectUri,
+    scope: scopes.join(" "),
+    include_granted_scopes: "true",
+    prompt: "consent"
+  });
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+
+  const redirect = await new Promise<string>((resolve, reject) => {
+    chrome.identity.launchWebAuthFlow(
+      { url: authUrl, interactive: true },
+      (responseUrl) => {
+        const err = chrome.runtime.lastError;
+        if (err) {
+          reject(new Error(String(err.message || err)));
+          return;
+        }
+        if (!responseUrl) {
+          reject(new Error("google_oauth_no_response"));
+          return;
+        }
+        resolve(responseUrl);
+      }
+    );
+  });
+
+  const fragment = parseOAuthHash(redirect);
+  if (fragment.error) {
+    throw new Error(`google_oauth_${fragment.error}`);
+  }
+  const accessToken = String(fragment.access_token || "").trim();
+  if (!accessToken) {
+    throw new Error("google_oauth_missing_token");
+  }
+  const expiresInSec = Math.max(
+    60,
+    Number(fragment.expires_in || 3600) || 3600
+  );
+  const issuedAt = Date.now();
+  const expiresAt = issuedAt + expiresInSec * 1000;
+  await setGoogleOAuthSession({
+    accessToken,
+    issuedAt,
+    expiresAt,
+    scope: fragment.scope,
+    tokenType: fragment.token_type,
+    clientId
+  });
+  await setProviderSecret("google", accessToken);
+  return {
+    connected: true,
+    expiresAt,
+    issuedAt,
+    scope: fragment.scope || scopes.join(" ")
+  };
 }
 
 function toolTextResult(text: string, isError?: boolean): ToolResult {
@@ -1029,6 +1545,17 @@ async function runOllamaFallbackChat(params: {
   });
 }
 
+async function preflightProviderForChat(): Promise<void> {
+  const llms = await loadLLMs({ watchStorage: false });
+  const current = (llms as any)?.default || {};
+  if (typeof current.apiKey === "function") {
+    await current.apiKey();
+  }
+  if (typeof current?.config?.baseURL === "function") {
+    await current.config.baseURL();
+  }
+}
+
 // Handle chat request
 async function handleChat(requestId: string, data: any): Promise<void> {
   const messageId = data.messageId;
@@ -1054,6 +1581,7 @@ async function handleChat(requestId: string, data: any): Promise<void> {
   abortControllers.set(messageId, abortController);
 
   try {
+    await preflightProviderForChat();
     const result = await chatAgent.chat({
       user: user,
       messageId,
@@ -1111,7 +1639,7 @@ async function handleChat(requestId: string, data: any): Promise<void> {
     chrome.runtime.sendMessage({
       requestId,
       type: "chat_result",
-      data: { messageId, error: sanitizeLogMessage(error, 1000) }
+      data: { messageId, error: normalizeProviderError(error) }
     });
   }
 }
@@ -1349,6 +1877,65 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
           sendResponse({ ok: true });
           return;
         }
+        if (request.type === "SOCA_PROVIDER_SECRET_SET") {
+          const providerId = normalizeProviderId(request.providerId);
+          if (!providerId) {
+            sendResponse({ ok: false, err: "provider_id_missing" });
+            return;
+          }
+          await setProviderSecret(providerId, String(request.secret || ""));
+          sendResponse({ ok: true });
+          return;
+        }
+        if (request.type === "SOCA_PROVIDER_SECRET_GET") {
+          const providerId = normalizeProviderId(request.providerId);
+          if (!providerId) {
+            sendResponse({ ok: false, err: "provider_id_missing" });
+            return;
+          }
+          const secret = await getProviderSecret(providerId);
+          sendResponse({ ok: true, secret });
+          return;
+        }
+        if (request.type === "SOCA_PROVIDER_SECRETS_STATUS") {
+          const map = await getProviderSecretsSession();
+          const status = Object.fromEntries(
+            Object.entries(map).map(([providerId, secret]) => [
+              providerId,
+              Boolean(secret)
+            ])
+          );
+          sendResponse({ ok: true, status });
+          return;
+        }
+        if (request.type === "SOCA_OAUTH_GOOGLE_START") {
+          const oauth = await startGoogleOAuth({
+            clientId: String(request.clientId || ""),
+            scopes: request.scopes
+          });
+          sendResponse({ ok: true, data: oauth });
+          return;
+        }
+        if (request.type === "SOCA_OAUTH_GOOGLE_STATUS") {
+          const oauth = await getGoogleOAuthSession();
+          sendResponse({
+            ok: true,
+            data: {
+              connected: Boolean(oauth?.accessToken),
+              expiresAt: Number(oauth?.expiresAt || 0),
+              issuedAt: Number(oauth?.issuedAt || 0),
+              scope: oauth?.scope || GOOGLE_OAUTH_DEFAULT_SCOPE,
+              hasClientId: Boolean(String(oauth?.clientId || "").trim())
+            }
+          });
+          return;
+        }
+        if (request.type === "SOCA_OAUTH_GOOGLE_CLEAR") {
+          await clearGoogleOAuthSession();
+          await setProviderSecret("google", "");
+          sendResponse({ ok: true });
+          return;
+        }
         if (request.type === "SOCA_SET_PROVIDER_POLICY_MODE") {
           const mode = String(
             request.mode || DEFAULT_PROVIDER_POLICY_MODE
@@ -1394,6 +1981,21 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
             timeoutMs: 10_000
           });
           sendResponse({ ok: true, data });
+          return;
+        }
+        if (request.type === "SOCA_PROVIDER_MODELS_REFRESH") {
+          const data = await refreshProviderModelsCatalog({
+            providerId: String(request.providerId || ""),
+            authMode: normalizeProviderAuthMode(request.authMode),
+            baseURL: String(request.baseURL || ""),
+            force: Boolean(request.force)
+          });
+          sendResponse({ ok: true, data });
+          return;
+        }
+        if (request.type === "SOCA_PROVIDER_MODELS_CACHE_READ") {
+          const cache = await readProviderModelsCache();
+          sendResponse({ ok: true, data: cache });
           return;
         }
         if (request.type === "SOCA_TEST_WRITE_GATE_BLOCK_REASON") {
@@ -1546,7 +2148,7 @@ chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
         }
         sendResponse({ ok: false, err: "unknown_message" });
       } catch (e: any) {
-        sendResponse({ ok: false, err: String(e?.message || e) });
+        sendResponse({ ok: false, err: normalizeProviderError(e) });
       }
     })();
     return true;
@@ -1639,6 +2241,9 @@ chrome.runtime.onInstalled.addListener(() => {
   void ensureDnrGuardrailsInstalled();
 });
 
+import { connectCoworkingSocket } from "./coworking-client";
+
 // Ensure guardrails are present even before any chat initialization.
 void configureSidePanelBehavior();
 void ensureDnrGuardrailsInstalled();
+connectCoworkingSocket();

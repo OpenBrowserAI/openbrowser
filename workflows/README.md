@@ -20,6 +20,9 @@ workflows/
     clawdbot-deploy.yaml   # Clawdbot + Tailscale deployment
     preflight.yaml         # Universal preflight inventory
     evidence-bundle.yaml   # Evidence collection workflow
+    aa-email-triage.yaml   # AA daily email triage (manual paste)
+    aa-second-brain.yaml   # AA Second Brain capture
+    soca-pulse-daily.yaml  # SOCA Pulse daily prompt flow
   examples/          # Example workflow compositions
   prompts/           # Agent prompts for workflow execution
 ```

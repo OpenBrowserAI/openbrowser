@@ -1,0 +1,52 @@
+{
+  "name": "OpenBrowser",
+  "description": "OpenBrowser Extension",
+  "version": "1.0.1",
+  "manifest_version": 3,
+  "background": {
+    "type": "module",
+    "service_worker": "js/background.js"
+  },
+  "icons": {
+    "16": "icon_neutral.png",
+    "48": "icon_neutral.png",
+    "128": "icon_neutral.png"
+  },
+  "side_panel": {
+    "default_path": "sidebar.html",
+    "openPanelOnActionClick": true
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "windows",
+    "sidePanel",
+    "downloads",
+    "declarativeNetRequest",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://127.0.0.1/*",
+    "http://localhost/*",
+    "https://localhost/*",
+    "https://aistudio.google.com/*",
+    "https://accounts.google.com/*",
+    "https://lovable.dev/*",
+    "https://antigravity.google/*",
+    "https://github.com/*"
+  ],
+  "optional_host_permissions": [],
+  "web_accessible_resources": [
+    {
+      "matches": ["<all_urls>"],
+      "resources": []
+    }
+  ]
+}

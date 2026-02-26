@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from uuid import uuid4
 
 import httpx
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -156,6 +156,9 @@ _LANE_RANK: Dict[str, int] = {
     "L2_CONTROLLED": 2,
     "L2_CONTROLLED_WRITE": 2,
     "L3_AUTONOMOUS": 3,
+    # OpenBrowser lanes (bridge clients)
+    "OB_OFFLINE": 0,
+    "OB_ONLINE_PULSE": 2,
 }
 
 
@@ -399,6 +402,23 @@ class OpenBrowserPanelDumpRequest(BaseModel):
     panel_html: Optional[str] = Field(default=None, description="Panel HTML snapshot (optional)")
 
 
+class Nt2lPlanPayloadRequest(BaseModel):
+    lane: str = Field("OB_OFFLINE", description="OpenBrowser lane identifier (OB_OFFLINE or OB_ONLINE_PULSE)")
+    plan: Dict[str, Any] = Field(..., description="NT2L plan JSON object")
+
+
+class Nt2lScheduleRequest(BaseModel):
+    lane: str = Field("OB_OFFLINE", description="OpenBrowser lane identifier (OB_OFFLINE or OB_ONLINE_PULSE)")
+    routine_type: Optional[str] = Field(default=None, description="Routine type: A, B, or C (optional)")
+    date: Optional[str] = Field(default=None, description="Date in YYYY-MM-DD (optional)")
+
+
+class Nt2lCarnetRequest(BaseModel):
+    lane: str = Field("OB_OFFLINE", description="OpenBrowser lane identifier (OB_OFFLINE or OB_ONLINE_PULSE)")
+    date: Optional[str] = Field(default=None, description="Date in YYYY-MM-DD (optional)")
+    count: int = Field(1, description="Number of recent handoffs to return (optional)")
+
+
 class ContextSnippet(BaseModel):
     layer: str
     text: str
@@ -633,10 +653,31 @@ def _pieces_snippets(
     return snippets
 
 
-_SOCA_ALIAS_MODELS: List[Dict[str, str]] = [
-    {"id": "soca/auto", "name": "SOCA Auto"},
-    {"id": "soca/fast", "name": "SOCA Fast"},
-    {"id": "soca/best", "name": "SOCA Best"},
+_SOCA_ALIAS_MODELS: List[Dict[str, Any]] = [
+    {
+        "id": "soca/auto",
+        "name": "SOCA Auto",
+        "provider": "soca",
+        "source": "bridge_alias",
+        "input_modalities": ["text", "image"],
+        "output_modalities": ["text"],
+    },
+    {
+        "id": "soca/fast",
+        "name": "SOCA Fast",
+        "provider": "soca",
+        "source": "bridge_alias",
+        "input_modalities": ["text", "image"],
+        "output_modalities": ["text"],
+    },
+    {
+        "id": "soca/best",
+        "name": "SOCA Best",
+        "provider": "soca",
+        "source": "bridge_alias",
+        "input_modalities": ["text", "image"],
+        "output_modalities": ["text"],
+    },
 ]
 
 _FALLBACK_MODELS: List[Dict[str, str]] = [
@@ -645,7 +686,14 @@ _FALLBACK_MODELS: List[Dict[str, str]] = [
     {"id": "qwen3-vl:8b", "name": "Qwen3-VL 8B"},
 ]
 
-_UPSTREAM_MODELS_CACHE: Dict[str, Any] = {"ts": 0.0, "models": list(_FALLBACK_MODELS)}
+_OLLAMA_MODELS_CACHE: Dict[str, Any] = {"ts": 0.0, "models": []}
+_OPENROUTER_MODELS_CACHE: Dict[str, Any] = {"ts": 0.0, "models": []}
+_DEFAULT_OLLAMA_MODELS_TTL_SECONDS = float(
+    os.environ.get("SOCA_OPENBROWSER_BRIDGE_MODELS_TTL_SECONDS", "15")
+)
+_DEFAULT_OPENROUTER_MODELS_TTL_SECONDS = float(
+    os.environ.get("SOCA_OPENBROWSER_BRIDGE_OPENROUTER_MODELS_TTL_SECONDS", "45")
+)
 
 
 def _env_nonempty(key: str) -> Optional[str]:
@@ -681,12 +729,126 @@ def _has_image_payload(body: Any) -> bool:
     return False
 
 
-async def _fetch_upstream_models(*, ttl_seconds: float = 15.0) -> List[Dict[str, str]]:
+def _cache_age_seconds(cache: Dict[str, Any]) -> Optional[float]:
+    ts = float(cache.get("ts") or 0.0)
+    if ts <= 0:
+        return None
+    return round(max(0.0, time.time() - ts), 3)
+
+
+def _normalize_modalities(value: Any) -> List[str]:
+    if isinstance(value, str) and value.strip():
+        return [value.strip().lower()]
+    if isinstance(value, list):
+        out: List[str] = []
+        for item in value:
+            if not isinstance(item, str):
+                continue
+            normalized = item.strip().lower()
+            if normalized and normalized not in out:
+                out.append(normalized)
+        return out
+    return []
+
+
+def _guess_modalities_from_model_id(model_id: str) -> Tuple[List[str], List[str]]:
+    lower = (model_id or "").lower()
+    has_image = any(
+        token in lower
+        for token in (
+            "vl",
+            "vision",
+            "llava",
+            "pixtral",
+            "multimodal",
+            "gpt-4o",
+            "gemini",
+            "claude",
+        )
+    )
+    input_modalities = ["text", "image"] if has_image else ["text"]
+    return input_modalities, ["text"]
+
+
+def _normalize_ollama_model(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    model_id = (item.get("id") or "").strip()
+    if not model_id:
+        return None
+    name = str(item.get("name") or model_id).strip() or model_id
+    input_modalities, output_modalities = _guess_modalities_from_model_id(model_id)
+    return {
+        "id": model_id,
+        "name": name,
+        "provider": "ollama",
+        "source": "ollama",
+        "input_modalities": input_modalities,
+        "output_modalities": output_modalities,
+    }
+
+
+def _normalize_openrouter_model(item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    raw_id = str(item.get("id") or "").strip()
+    if not raw_id:
+        return None
+    model_id = raw_id if raw_id.startswith("openrouter/") else f"openrouter/{raw_id}"
+    name = str(item.get("name") or raw_id).strip() or raw_id
+
+    architecture = item.get("architecture")
+    input_modalities: List[str] = []
+    output_modalities: List[str] = []
+    if isinstance(architecture, dict):
+        input_modalities = _normalize_modalities(
+            architecture.get("input_modalities")
+            or architecture.get("input")
+            or architecture.get("modality")
+        )
+        output_modalities = _normalize_modalities(
+            architecture.get("output_modalities") or architecture.get("output")
+        )
+
+    if not input_modalities or not output_modalities:
+        guessed_input, guessed_output = _guess_modalities_from_model_id(raw_id)
+        if not input_modalities:
+            input_modalities = guessed_input
+        if not output_modalities:
+            output_modalities = guessed_output
+
+    context_length_raw = item.get("context_length")
+    context_length = context_length_raw if isinstance(context_length_raw, int) else None
+    pricing = item.get("pricing") if isinstance(item.get("pricing"), dict) else None
+    model_type = item.get("type") if isinstance(item.get("type"), str) else None
+
+    normalized: Dict[str, Any] = {
+        "id": model_id,
+        "name": name,
+        "provider": "openrouter",
+        "source": "openrouter",
+        "input_modalities": input_modalities,
+        "output_modalities": output_modalities,
+    }
+    if context_length is not None:
+        normalized["context_length"] = context_length
+    if pricing:
+        normalized["pricing"] = pricing
+    if model_type:
+        normalized["type"] = model_type
+    return normalized
+
+
+async def _fetch_ollama_models(
+    *, ttl_seconds: float = _DEFAULT_OLLAMA_MODELS_TTL_SECONDS
+) -> List[Dict[str, Any]]:
     now = time.time()
-    cached_ts = float(_UPSTREAM_MODELS_CACHE.get("ts") or 0.0)
-    cached_models = _UPSTREAM_MODELS_CACHE.get("models")
-    if isinstance(cached_models, list) and (now - cached_ts) < ttl_seconds:
+    cached_ts = float(_OLLAMA_MODELS_CACHE.get("ts") or 0.0)
+    cached_models = _OLLAMA_MODELS_CACHE.get("models")
+    if isinstance(cached_models, list) and cached_models and (now - cached_ts) < ttl_seconds:
         return cached_models
+
+    fallback_models: List[Dict[str, Any]] = []
+    for fallback in _FALLBACK_MODELS:
+        normalized = _normalize_ollama_model(fallback)
+        if normalized:
+            fallback_models.append(normalized)
 
     url = f"{_ollama_base_url()}/models"
     try:
@@ -696,27 +858,73 @@ async def _fetch_upstream_models(*, ttl_seconds: float = 15.0) -> List[Dict[str,
             raise RuntimeError(f"status={resp.status_code}")
         payload = resp.json()
         data = payload.get("data")
-        models: List[Dict[str, str]] = []
+        models: List[Dict[str, Any]] = []
         if isinstance(data, list):
             for item in data:
                 if not isinstance(item, dict):
                     continue
-                model_id = (item.get("id") or "").strip()
-                if not model_id:
-                    continue
-                models.append({"id": model_id, "name": model_id})
+                normalized = _normalize_ollama_model(item)
+                if normalized:
+                    models.append(normalized)
         if not models:
-            models = list(_FALLBACK_MODELS)
-        _UPSTREAM_MODELS_CACHE["ts"] = now
-        _UPSTREAM_MODELS_CACHE["models"] = models
+            models = fallback_models
+        _OLLAMA_MODELS_CACHE["ts"] = now
+        _OLLAMA_MODELS_CACHE["models"] = models
         return models
     except Exception:
-        return cached_models if isinstance(cached_models, list) and cached_models else list(_FALLBACK_MODELS)
+        return cached_models if isinstance(cached_models, list) and cached_models else fallback_models
+
+
+async def _fetch_openrouter_models(
+    *, ttl_seconds: float = _DEFAULT_OPENROUTER_MODELS_TTL_SECONDS
+) -> List[Dict[str, Any]]:
+    api_key = _openrouter_api_key()
+    if not api_key:
+        return []
+
+    now = time.time()
+    cached_ts = float(_OPENROUTER_MODELS_CACHE.get("ts") or 0.0)
+    cached_models = _OPENROUTER_MODELS_CACHE.get("models")
+    if isinstance(cached_models, list) and cached_models and (now - cached_ts) < ttl_seconds:
+        return cached_models
+
+    url = f"{_openrouter_base_url()}/models"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json",
+        "User-Agent": f"soca-openbrowser-bridge/{APP_VERSION}",
+    }
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, headers=headers)
+        if resp.status_code >= 400:
+            raise RuntimeError(f"status={resp.status_code}")
+        payload = resp.json()
+        data = payload.get("data")
+        models: List[Dict[str, Any]] = []
+        if isinstance(data, list):
+            for item in data:
+                if not isinstance(item, dict):
+                    continue
+                normalized = _normalize_openrouter_model(item)
+                if normalized:
+                    models.append(normalized)
+        _OPENROUTER_MODELS_CACHE["ts"] = now
+        _OPENROUTER_MODELS_CACHE["models"] = models
+        return models
+    except Exception:
+        return cached_models if isinstance(cached_models, list) else []
+
+
+async def _fetch_upstream_models() -> List[Dict[str, Any]]:
+    ollama_models = await _fetch_ollama_models()
+    openrouter_models = await _fetch_openrouter_models()
+    return [*ollama_models, *openrouter_models]
 
 
 async def _upstream_model_ids() -> Set[str]:
     models = await _fetch_upstream_models()
-    return {m.get("id", "") for m in models if isinstance(m, dict)}
+    return {str(m.get("id", "")).strip() for m in models if isinstance(m, dict)}
 
 
 def _pick_first_available(candidates: Sequence[str], available: Set[str]) -> Optional[str]:
@@ -825,7 +1033,18 @@ app.include_router(promptbuddy_router)
 
 @app.get("/health")
 async def health() -> Dict[str, Any]:
-    return {"status": "ok", "version": APP_VERSION}
+    import socket
+    hostname = socket.gethostname()
+    bind_host = os.environ.get("SOCA_OPENBROWSER_BRIDGE_HOST", "0.0.0.0")
+    bind_port = int(os.environ.get("SOCA_OPENBROWSER_BRIDGE_PORT", "9834"))
+    return {
+        "status": "ok",
+        "version": APP_VERSION,
+        "hostname": hostname,
+        "bind": f"{bind_host}:{bind_port}",
+        "token_required": bool(os.environ.get("SOCA_OPENBROWSER_BRIDGE_TOKEN", "soca").strip()),
+        "ollama_configured": bool(os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")),
+    }
 
 
 def _policy_packs_path(repo_root: Path) -> Path:
@@ -853,14 +1072,48 @@ async def capabilities() -> Dict[str, Any]:
         "endpoints": [
             "/health",
             "/capabilities",
+            "/soca/bridge/status",
             "/v1/models",
             "/v1/chat/completions",
             "/soca/context-pack",
             "/soca/policy/packs",
             "/soca/webfetch",
             "/soca/pdf/extract",
+            "/soca/nt2l/plan",
+            "/soca/nt2l/validate",
+            "/soca/nt2l/approval-preview",
+            "/soca/nt2l/execute-dry-run",
+            "/soca/nt2l/schedule",
+            "/soca/nt2l/carnet-handoff",
         ],
         "policy_packs": {"path": _safe_relpath(policy_path, repo_root), "sha256": policy_sha},
+    }
+
+
+@app.get("/soca/bridge/status")
+async def soca_bridge_status(
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+) -> Dict[str, Any]:
+    _require_token(authorization)
+    ollama_models = await _fetch_ollama_models()
+    openrouter_models = await _fetch_openrouter_models()
+    merged_models = await _fetch_upstream_models()
+
+    return {
+        "ok": True,
+        "bridge_up": True,
+        "version": APP_VERSION,
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "supported_lanes": ["OB_OFFLINE", "OB_ONLINE_PULSE"],
+        "ollama_up": bool(ollama_models),
+        "ollama_models_count": len(ollama_models),
+        "openrouter_key_present": bool(_openrouter_api_key()),
+        "openrouter_models_count": len(openrouter_models),
+        "merged_models_count": len(merged_models),
+        "cache": {
+            "ollama_age_seconds": _cache_age_seconds(_OLLAMA_MODELS_CACHE),
+            "openrouter_age_seconds": _cache_age_seconds(_OPENROUTER_MODELS_CACHE),
+        },
     }
 
 
@@ -894,14 +1147,29 @@ async def list_models(authorization: Optional[str] = Header(default=None, alias=
     _require_token(authorization)
     now = int(time.time())
     upstream = await _fetch_upstream_models()
-    merged: List[Dict[str, str]] = []
+    merged: List[Dict[str, Any]] = []
     seen: Set[str] = set()
     for entry in [*_SOCA_ALIAS_MODELS, *upstream]:
-        model_id = (entry.get("id") or "").strip()
+        model_id = str(entry.get("id") or "").strip()
         if not model_id or model_id in seen:
             continue
         seen.add(model_id)
-        merged.append({"id": model_id})
+        normalized: Dict[str, Any] = {"id": model_id}
+        for key in (
+            "name",
+            "provider",
+            "source",
+            "input_modalities",
+            "output_modalities",
+            "context_length",
+            "pricing",
+            "type",
+        ):
+            value = entry.get(key)
+            if value in (None, "", [], {}):
+                continue
+            normalized[key] = value
+        merged.append(normalized)
     return {
         "object": "list",
         "data": [
@@ -910,6 +1178,46 @@ async def list_models(authorization: Optional[str] = Header(default=None, alias=
                 "object": "model",
                 "created": now,
                 "owned_by": "soca-openbrowser-bridge",
+                **(
+                    {"name": model["name"]}
+                    if isinstance(model.get("name"), str) and model.get("name")
+                    else {}
+                ),
+                **(
+                    {"provider": model["provider"]}
+                    if isinstance(model.get("provider"), str) and model.get("provider")
+                    else {}
+                ),
+                **(
+                    {"source": model["source"]}
+                    if isinstance(model.get("source"), str) and model.get("source")
+                    else {}
+                ),
+                **(
+                    {"input_modalities": model["input_modalities"]}
+                    if isinstance(model.get("input_modalities"), list)
+                    else {}
+                ),
+                **(
+                    {"output_modalities": model["output_modalities"]}
+                    if isinstance(model.get("output_modalities"), list)
+                    else {}
+                ),
+                **(
+                    {"context_length": model["context_length"]}
+                    if isinstance(model.get("context_length"), int)
+                    else {}
+                ),
+                **(
+                    {"pricing": model["pricing"]}
+                    if isinstance(model.get("pricing"), dict)
+                    else {}
+                ),
+                **(
+                    {"type": model["type"]}
+                    if isinstance(model.get("type"), str) and model.get("type")
+                    else {}
+                ),
             }
             for model in merged
         ],
@@ -1170,6 +1478,11 @@ async def _fetch_url_text(*, url: str, max_bytes: int) -> Tuple[str, bool, Optio
 
 
 def _ensure_core_on_syspath(repo_root: Path) -> None:
+    root_dir = repo_root.resolve()
+    root_str = str(root_dir)
+    if root_str not in sys.path:
+        sys.path.insert(0, root_str)
+
     core_dir = (repo_root / "core").resolve()
     core_str = str(core_dir)
     if core_str not in sys.path:
@@ -1773,7 +2086,7 @@ async def soca_nt2l_plan(
     if payload.fake_model:
         os.environ["SOCA_FAKE_MODEL"] = "1"
     try:
-        import nt2l_prompt_to_plan
+        from orchestrators import nt2l_prompt_to_plan
 
         plan = nt2l_prompt_to_plan.prompt_to_nt2l_plan(payload.prompt)
         response = plan.model_dump(mode="json")
@@ -1783,6 +2096,317 @@ async def soca_nt2l_plan(
                 os.environ.pop("SOCA_FAKE_MODEL", None)
             else:
                 os.environ["SOCA_FAKE_MODEL"] = prev_fake
+
+    if evidence_dir:
+        (evidence_dir / "response.json").write_text(
+            json.dumps(response, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        files = [p for p in evidence_dir.glob("*") if p.is_file()]
+        (evidence_dir / "sha256.txt").write_text(
+            "\n".join(f"{_sha256_file(p)}  {p.name}" for p in sorted(files)),
+            encoding="utf-8",
+        )
+
+    return response
+
+
+@app.post("/soca/nt2l/validate")
+async def soca_nt2l_validate(
+    payload: Nt2lPlanPayloadRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+) -> Dict[str, Any]:
+    _require_token(authorization)
+    repo_root = _repo_root_or_500()
+    _ensure_core_on_syspath(repo_root)
+
+    evidence_dir, run_id = _start_evidence_dir(evidence_root=_evidence_root(), prefix="nt2l_validate")
+    if evidence_dir:
+        (evidence_dir / "request.json").write_text(
+            json.dumps(_model_dump(payload), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (evidence_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "timestamp": run_id.split("-", 1)[0] if run_id else None,
+                    "client_headers": _redact_headers(dict(request.headers)),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+    try:
+        from orchestrators import nt2l_execute_core
+
+        plan = nt2l_execute_core.validate_plan_payload(payload.plan)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"nt2l_validate_failed:{e}") from e
+
+    response = {
+        "ok": True,
+        "plan_id": plan.plan_id,
+        "plan": plan.model_dump(mode="json"),
+    }
+
+    if evidence_dir:
+        (evidence_dir / "response.json").write_text(
+            json.dumps(response, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        files = [p for p in evidence_dir.glob("*") if p.is_file()]
+        (evidence_dir / "sha256.txt").write_text(
+            "\n".join(f"{_sha256_file(p)}  {p.name}" for p in sorted(files)),
+            encoding="utf-8",
+        )
+
+    return response
+
+
+@app.post("/soca/nt2l/approval-preview")
+async def soca_nt2l_approval_preview(
+    payload: Nt2lPlanPayloadRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+) -> Dict[str, Any]:
+    _require_token(authorization)
+    repo_root = _repo_root_or_500()
+    _ensure_core_on_syspath(repo_root)
+
+    evidence_dir, run_id = _start_evidence_dir(evidence_root=_evidence_root(), prefix="nt2l_approval_preview")
+    if evidence_dir:
+        (evidence_dir / "request.json").write_text(
+            json.dumps(_model_dump(payload), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (evidence_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "timestamp": run_id.split("-", 1)[0] if run_id else None,
+                    "client_headers": _redact_headers(dict(request.headers)),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+    try:
+        from orchestrators import nt2l_execute_core
+
+        plan = nt2l_execute_core.validate_plan_payload(payload.plan)
+        run_id = nt2l_execute_core.run_id_for_plan(plan)
+        approvals = []
+        for step in plan.steps:
+            if step.hil.required:
+                approvals.append(nt2l_execute_core.build_hil_approval(plan=plan, step=step, run_id=run_id))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"nt2l_approval_failed:{e}") from e
+
+    response = {
+        "ok": True,
+        "plan_id": plan.plan_id,
+        "run_id": run_id,
+        "approvals": [a.model_dump(mode="json") for a in approvals],
+    }
+
+    if evidence_dir:
+        (evidence_dir / "response.json").write_text(
+            json.dumps(response, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        files = [p for p in evidence_dir.glob("*") if p.is_file()]
+        (evidence_dir / "sha256.txt").write_text(
+            "\n".join(f"{_sha256_file(p)}  {p.name}" for p in sorted(files)),
+            encoding="utf-8",
+        )
+
+    return response
+
+
+@app.post("/soca/nt2l/execute-dry-run")
+async def soca_nt2l_execute_dry_run(
+    payload: Nt2lPlanPayloadRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+) -> Dict[str, Any]:
+    _require_token(authorization)
+    repo_root = _repo_root_or_500()
+    _ensure_core_on_syspath(repo_root)
+
+    evidence_dir, run_id = _start_evidence_dir(evidence_root=_evidence_root(), prefix="nt2l_execute_dry_run")
+    if evidence_dir:
+        (evidence_dir / "request.json").write_text(
+            json.dumps(_model_dump(payload), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (evidence_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "timestamp": run_id.split("-", 1)[0] if run_id else None,
+                    "client_headers": _redact_headers(dict(request.headers)),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+    try:
+        from orchestrators import nt2l_execute_core
+
+        plan = nt2l_execute_core.validate_plan_payload(payload.plan)
+        run_id = nt2l_execute_core.run_id_for_plan(plan)
+        steps = []
+        approvals = []
+        for step in plan.steps:
+            steps.append(nt2l_execute_core.execute_step_stub(step))
+            if step.hil.required:
+                approvals.append(nt2l_execute_core.build_hil_approval(plan=plan, step=step, run_id=run_id))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"nt2l_execute_failed:{e}") from e
+
+    response = {
+        "ok": True,
+        "plan_id": plan.plan_id,
+        "run_id": run_id,
+        "steps": steps,
+        "approvals": [a.model_dump(mode="json") for a in approvals],
+    }
+
+    if evidence_dir:
+        (evidence_dir / "response.json").write_text(
+            json.dumps(response, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        files = [p for p in evidence_dir.glob("*") if p.is_file()]
+        (evidence_dir / "sha256.txt").write_text(
+            "\n".join(f"{_sha256_file(p)}  {p.name}" for p in sorted(files)),
+            encoding="utf-8",
+        )
+
+    return response
+
+
+@app.post("/soca/nt2l/schedule")
+async def soca_nt2l_schedule(
+    payload: Nt2lScheduleRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+) -> Dict[str, Any]:
+    _require_token(authorization)
+    repo_root = _repo_root_or_500()
+    _ensure_core_on_syspath(repo_root)
+
+    evidence_dir, run_id = _start_evidence_dir(evidence_root=_evidence_root(), prefix="nt2l_schedule")
+    if evidence_dir:
+        (evidence_dir / "request.json").write_text(
+            json.dumps(_model_dump(payload), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (evidence_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "timestamp": run_id.split("-", 1)[0] if run_id else None,
+                    "client_headers": _redact_headers(dict(request.headers)),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+    try:
+        from orchestrators.nt2l_schedule_engine import NT2LScheduleEngine, RoutineType
+
+        routine_raw = (payload.routine_type or "").strip().upper()
+        routine = RoutineType.A
+        if routine_raw:
+            routine = RoutineType(routine_raw)
+        engine = NT2LScheduleEngine(routine_type=routine)
+        schedule = engine.get_daily_schedule(date=payload.date)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"nt2l_schedule_failed:{e}") from e
+
+    response = {
+        "ok": True,
+        "schedule": schedule.model_dump(mode="json"),
+    }
+
+    if evidence_dir:
+        (evidence_dir / "response.json").write_text(
+            json.dumps(response, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        files = [p for p in evidence_dir.glob("*") if p.is_file()]
+        (evidence_dir / "sha256.txt").write_text(
+            "\n".join(f"{_sha256_file(p)}  {p.name}" for p in sorted(files)),
+            encoding="utf-8",
+        )
+
+    return response
+
+
+@app.post("/soca/nt2l/carnet-handoff")
+async def soca_nt2l_carnet_handoff(
+    payload: Nt2lCarnetRequest,
+    request: Request,
+    authorization: Optional[str] = Header(default=None, alias="Authorization"),
+) -> Dict[str, Any]:
+    _require_token(authorization)
+    repo_root = _repo_root_or_500()
+    _ensure_core_on_syspath(repo_root)
+
+    evidence_dir, run_id = _start_evidence_dir(evidence_root=_evidence_root(), prefix="nt2l_carnet")
+    if evidence_dir:
+        (evidence_dir / "request.json").write_text(
+            json.dumps(_model_dump(payload), ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        (evidence_dir / "meta.json").write_text(
+            json.dumps(
+                {
+                    "timestamp": run_id.split("-", 1)[0] if run_id else None,
+                    "client_headers": _redact_headers(dict(request.headers)),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+
+    try:
+        from orchestrators.nt2l_carnet_injector import CarnetInjector
+
+        injector = CarnetInjector()
+        handoffs = []
+        if payload.date:
+            carnets = injector.get_carnets_for_date(payload.date)
+        else:
+            count = max(1, int(payload.count or 1))
+            carnets = injector.get_recent_carnets(count) if count > 1 else [injector.get_latest_carnet()]
+
+        for carnet in carnets:
+            if not carnet:
+                continue
+            handoff = injector.parse_carnet(carnet)
+            handoffs.append(
+                {
+                    "handoff": handoff.to_dict(),
+                    "prompt_injection": handoff.to_prompt_injection(),
+                }
+            )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"nt2l_carnet_failed:{e}") from e
+
+    response = {
+        "ok": True,
+        "count": len(handoffs),
+        "items": handoffs,
+    }
 
     if evidence_dir:
         (evidence_dir / "response.json").write_text(
@@ -1974,10 +2598,62 @@ async def chat_completions(
 
     return JSONResponse(content=upstream.json(), status_code=upstream.status_code)
 
+class CoworkingTask(BaseModel):
+    action: str
+    target: str = ""
+    value: str = ""
+    timeout: int = 15000
+
+connected_coworking_clients: List[WebSocket] = []
+
+@app.websocket("/soca/bridge/coworking")
+async def coworking_ws(websocket: WebSocket):
+    await websocket.accept()
+    if websocket not in connected_coworking_clients:
+        connected_coworking_clients.append(websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            if data.get("type") == "ping":
+                await websocket.send_json({"type": "pong"})
+    except WebSocketDisconnect:
+        if websocket in connected_coworking_clients:
+            connected_coworking_clients.remove(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        if websocket in connected_coworking_clients:
+            connected_coworking_clients.remove(websocket)
+
+@app.post("/soca/bridge/coworking/task")
+async def send_coworking_task(
+    task: CoworkingTask,
+    authorization: Optional[str] = Header(default=None, alias="Authorization")
+):
+    _require_token(authorization)
+    if not connected_coworking_clients:
+        raise HTTPException(status_code=503, detail="No active browser extensions connected.")
+    
+    dead_clients = []
+    dispatched = 0
+    for client in connected_coworking_clients:
+        try:
+            await client.send_json(task.dict())
+            dispatched += 1
+        except Exception:
+            dead_clients.append(client)
+            
+    for dc in dead_clients:
+        if dc in connected_coworking_clients:
+            connected_coworking_clients.remove(dc)
+            
+    return {"status": "dispatched", "clients": dispatched}
 
 if __name__ == "__main__":
     import uvicorn
 
-    host = os.environ.get("SOCA_OPENBROWSER_BRIDGE_HOST", "127.0.0.1").strip() or "127.0.0.1"
+    # Default to 0.0.0.0 so the bridge is reachable over Tailscale / VPS HOLO.
+    # Set SOCA_OPENBROWSER_BRIDGE_HOST=127.0.0.1 to restrict to localhost only.
+    default_host = "0.0.0.0"
+    host = os.environ.get("SOCA_OPENBROWSER_BRIDGE_HOST", default_host).strip() or default_host
     port = int(os.environ.get("SOCA_OPENBROWSER_BRIDGE_PORT", "9834"))
     uvicorn.run(app, host=host, port=port, log_level="info")

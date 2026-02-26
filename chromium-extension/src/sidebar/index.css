@@ -152,7 +152,7 @@
   .bg-theme-input input::-webkit-input-placeholder,
   .bg-theme-input .ant-input::-webkit-input-placeholder,
   .bg-theme-input .ant-input-password input::-webkit-input-placeholder {
-    color: #ffffff !important;
+    color: var(--chrome-text-primary) !important;
     opacity: 0.7 !important;
   }
 }
@@ -252,11 +252,11 @@
 /* Light mode overrides for theme utilities */
 @media (prefers-color-scheme: light) {
   .bg-theme-input {
-    background-color: #ffffff !important;
+    background-color: var(--chrome-input-background) !important;
   }
 
   .bg-theme-input * {
-    background-color: #ffffff !important;
+    background-color: var(--chrome-input-background) !important;
   }
 }
 
@@ -350,6 +350,72 @@
 .fill-red-danger svg,
 .fill-red-danger svg * {
   fill: #ff4d4f !important;
+}
+
+/* ============================================
+   SOCA UI ENHANCEMENTS
+   ============================================ */
+
+.soca-quick-action-btn {
+  background-color: var(--chrome-bg-secondary) !important;
+  color: var(--chrome-text-primary) !important;
+  border: 1px solid var(--chrome-input-border) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+.soca-quick-action-btn:hover,
+.soca-quick-action-btn:focus {
+  background-color: var(--chrome-input-background) !important;
+}
+
+.soca-primary-btn {
+  background-color: var(--chrome-text-primary) !important;
+  color: var(--chrome-bg-primary) !important;
+  border: 1px solid var(--chrome-input-border) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+}
+
+.soca-secondary-btn {
+  background-color: var(--chrome-input-background) !important;
+  color: var(--chrome-text-primary) !important;
+  border: 1px solid var(--chrome-input-border) !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+}
+
+.soca-danger-btn {
+  background-color: rgba(255, 77, 79, 0.12) !important;
+  color: #ff4d4f !important;
+  border: 1px solid rgba(255, 77, 79, 0.4) !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+}
+
+.soca-socakit {
+  border: 1px solid var(--chrome-input-border) !important;
+  background-color: var(--chrome-bg-secondary) !important;
+  border-radius: 8px !important;
+  padding: 8px 10px !important;
+}
+
+.soca-socakit summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.soca-socakit summary::-webkit-details-marker {
+  display: none;
+}
+
+.soca-socakit ol {
+  padding-left: 18px;
+  margin: 0;
+}
+
+.soca-socakit li {
+  margin: 2px 0;
 }
 
 /* Green Colors - for success messages */
@@ -556,7 +622,7 @@ textarea {
 /* Animation for streaming cursor */
 .streaming-cursor {
   animation: blink 1s infinite;
-  color: black;
+  color: var(--chrome-text-primary);
 }
 
 @keyframes blink {
@@ -643,7 +709,7 @@ textarea {
 /* Force white background in light mode */
 @media (prefers-color-scheme: light) {
   .chat-input-box {
-    background-color: #ffffff !important;
+    background-color: var(--chrome-input-background) !important;
   }
 }
 
@@ -743,6 +809,6 @@ textarea {
   .tool-call-collapse .ant-collapse-content-box,
   .thinking-collapse .ant-collapse-content-box,
   .agent-collapse .ant-collapse-content-box {
-    background-color: #ffffff !important;
+    background-color: var(--chrome-input-background) !important;
   }
 }

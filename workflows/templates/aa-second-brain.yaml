@@ -1,0 +1,69 @@
+# SOCA OpenBrowser Workflow: AA Second Brain Capture (Manual Paste)
+# Goal: Structure captured knowledge for AA tasks.
+# Lane: L1_ASSISTED (writes only to local evidence output)
+
+meta:
+  name: aa-second-brain
+  version: "1.0.0"
+  lane: L1_ASSISTED
+  network: DENY
+  description: "Prepare Second Brain capture prompt"
+  tags: [aa, second-brain, capture]
+
+inputs:
+  output_dir:
+    type: string
+    default: "runs/_local/aa-second-brain"
+    description: "Directory to store prompt template and outputs"
+
+tasks:
+  - id: T00_prepare
+    name: "Prepare Output Directory"
+    goal: "Create output directory for prompts and results"
+    lane: L1_ASSISTED
+    commands:
+      - mkdir -p "${output_dir}"
+    verify:
+      - "output_dir exists"
+
+  - id: T01_write_prompt
+    name: "Write Second Brain Prompt"
+    goal: "Create a reusable capture prompt file"
+    lane: L1_ASSISTED
+    commands:
+      - |
+        cat > "${output_dir}/second_brain_prompt.txt" <<'PROMPT'
+        Second Brain Capture (paste content below)
+
+        Extract:
+        - Key facts (bullets)
+        - Projects and status
+        - People and roles
+        - Decisions and rationale
+        - Follow-ups and deadlines
+        - Tags (5-10)
+
+        Content:
+        PROMPT
+    verify:
+      - "second_brain_prompt.txt created"
+
+  - id: T02_run_in_openbrowser
+    name: "Run in OpenBrowser"
+    goal: "Paste content into OpenBrowser and run the capture prompt"
+    lane: L1_ASSISTED
+    manual_check:
+      - "Open OpenBrowser sidebar"
+      - "Paste content into prompt"
+      - "Save output to ${output_dir}/second_brain_output.md"
+
+outputs:
+  prompt: "${output_dir}/second_brain_prompt.txt"
+  output: "${output_dir}/second_brain_output.md"
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: aa-second-brain
+# version: 1.0.0
+# lane: L1_ASSISTED

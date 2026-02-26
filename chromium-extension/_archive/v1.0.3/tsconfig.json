@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": false,
+    "target": "ES2019",
+    "moduleResolution": "bundler",
+    "module": "ES6",
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "rootDir": "src",
+    "outDir": "dist/js",
+    "noEmitOnError": true,
+    "jsx": "react",
+    "typeRoots": ["node_modules/@types", "src/types"]
+  },
+  "include": ["src/**/*"]
+}

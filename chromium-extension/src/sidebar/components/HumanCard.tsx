@@ -44,8 +44,8 @@ const HumanConfirmCard: React.FC<{
   };
 
   return (
-    <Card size="small" className="mb-2 bg-orange-50 border border-orange-300">
-      <div className="mb-3">
+    <Card size="small" className="mb-2 bg-theme-input border-theme-input radius-8px text-theme-primary">
+      <div className="mb-3 text-theme-primary">
         <MarkdownRenderer content={item.prompt} />
       </div>
       <Space>
@@ -89,8 +89,8 @@ const HumanInputCard: React.FC<{
   };
 
   return (
-    <Card size="small" className="mb-2 bg-blue-50 border border-blue-300">
-      <div className="mb-3">
+    <Card size="small" className="mb-2 bg-theme-input border-theme-input radius-8px text-theme-primary">
+      <div className="mb-3 text-theme-primary">
         <MarkdownRenderer content={item.prompt} />
       </div>
       <Space direction="vertical" className="w-full">
@@ -152,8 +152,8 @@ const HumanSelectCard: React.FC<{
   };
 
   return (
-    <Card size="small" className="mb-2 bg-green-50 border border-green-300">
-      <div className="mb-3">
+    <Card size="small" className="mb-2 bg-theme-input border-theme-input radius-8px text-theme-primary">
+      <div className="mb-3 text-theme-primary">
         <MarkdownRenderer content={item.prompt} />
       </div>
       <Space direction="vertical" className="w-full">
@@ -228,10 +228,10 @@ const HumanHelpCard: React.FC<{
       : "Assistance Required";
 
   return (
-    <Card size="small" className="mb-2 bg-red-50 border border-red-200">
-      <Space direction="vertical" className="w-full">
+    <Card size="small" className="mb-2 bg-theme-input border-theme-input radius-8px text-theme-primary">
+      <Space direction="vertical" className="w-full text-theme-primary">
         <Tag color="orange">{helpTypeText}</Tag>
-        <div className="mb-3">
+        <div className="mb-3 text-theme-primary">
           <MarkdownRenderer content={item.prompt} />
         </div>
         <Space>

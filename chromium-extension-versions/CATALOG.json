@@ -1,0 +1,36 @@
+{
+  "project": "openbrowser-chromium-extension",
+  "policy": "immutable-version-folders",
+  "versions": [
+    {
+      "version": "1.0.4",
+      "folder": "core/tools/openbrowser/chromium-extension-versions/v1.0.4",
+      "load_unpacked": true
+    },
+    {
+      "version": "1.0.5",
+      "folder": "core/tools/openbrowser/chromium-extension-versions/v1.0.5",
+      "load_unpacked": true
+    },
+    {
+      "version": "1.0.6",
+      "folder": "core/tools/openbrowser/chromium-extension-versions/v1.0.6",
+      "load_unpacked": true
+    },
+    {
+      "version": "1.0.7",
+      "folder": "core/tools/openbrowser/chromium-extension-versions/v1.0.7",
+      "load_unpacked": true
+    },
+    {
+      "version": "1.0.8",
+      "folder": "core/tools/openbrowser/chromium-extension-versions/v1.0.8",
+      "load_unpacked": true
+    },
+    {
+      "version": "1.0.9",
+      "folder": "core/tools/openbrowser/chromium-extension-versions/v1.0.9",
+      "load_unpacked": true
+    }
+  ]
+}

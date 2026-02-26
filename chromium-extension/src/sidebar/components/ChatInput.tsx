@@ -96,11 +96,11 @@ const PROMPTBUDDY_MODES: PromptBuddyMode[] = [
 ];
 const DEFAULT_SOCA_TOOLS_CONFIG: SocaToolsConfig = {
   mcp: {
-    webfetch: false,
-    context7: false,
-    github: false,
-    nanobanapro: false,
-    nt2l: false
+    webfetch: true,
+    context7: true,
+    github: true,
+    nanobanapro: true,
+    nt2l: true
   },
   allowlistText: ""
 };
@@ -153,7 +153,182 @@ const DEFAULT_PROMPTBUDDY_LIBRARY: PromptBuddyLibraryItem[] = [
       "Task:\n",
     createdAtMs: 0,
     updatedAtMs: 0
+  },
+  {
+    id: "aa_daily_triage_v1",
+    title: "AA Daily Triage",
+    category: "AA",
+    prompt:
+      "AA Daily Email Triage (paste emails below)\n\n" +
+      "Return a table with columns: From | Subject | Priority (Urgent/Today/Week/Later/Archive) | Decision | Next Action | Owner | Due Date | Draft Reply.\n" +
+      "Rules:\n" +
+      "- If unclear, list questions in a final 'Open Questions' section.\n" +
+      "- Keep draft replies concise and action-oriented.\n\n" +
+      "Emails:\n",
+    favorite: true,
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "aa_followup_queue_v1",
+    title: "AA Follow-up Queue",
+    category: "AA",
+    prompt:
+      "Build a follow-up queue from the emails below.\n\n" +
+      "Output as a checklist with: Who | Topic | Next Action | Due Date | Status.\n" +
+      "End with a short summary of top 3 follow-ups.\n\n" +
+      "Emails:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "aa_decision_draft_v1",
+    title: "AA Decision Draft",
+    category: "AA",
+    prompt:
+      "Draft a decision summary from the content below.\n\n" +
+      "Include:\n" +
+      "- Decision statement\n" +
+      "- Rationale\n" +
+      "- Risks\n" +
+      "- Next steps\n\n" +
+      "Content:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "aa_second_brain_capture_v1",
+    title: "AA Second Brain Capture",
+    category: "AA",
+    prompt:
+      "Second Brain Capture (paste content below)\n\n" +
+      "Extract:\n" +
+      "- Key facts (bullets)\n" +
+      "- Projects and status\n" +
+      "- People and roles\n" +
+      "- Decisions and rationale\n" +
+      "- Follow-ups and deadlines\n" +
+      "- Tags (5-10)\n\n" +
+      "Content:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "soca_pulse_openai_daily_v1",
+    title: "SOCA Pulse OpenAI Daily",
+    category: "SOCA Pulse",
+    prompt:
+      "SOCA Pulse Daily (paste signals/notes below)\n\n" +
+      "Return:\n" +
+      "1. Top 5 signals\n" +
+      "2. Risks (max 5)\n" +
+      "3. Opportunities (max 5)\n" +
+      "4. Recommended actions for today (max 5)\n\n" +
+      "Signals:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "soca_pulse_delta_v1",
+    title: "SOCA Pulse Delta",
+    category: "SOCA Pulse",
+    prompt:
+      "SOCA Pulse Delta (paste yesterday summary and today's notes below)\n\n" +
+      "Output:\n" +
+      "- New signals\n" +
+      "- Signals that weakened\n" +
+      "- Signals that strengthened\n" +
+      "- Action changes\n\n" +
+      "Input:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "soca_pulse_action_plan_v1",
+    title: "SOCA Pulse Action Plan",
+    category: "SOCA Pulse",
+    prompt:
+      "SOCA Pulse Action Plan (paste signals below)\n\n" +
+      "Return a top-5 action list with owner, due date, and expected impact.\n\n" +
+      "Signals:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
+  },
+  {
+    id: "nt2l_plan_execute_v1",
+    title: "NT2L Plan + Dry Run",
+    category: "NT2L",
+    prompt:
+      "Generate an NT2L plan for the task below. Use nt2lPlan, then nt2lValidatePlan, then nt2lExecuteDryRun. Summarize approvals needed.\n\n" +
+      "Task:\n",
+    createdAtMs: 0,
+    updatedAtMs: 0
   }
+];
+
+const QUICK_ACTIONS: Array<{ id: string; label: string; prompt: string }> = [
+  {
+    id: "aa_daily_triage",
+    label: "AA Triage",
+    prompt:
+      "AA Daily Email Triage (paste emails below)\n\n" +
+      "Return a table with columns: From | Subject | Priority (Urgent/Today/Week/Later/Archive) | Decision | Next Action | Owner | Due Date | Draft Reply.\n" +
+      "Rules:\n" +
+      "- If unclear, list questions in a final 'Open Questions' section.\n" +
+      "- Keep draft replies concise and action-oriented.\n\n" +
+      "Emails:\n"
+  },
+  {
+    id: "aa_second_brain",
+    label: "Second Brain",
+    prompt:
+      "Second Brain Capture (paste content below)\n\n" +
+      "Extract:\n" +
+      "- Key facts (bullets)\n" +
+      "- Projects and status\n" +
+      "- People and roles\n" +
+      "- Decisions and rationale\n" +
+      "- Follow-ups and deadlines\n" +
+      "- Tags (5-10)\n\n" +
+      "Content:\n"
+  },
+  {
+    id: "soca_pulse_daily",
+    label: "SOCA Pulse",
+    prompt:
+      "SOCA Pulse Daily (paste signals/notes below)\n\n" +
+      "Return:\n" +
+      "1. Top 5 signals\n" +
+      "2. Risks (max 5)\n" +
+      "3. Opportunities (max 5)\n" +
+      "4. Recommended actions for today (max 5)\n\n" +
+      "Signals:\n"
+  },
+  {
+    id: "nt2l_plan",
+    label: "NT2L Plan",
+    prompt:
+      "Generate an NT2L plan for the task below. Use nt2lPlan, then nt2lValidatePlan, then nt2lExecuteDryRun. Summarize approvals needed.\n\n" +
+      "Task:\n"
+  }
+];
+
+const SOCAKIT_STEPS = [
+  "1) Preflight (policy + scope + sandbox)",
+  "2) Clarify",
+  "3) Condition",
+  "4) Specify",
+  "5) Expectations",
+  "6) Plan",
+  "7) Tasks",
+  "8) Reflect",
+  "9) Iterate",
+  "10) Execute (HIL)",
+  "11) Test",
+  "12) Go / No-Go",
+  "13) ZHV (evidence)",
+  "14) ZHDEEV (drift/entropy)",
+  "15) Delivery"
 ];
 
 interface ChatInputProps {
@@ -765,6 +940,39 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         </div>
       )}
 
+      <details className="soca-socakit mb-3" open>
+        <summary className="text-xs font-medium text-theme-primary">
+          SOCaKit 15 Steps (embedded)
+        </summary>
+        <ol className="mt-2 text-xs text-theme-primary">
+          {SOCAKIT_STEPS.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+      </details>
+
+      <div className="mb-3">
+        <div
+          className="text-xs text-theme-primary"
+          style={{ opacity: 0.7, marginBottom: 6 }}
+        >
+          Quick Actions
+        </div>
+        <Space size="small" wrap>
+          {QUICK_ACTIONS.map((action) => (
+            <Button
+              key={action.id}
+              size="small"
+              onClick={() => onInputChange(action.prompt)}
+              disabled={sending || currentMessageId !== null}
+              className="soca-quick-action-btn"
+            >
+              {action.label}
+            </Button>
+          ))}
+        </Space>
+      </div>
+
       {/* Floating Chat Input Box */}
       <div
         className="bg-theme-input border-theme-input relative shadow-sm hover:shadow-md transition-shadow radius-8px"
@@ -894,32 +1102,36 @@ export const ChatInput: React.FC<ChatInputProps> = ({
               {pbBusy ? "Enhancing..." : "Enhance"}
             </Button>
 
-            {/* Right: Send/Stop/New Session Button */}
+            <Button
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={onNewSession}
+              disabled={sending || currentMessageId !== null}
+              className="soca-secondary-btn"
+            >
+              New (+)
+            </Button>
             {currentMessageId ? (
               <Button
-                type="text"
+                size="small"
                 danger
-                icon={<StopOutlined className="fill-red-500" />}
+                icon={<StopOutlined />}
                 onClick={onStop}
-                className="text-red-500"
-              />
-            ) : isEmpty ? (
-              <Button
-                type="text"
-                icon={<PlusOutlined className="fill-theme-icon" />}
-                onClick={onNewSession}
-                disabled={sending}
-                className="text-theme-icon"
-              />
+                className="soca-danger-btn"
+              >
+                Stop
+              </Button>
             ) : (
               <Button
-                type="text"
-                icon={<SendOutlined className="fill-theme-icon" />}
+                size="small"
+                icon={<SendOutlined />}
                 onClick={() => onSend()}
                 loading={sending}
-                disabled={sending}
-                className="text-theme-icon"
-              />
+                disabled={sending || isEmpty}
+                className="soca-primary-btn"
+              >
+                Send (Enter)
+              </Button>
             )}
           </Space>
         </div>

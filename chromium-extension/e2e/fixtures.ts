@@ -29,8 +29,24 @@ export const test = base.extend<Fixtures>({
     const userDataDir = fs.mkdtempSync(
       path.join(os.tmpdir(), "soca-openbrowser-e2e-")
     );
+    const bundledExecutable = chromium.executablePath();
+    let executablePath: string | undefined;
+    if (!fs.existsSync(bundledExecutable)) {
+      const candidates = [
+        process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+      ].filter((value): value is string => Boolean(value));
+      executablePath = candidates.find((candidate) => fs.existsSync(candidate));
+      if (!executablePath) {
+        throw new Error(
+          `No Chromium executable found. Missing Playwright browser at ${bundledExecutable} and no local fallback in /Applications.`
+        );
+      }
+    }
     const context = await chromium.launchPersistentContext(userDataDir, {
       headless: false,
+      executablePath,
       args: [
         `--disable-extensions-except=${extPath}`,
         `--load-extension=${extPath}`

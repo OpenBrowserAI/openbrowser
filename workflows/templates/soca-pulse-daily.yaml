@@ -1,0 +1,67 @@
+# SOCA OpenBrowser Workflow: SOCA Pulse Daily (Manual Paste)
+# Goal: Consistent daily pulse summary and actions.
+# Lane: L1_ASSISTED (writes only to local evidence output)
+
+meta:
+  name: soca-pulse-daily
+  version: "1.0.0"
+  lane: L1_ASSISTED
+  network: DENY
+  description: "Prepare SOCA Pulse daily prompt"
+  tags: [soca, pulse, daily]
+
+inputs:
+  output_dir:
+    type: string
+    default: "runs/_local/soca-pulse-daily"
+    description: "Directory to store prompt template and outputs"
+
+tasks:
+  - id: T00_prepare
+    name: "Prepare Output Directory"
+    goal: "Create output directory for prompts and results"
+    lane: L1_ASSISTED
+    commands:
+      - mkdir -p "${output_dir}"
+    verify:
+      - "output_dir exists"
+
+  - id: T01_write_prompt
+    name: "Write SOCA Pulse Prompt"
+    goal: "Create a reusable pulse prompt file"
+    lane: L1_ASSISTED
+    commands:
+      - |
+        cat > "${output_dir}/pulse_prompt.txt" <<'PROMPT'
+        SOCA Pulse Daily (paste signals/notes below)
+
+        Return:
+        1. Top 5 signals
+        2. Risks (max 5)
+        3. Opportunities (max 5)
+        4. Recommended actions for today (max 5)
+
+        Signals:
+        PROMPT
+    verify:
+      - "pulse_prompt.txt created"
+
+  - id: T02_run_in_openbrowser
+    name: "Run in OpenBrowser"
+    goal: "Paste signals into OpenBrowser and run the pulse prompt"
+    lane: L1_ASSISTED
+    manual_check:
+      - "Open OpenBrowser sidebar"
+      - "Paste signals into prompt"
+      - "Save output to ${output_dir}/pulse_output.md"
+
+outputs:
+  prompt: "${output_dir}/pulse_prompt.txt"
+  output: "${output_dir}/pulse_output.md"
+
+---
+# SOCA-STAMP
+# type: workflow
+# workflow: soca-pulse-daily
+# version: 1.0.0
+# lane: L1_ASSISTED
