@@ -1,4 +1,4 @@
-import { ChatService, uuidv4, ExaSearchService } from "@openbrowser-ai/core";
+import { ChatService, uuidv4, ExaSearchService, TavilySearchService } from "@openbrowser-ai/core";
 import {
   OpenBrowserMessage,
   WebSearchResult
@@ -17,9 +17,14 @@ export class SimpleChatService implements ChatService {
     }
   ) => Promise<WebSearchResult[]>;
 
+  private searchProvider: "exa" | "tavily" = "exa";
+  private tavilyApiKey?: string;
+
   constructor() {
     chrome.storage.sync.get(["webSearchConfig"], (result) => {
       if (result.webSearchConfig?.enabled) {
+        this.searchProvider = result.webSearchConfig.provider || "exa";
+        this.tavilyApiKey = result.webSearchConfig.tavilyApiKey;
         this.websearch = (chatId, options) =>
           this.websearchImpl(chatId, result.webSearchConfig.apiKey, options);
       }
@@ -69,16 +74,28 @@ export class SimpleChatService implements ChatService {
     }
   ): Promise<WebSearchResult[]> {
     try {
-      const content = await ExaSearchService.search(
-        {
-          query: options.query,
-          numResults: options.numResults || 8,
-          type: options.type || "auto",
-          livecrawl: options.livecrawl || "fallback",
-          contextMaxCharacters: options.contextMaxCharacters || 10000
-        },
-        apiKey
-      );
+      let content: string;
+
+      if (this.searchProvider === "tavily" && this.tavilyApiKey) {
+        content = await TavilySearchService.search(
+          {
+            query: options.query,
+            numResults: options.numResults || 8
+          },
+          this.tavilyApiKey
+        );
+      } else {
+        content = await ExaSearchService.search(
+          {
+            query: options.query,
+            numResults: options.numResults || 8,
+            type: options.type || "auto",
+            livecrawl: options.livecrawl || "fallback",
+            contextMaxCharacters: options.contextMaxCharacters || 10000
+          },
+          apiKey
+        );
+      }
 
       return [
         {
