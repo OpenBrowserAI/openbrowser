@@ -56,32 +56,47 @@ async function post<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   });
   if (!res.ok) throw new Error(`${res.status}`);
   return res.json();
 }
 
+async function fetchCaps(system?: string): Promise<Capability[]> {
+  const url = system
+    ? `/api/caps?system=${encodeURIComponent(system)}`
+    : "/api/caps";
+  const data = await get<{ capabilities: Capability[] }>(url);
+  return data.capabilities ?? [];
+}
+
 export async function ping(): Promise<boolean> {
-  try { await get("/api/capabilities"); return true; } catch { return false; }
+  try {
+    await fetchCaps();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function getSystems(): Promise<Record<string, number>> {
-  const caps = await get<Capability[]>("/api/capabilities");
+  const caps = await fetchCaps();
   const counts: Record<string, number> = {};
   for (const c of caps) counts[c.source] = (counts[c.source] ?? 0) + 1;
   return counts;
 }
 
 export async function getCapabilities(system?: string): Promise<Capability[]> {
-  const url = system ? `/api/capabilities?system=${encodeURIComponent(system)}` : "/api/capabilities";
-  return get<Capability[]>(url);
+  return fetchCaps(system);
 }
 
 export async function compose(goal: string): Promise<WorkflowPlan> {
   return post<WorkflowPlan>("/api/compose", { goal });
 }
 
-export async function runWorkflow(plan: WorkflowPlan, confirm = false): Promise<WorkflowResult> {
+export async function runWorkflow(
+  plan: WorkflowPlan,
+  confirm = false
+): Promise<WorkflowResult> {
   return post<WorkflowResult>("/api/workflow/run", { plan, confirm });
 }
