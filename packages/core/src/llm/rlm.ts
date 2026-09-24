@@ -279,7 +279,8 @@ export class RetryLanguageModel {
           apiKey: apiKey,
           baseURL: baseURL,
           fetch: llm.fetch,
-          headers: llm.config?.headers
+          headers: llm.config?.headers,
+          dangerouslyAllowBrowser: true
         }).languageModel(llm.model);
 
       case "@ai-sdk/google":
