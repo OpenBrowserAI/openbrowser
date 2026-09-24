@@ -382,6 +382,18 @@ async function handleGetTabs(requestId: string, data: any): Promise<void> {
 }
 
 // Event routing mapping
+async function handleOsTrace(_requestId: string, data: any): Promise<void> {
+  try {
+    await fetch("http://localhost:4173/api/trace", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(data)
+    });
+  } catch {
+    // server not running — silent fail
+  }
+}
+
 const eventHandlers: Record<
   string,
   (requestId: string, data: any) => Promise<void>
@@ -390,7 +402,8 @@ const eventHandlers: Record<
   callback: handleCallback,
   uploadFile: handleUploadFile,
   stop: handleStop,
-  getTabs: handleGetTabs
+  getTabs: handleGetTabs,
+  os_trace: handleOsTrace
 };
 
 // Message listener
