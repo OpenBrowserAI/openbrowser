@@ -3,6 +3,7 @@ import { uuidv4 } from "@openbrowser-ai/core";
 import { createRoot } from "react-dom/client";
 import { ChatInput } from "./components/ChatInput";
 import { SessionHistory } from "./components/SessionHistory";
+import { CapabilitiesTab } from "./components/CapabilitiesTab";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { MessageItem } from "./components/MessageItem";
 import type { ChatMessage, UploadedFile } from "./types";
@@ -13,7 +14,10 @@ import { message as AntdMessage, Button, Space } from "antd";
 import { HistoryOutlined, SettingOutlined } from "@ant-design/icons";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
+type Tab = "chat" | "capabilities";
+
 const AppRun = () => {
+  const [activeTab, setActiveTab] = useState<Tab>("chat");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [sending, setSending] = useState(false);
@@ -303,28 +307,56 @@ const AppRun = () => {
 
   return (
     <div className="flex flex-col h-screen bg-white">
-      {/* Header with Session and Settings Buttons */}
-      <div className="flex items-center justify-end px-1 py-1 bg-gray-100">
-        <Space size={4}>
-          <Button
-            type="text"
-            icon={<HistoryOutlined />}
-            onClick={handleShowSessionHistory}
-            className="text-gray-500 hover:text-gray-700"
-          />
-          <Button
-            type="text"
-            icon={<SettingOutlined />}
-            onClick={() => chrome.runtime.openOptionsPage()}
-            className="text-gray-500 hover:text-gray-700"
-          />
-        </Space>
+      {/* Header: tabs + action buttons */}
+      <div className="flex items-center px-1 py-1 bg-gray-100 border-b border-gray-200">
+        {/* Tab switcher */}
+        <div className="flex items-center gap-0.5 flex-1">
+          {(["chat", "capabilities"] as Tab[]).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={[
+                "px-3 py-1 rounded text-xs font-medium capitalize transition-colors",
+                activeTab === tab
+                  ? "bg-white text-gray-800 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-200",
+              ].join(" ")}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {/* Action buttons — only shown on chat tab */}
+        {activeTab === "chat" && (
+          <Space size={4}>
+            <Button
+              type="text"
+              icon={<HistoryOutlined />}
+              onClick={handleShowSessionHistory}
+              className="text-gray-500 hover:text-gray-700"
+            />
+            <Button
+              type="text"
+              icon={<SettingOutlined />}
+              onClick={() => chrome.runtime.openOptionsPage()}
+              className="text-gray-500 hover:text-gray-700"
+            />
+          </Space>
+        )}
       </div>
 
-      {/* Message area */}
+      {/* Capabilities tab */}
+      {activeTab === "capabilities" && (
+        <div className="flex-1 overflow-hidden" style={{ background: "var(--chrome-bg-secondary)" }}>
+          <CapabilitiesTab />
+        </div>
+      )}
+
+      {/* Message area — hidden when capabilities tab active */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto overflow-x-hidden p-4 bg-gray-100 relative"
+        style={{ display: activeTab === "chat" ? undefined : "none" }}
       >
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -356,19 +388,21 @@ const AppRun = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input area */}
-      <ChatInput
-        inputValue={inputValue}
-        onInputChange={setInputValue}
-        onSend={sendMessage}
-        onStop={handleStop}
-        onFileSelect={handleFileSelect}
-        onRemoveFile={removeFile}
-        uploadedFiles={uploadedFiles}
-        sending={sending}
-        currentMessageId={currentMessageId}
-        onNewSession={handleNewSession}
-      />
+      {/* Input area — chat tab only */}
+      {activeTab === "chat" && (
+        <ChatInput
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          onSend={sendMessage}
+          onStop={handleStop}
+          onFileSelect={handleFileSelect}
+          onRemoveFile={removeFile}
+          uploadedFiles={uploadedFiles}
+          sending={sending}
+          currentMessageId={currentMessageId}
+          onNewSession={handleNewSession}
+        />
+      )}
 
       {/* Session History Modal */}
       <SessionHistory
