@@ -9,7 +9,8 @@ module.exports = {
     sidebar: path.join(srcDir, "sidebar/index.tsx"),
     options: path.join(srcDir, "options/index.tsx"),
     background: path.join(srcDir, "background/index.ts"),
-    content_script: path.join(srcDir, "content/index.ts")
+    content_script: path.join(srcDir, "content/index.ts"),
+    content_bridge: path.join(srcDir, "content/bridge.ts")
   },
   output: {
     path: path.join(__dirname, "dist/js"),
