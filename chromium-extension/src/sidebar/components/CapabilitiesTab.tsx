@@ -8,7 +8,7 @@ import {
   Space,
   Badge,
   Tooltip,
-  Collapse,
+  Collapse
 } from "antd";
 import {
   ThunderboltOutlined,
@@ -17,9 +17,13 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   SearchOutlined,
-  ReloadOutlined,
+  ReloadOutlined
 } from "@ant-design/icons";
-import type { Capability, WorkflowPlan, WorkflowResult } from "../services/opensurfer";
+import type {
+  Capability,
+  WorkflowPlan,
+  WorkflowResult
+} from "../services/opensurfer";
 import * as opensurfer from "../services/opensurfer";
 
 const { Text, Paragraph } = Typography;
@@ -28,14 +32,14 @@ const { TextArea } = Input;
 const EFFECT_COLOR: Record<string, string> = {
   read: "blue",
   write: "orange",
-  destructive: "red",
+  destructive: "red"
 };
 
 function SystemCard({
   name,
   count,
   selected,
-  onClick,
+  onClick
 }: {
   name: string;
   count: number;
@@ -51,17 +55,23 @@ function SystemCard({
         "flex items-center gap-2 px-3 py-2 rounded-lg border text-left w-full transition-colors",
         selected
           ? "border-blue-400 bg-blue-50 text-blue-700"
-          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50",
+          : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50"
       ].join(" ")}
     >
       <span
         className="w-6 h-6 rounded text-xs font-bold flex items-center justify-center shrink-0"
-        style={{ background: selected ? "#dbeafe" : "#f3f4f6", color: selected ? "#1d4ed8" : "#6b7280" }}
+        style={{
+          background: selected ? "#dbeafe" : "#f3f4f6",
+          color: selected ? "#1d4ed8" : "#6b7280"
+        }}
       >
         {label[0]?.toUpperCase() ?? "?"}
       </span>
       <span className="flex-1 min-w-0">
-        <span className="block text-xs font-medium truncate" style={{ color: "var(--chrome-text-primary)" }}>
+        <span
+          className="block text-xs font-medium truncate"
+          style={{ color: "var(--chrome-text-primary)" }}
+        >
           {host}
         </span>
       </span>
@@ -75,18 +85,27 @@ function CapabilityRow({ cap }: { cap: Capability }) {
   return (
     <div className="px-3 py-2 border-b border-gray-100 last:border-0">
       <div className="flex items-center gap-2">
-        <Text className="text-xs font-mono font-medium" style={{ color: "var(--chrome-text-primary)" }}>
+        <Text
+          className="text-xs font-mono font-medium"
+          style={{ color: "var(--chrome-text-primary)" }}
+        >
           {cap.capability}
         </Text>
         <Tag color={EFFECT_COLOR[cap.effect] ?? "default"} className="text-xs">
           {cap.effect}
         </Tag>
-        <span className="ml-auto text-xs" style={{ color: "var(--chrome-text-primary)", opacity: 0.4 }}>
+        <span
+          className="ml-auto text-xs"
+          style={{ color: "var(--chrome-text-primary)", opacity: 0.4 }}
+        >
           {Math.round(cap.confidence * 100)}%
         </span>
       </div>
       {inputs.length > 0 && (
-        <Text className="text-xs block mt-0.5" style={{ color: "var(--chrome-text-primary)", opacity: 0.5 }}>
+        <Text
+          className="text-xs block mt-0.5"
+          style={{ color: "var(--chrome-text-primary)", opacity: 0.5 }}
+        >
           ({inputs.join(", ")})
         </Text>
       )}
@@ -98,7 +117,7 @@ function PlanView({
   plan,
   running,
   result,
-  onRun,
+  onRun
 }: {
   plan: WorkflowPlan;
   running: boolean;
@@ -110,7 +129,10 @@ function PlanView({
   return (
     <div className="mt-3 rounded-lg border border-gray-200 bg-white overflow-hidden">
       <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-        <Text className="text-xs font-semibold" style={{ color: "var(--chrome-text-primary)" }}>
+        <Text
+          className="text-xs font-semibold"
+          style={{ color: "var(--chrome-text-primary)" }}
+        >
           Workflow plan
         </Text>
         <Button
@@ -148,19 +170,40 @@ function PlanView({
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <Text className="text-xs font-medium" style={{ color: "var(--chrome-text-primary)" }}>
+                    <Text
+                      className="text-xs font-medium"
+                      style={{ color: "var(--chrome-text-primary)" }}
+                    >
                       {step.system}
                     </Text>
-                    <span style={{ color: "var(--chrome-text-primary)", opacity: 0.3 }}>/</span>
-                    <Text className="text-xs font-mono" style={{ color: "var(--chrome-text-primary)" }}>
+                    <span
+                      style={{
+                        color: "var(--chrome-text-primary)",
+                        opacity: 0.3
+                      }}
+                    >
+                      /
+                    </span>
+                    <Text
+                      className="text-xs font-mono"
+                      style={{ color: "var(--chrome-text-primary)" }}
+                    >
                       {step.capability}
                     </Text>
                     {step.forEach && (
-                      <Tag color="purple" className="text-xs">forEach</Tag>
+                      <Tag color="purple" className="text-xs">
+                        forEach
+                      </Tag>
                     )}
                   </div>
                   {step.description && (
-                    <Text className="text-xs block mt-0.5" style={{ color: "var(--chrome-text-primary)", opacity: 0.5 }}>
+                    <Text
+                      className="text-xs block mt-0.5"
+                      style={{
+                        color: "var(--chrome-text-primary)",
+                        opacity: 0.5
+                      }}
+                    >
                       {step.description}
                     </Text>
                   )}
@@ -183,7 +226,10 @@ function PlanView({
               </div>
             </div>
             {i < plan.steps.length - 1 && (
-              <div className="flex justify-center py-0.5" style={{ color: "var(--chrome-text-primary)", opacity: 0.2 }}>
+              <div
+                className="flex justify-center py-0.5"
+                style={{ color: "var(--chrome-text-primary)", opacity: 0.2 }}
+              >
                 ↓
               </div>
             )}
@@ -220,12 +266,35 @@ export function CapabilitiesTab() {
     const ok = await opensurfer.ping();
     setConnected(ok);
     if (!ok) return;
-    const [s, c] = await Promise.all([opensurfer.getSystems(), opensurfer.getCapabilities()]);
+    const [s, c] = await Promise.all([
+      opensurfer.getSystems(),
+      opensurfer.getCapabilities()
+    ]);
     setSystems(s);
     setCaps(c);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  const poll = useCallback(async () => {
+    try {
+      const c = await opensurfer.getCapabilities();
+      setCaps((prev) => (prev.length !== c.length ? c : prev));
+      const s = await opensurfer.getSystems();
+      setSystems((prev) =>
+        JSON.stringify(prev) !== JSON.stringify(s) ? s : prev
+      );
+    } catch {
+      setConnected(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  useEffect(() => {
+    const id = setInterval(poll, 3000);
+    return () => clearInterval(id);
+  }, [poll]);
 
   const handleCompose = useCallback(async () => {
     if (!goal.trim()) return;
@@ -235,7 +304,11 @@ export function CapabilitiesTab() {
     setResult(null);
     try {
       const p = await opensurfer.compose(goal);
-      if (p.error) { setComposeError(p.error); } else { setPlan(p); }
+      if (p.error) {
+        setComposeError(p.error);
+      } else {
+        setPlan(p);
+      }
     } catch (e: any) {
       setComposeError(e.message ?? "compose failed");
     } finally {
@@ -266,16 +339,31 @@ export function CapabilitiesTab() {
   if (connected === false) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
-        <ApiOutlined style={{ fontSize: 40, color: "var(--chrome-text-primary)", opacity: 0.2 }} />
+        <ApiOutlined
+          style={{
+            fontSize: 40,
+            color: "var(--chrome-text-primary)",
+            opacity: 0.2
+          }}
+        />
         <div className="text-center">
-          <Text className="text-sm font-medium block" style={{ color: "var(--chrome-text-primary)" }}>
+          <Text
+            className="text-sm font-medium block"
+            style={{ color: "var(--chrome-text-primary)" }}
+          >
             OpenSurfer server not running
           </Text>
-          <Text className="text-xs block mt-1" style={{ color: "var(--chrome-text-primary)", opacity: 0.5 }}>
+          <Text
+            className="text-xs block mt-1"
+            style={{ color: "var(--chrome-text-primary)", opacity: 0.5 }}
+          >
             Start it to see discovered capabilities
           </Text>
         </div>
-        <div className="w-full rounded-lg bg-gray-100 px-3 py-2 font-mono text-xs" style={{ color: "var(--chrome-text-primary)" }}>
+        <div
+          className="w-full rounded-lg bg-gray-100 px-3 py-2 font-mono text-xs"
+          style={{ color: "var(--chrome-text-primary)" }}
+        >
           node server.mjs
         </div>
         <Button icon={<ReloadOutlined />} size="small" onClick={load}>
@@ -309,14 +397,17 @@ export function CapabilitiesTab() {
             placeholder="What do you want to automate?"
             autoSize={{ minRows: 1, maxRows: 4 }}
             onPressEnter={(e) => {
-              if (!e.shiftKey) { e.preventDefault(); handleCompose(); }
+              if (!e.shiftKey) {
+                e.preventDefault();
+                handleCompose();
+              }
             }}
             className="text-sm rounded-lg"
             style={{
               background: "var(--chrome-input-background)",
               borderColor: "var(--chrome-input-border)",
               color: "var(--chrome-text-primary)",
-              resize: "none",
+              resize: "none"
             }}
           />
           <Button
@@ -334,26 +425,47 @@ export function CapabilitiesTab() {
           </Text>
         )}
         {plan && (
-          <PlanView plan={plan} running={running} result={result} onRun={handleRun} />
+          <PlanView
+            plan={plan}
+            running={running}
+            result={result}
+            onRun={handleRun}
+          />
         )}
       </div>
 
       {/* Systems strip */}
       <div className="px-3 py-2 bg-white border-b border-gray-100">
         <div className="flex items-center gap-2 mb-2">
-          <Text className="text-xs font-semibold" style={{ color: "var(--chrome-text-primary)" }}>
+          <Text
+            className="text-xs font-semibold"
+            style={{ color: "var(--chrome-text-primary)" }}
+          >
             Connected apps
           </Text>
-          <Text className="text-xs" style={{ color: "var(--chrome-text-primary)", opacity: 0.4 }}>
+          <Text
+            className="text-xs"
+            style={{ color: "var(--chrome-text-primary)", opacity: 0.4 }}
+          >
             {systemCount} apps · {totalCaps} capabilities
           </Text>
           <Tooltip title="Refresh">
-            <Button type="text" size="small" icon={<ReloadOutlined />} onClick={load} className="ml-auto" />
+            <Button
+              type="text"
+              size="small"
+              icon={<ReloadOutlined />}
+              onClick={load}
+              className="ml-auto"
+            />
           </Tooltip>
         </div>
         {systemCount === 0 ? (
-          <Text className="text-xs" style={{ color: "var(--chrome-text-primary)", opacity: 0.4 }}>
-            Use apps with the OpenSurfer extension active to discover capabilities.
+          <Text
+            className="text-xs"
+            style={{ color: "var(--chrome-text-primary)", opacity: 0.4 }}
+          >
+            Use apps with the OpenSurfer extension active to discover
+            capabilities.
           </Text>
         ) : (
           <div className="flex flex-col gap-1.5">
@@ -363,7 +475,9 @@ export function CapabilitiesTab() {
                 name={sys}
                 count={count}
                 selected={selectedSystem === sys}
-                onClick={() => setSelectedSystem(selectedSystem === sys ? null : sys)}
+                onClick={() =>
+                  setSelectedSystem(selectedSystem === sys ? null : sys)
+                }
               />
             ))}
           </div>
@@ -375,7 +489,11 @@ export function CapabilitiesTab() {
         <div className="flex flex-col flex-1 overflow-hidden">
           <div className="px-3 py-2 bg-white border-b border-gray-100">
             <Input
-              prefix={<SearchOutlined style={{ color: "var(--chrome-text-primary)", opacity: 0.3 }} />}
+              prefix={
+                <SearchOutlined
+                  style={{ color: "var(--chrome-text-primary)", opacity: 0.3 }}
+                />
+              }
               placeholder="Search capabilities…"
               size="small"
               value={search}
@@ -384,19 +502,24 @@ export function CapabilitiesTab() {
               style={{
                 background: "var(--chrome-input-background)",
                 borderColor: "var(--chrome-input-border)",
-                color: "var(--chrome-text-primary)",
+                color: "var(--chrome-text-primary)"
               }}
             />
           </div>
           <div className="flex-1 overflow-y-auto bg-white">
             {visibleCaps.length === 0 ? (
               <div className="flex items-center justify-center py-8">
-                <Text className="text-xs" style={{ color: "var(--chrome-text-primary)", opacity: 0.3 }}>
+                <Text
+                  className="text-xs"
+                  style={{ color: "var(--chrome-text-primary)", opacity: 0.3 }}
+                >
                   No capabilities match
                 </Text>
               </div>
             ) : (
-              visibleCaps.map((c) => <CapabilityRow key={`${c.source}/${c.capability}`} cap={c} />)
+              visibleCaps.map((c) => (
+                <CapabilityRow key={`${c.source}/${c.capability}`} cap={c} />
+              ))
             )}
           </div>
         </div>
