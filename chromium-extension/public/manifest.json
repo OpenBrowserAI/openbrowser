@@ -1,6 +1,6 @@
 {
-  "name": "OpenBrowser",
-  "description": "OpenBrowser Extension",
+  "name": "OpenSurfer",
+  "description": "OpenSurfer — capability discovery and cross-app workflows",
   "version": "1.0.0",
   "manifest_version": 3,
   "background": {
