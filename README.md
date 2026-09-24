@@ -17,8 +17,8 @@ OpenSurfer Browser
 │   └── Capabilities tab          ← new: discovered apps, workflows, compose
 │
 ├── packages/core                 ← OpenBrowser's AI layer (chat, agents, LLM providers)
-├── packages/sunder-runtime       ← new: capability discovery + workflow engine
-│   └── SunderClient              ← typed wrapper → opensurfer server (localhost:4173)
+├── packages/opensurfer-runtime   ← new: capability discovery + workflow engine
+│   └── OpenSurferClient          ← typed wrapper → opensurfer server (localhost:4173)
 │
 └── chromium/patches/
     ├── branding/                 ← OpenSurfer name + icons
@@ -27,7 +27,7 @@ OpenSurfer Browser
     └── opensurfer_observer/      ← planned: native network + DOM observation
 ```
 
-The **Sunder Runtime** (`packages/sunder-runtime`) is the capability engine:
+The **OpenSurfer Runtime** (`packages/opensurfer-runtime`) is the capability engine:
 - Connects to the local [opensurfer](https://github.com/opensurfer/opensurfer) server
 - Discovers what every connected app can do (no API docs, no connectors)
 - Composes multi-step workflows across apps in natural language
@@ -43,7 +43,7 @@ The **chat tab** uses OpenBrowser's existing AI infrastructure (`packages/core`)
 |---|---|
 | `packages/core` | OpenBrowser AI layer — LLM providers, agents, chat, memory |
 | `packages/extension` | Shared browser utilities |
-| `packages/sunder-runtime` | Sunder capability client — discovery, resolve, compose, run |
+| `packages/opensurfer-runtime` | OpenSurfer capability client — discovery, resolve, compose, run |
 | `chromium-extension` | React sidebar — Chat + Capabilities tabs |
 
 ---

@@ -1,4 +1,4 @@
-export { SunderClient } from "./client.js";
+export { OpenSurferClient } from "./client.js";
 export type {
   Capability,
   CapabilityInput,
@@ -9,7 +9,7 @@ export type {
   WorkflowStepResult,
   WorkflowResult,
   ResolveResult,
-  SunderConfig,
+  OpenSurferConfig,
   Effect,
   Policy,
 } from "./types.js";

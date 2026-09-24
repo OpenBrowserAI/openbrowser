@@ -3,19 +3,19 @@ import type {
   WorkflowPlan,
   WorkflowResult,
   ResolveResult,
-  SunderConfig,
+  OpenSurferConfig,
 } from "./types.js";
 
-export class SunderClient {
+export class OpenSurferClient {
   private base: string;
 
-  constructor(config: SunderConfig = {}) {
+  constructor(config: OpenSurferConfig = {}) {
     this.base = (config.serverUrl ?? "http://localhost:4173").replace(/\/$/, "");
   }
 
   private async get<T>(path: string): Promise<T> {
     const res = await fetch(`${this.base}${path}`);
-    if (!res.ok) throw new Error(`sunder ${path}: ${res.status}`);
+    if (!res.ok) throw new Error(`opensurfer ${path}: ${res.status}`);
     return res.json() as Promise<T>;
   }
 
@@ -25,7 +25,7 @@ export class SunderClient {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`sunder ${path}: ${res.status}`);
+    if (!res.ok) throw new Error(`opensurfer ${path}: ${res.status}`);
     return res.json() as Promise<T>;
   }
 

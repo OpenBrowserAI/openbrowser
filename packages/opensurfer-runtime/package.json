@@ -1,5 +1,5 @@
 {
-  "name": "@opensurfer/sunder-runtime",
+  "name": "@opensurfer/runtime",
   "version": "0.1.0",
   "description": "Capability discovery and workflow execution engine for OpenSurfer Browser",
   "type": "module",

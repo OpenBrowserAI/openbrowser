@@ -1,5 +1,5 @@
 packages:
   - "packages/core"
   - "packages/extension"
-  - "packages/sunder-runtime"
+  - "packages/opensurfer-runtime"
   - "chromium-extension"

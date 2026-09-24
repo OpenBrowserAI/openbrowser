@@ -84,7 +84,7 @@ export interface ResolveResult {
   effect: Effect;
 }
 
-export interface SunderConfig {
+export interface OpenSurferConfig {
   /** Base URL of the opensurfer control room. Defaults to http://localhost:4173 */
   serverUrl?: string;
 }
