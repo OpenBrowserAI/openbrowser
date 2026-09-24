@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import { ChatInput } from "./components/ChatInput";
 import { SessionHistory } from "./components/SessionHistory";
 import { CapabilitiesTab } from "./components/CapabilitiesTab";
+import { WorkflowsTab } from "./components/WorkflowsTab";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { MessageItem } from "./components/MessageItem";
 import type { ChatMessage, UploadedFile } from "./types";
@@ -14,7 +15,7 @@ import { message as AntdMessage, Button, Space } from "antd";
 import { HistoryOutlined, SettingOutlined } from "@ant-design/icons";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
-type Tab = "chat" | "capabilities";
+type Tab = "chat" | "capabilities" | "workflows";
 
 const AppRun = () => {
   const [activeTab, setActiveTab] = useState<Tab>("chat");
@@ -311,7 +312,7 @@ const AppRun = () => {
       <div className="flex items-center px-1 py-1 bg-gray-100 border-b border-gray-200">
         {/* Tab switcher */}
         <div className="flex items-center gap-0.5 flex-1">
-          {(["chat", "capabilities"] as Tab[]).map((tab) => (
+          {(["chat", "capabilities", "workflows"] as Tab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -319,7 +320,7 @@ const AppRun = () => {
                 "px-3 py-1 rounded text-xs font-medium capitalize transition-colors",
                 activeTab === tab
                   ? "bg-white text-gray-800 shadow-sm"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-200",
+                  : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"
               ].join(" ")}
             >
               {tab}
@@ -347,8 +348,21 @@ const AppRun = () => {
 
       {/* Capabilities tab */}
       {activeTab === "capabilities" && (
-        <div className="flex-1 overflow-hidden" style={{ background: "var(--chrome-bg-secondary)" }}>
+        <div
+          className="flex-1 overflow-hidden"
+          style={{ background: "var(--chrome-bg-secondary)" }}
+        >
           <CapabilitiesTab />
+        </div>
+      )}
+
+      {/* Workflows tab */}
+      {activeTab === "workflows" && (
+        <div
+          className="flex-1 overflow-hidden"
+          style={{ background: "var(--chrome-bg-secondary)" }}
+        >
+          <WorkflowsTab />
         </div>
       )}
 

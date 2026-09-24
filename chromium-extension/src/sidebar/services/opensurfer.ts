@@ -100,3 +100,57 @@ export async function runWorkflow(
 ): Promise<WorkflowResult> {
   return post<WorkflowResult>("/api/workflow/run", { plan, confirm });
 }
+
+// ── triggers ──────────────────────────────────────────────────────────────
+
+export interface Trigger {
+  id: string;
+  name: string;
+  trigger: {
+    type: "poll" | "webhook";
+    system?: string;
+    capability?: string;
+    inputs?: Record<string, unknown>;
+    interval?: number;
+  };
+  workflowPlan?: WorkflowPlan;
+  composeGoal?: string;
+  enabled: boolean;
+  createdAt: string;
+  lastFired: string | null;
+}
+
+export async function getTriggers(): Promise<Trigger[]> {
+  const data = await get<{ triggers: Trigger[] }>("/api/triggers");
+  return data.triggers ?? [];
+}
+
+export async function createTrigger(body: {
+  name: string;
+  trigger: Trigger["trigger"];
+  workflowPlan?: WorkflowPlan;
+  composeGoal?: string;
+}): Promise<Trigger> {
+  return post<Trigger>("/api/triggers", body);
+}
+
+async function req(method: string, path: string, body?: unknown): Promise<any> {
+  const res = await fetch(`${BASE}${path}`, {
+    method,
+    headers: { "content-type": "application/json" },
+    ...(body ? { body: JSON.stringify(body) } : {})
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  return res.json();
+}
+
+export async function updateTrigger(
+  id: string,
+  patch: Partial<Trigger>
+): Promise<Trigger> {
+  return req("PATCH", `/api/triggers/${id}`, patch);
+}
+
+export async function deleteTrigger(id: string): Promise<void> {
+  await req("DELETE", `/api/triggers/${id}`);
+}
