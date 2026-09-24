@@ -1,4 +1,5 @@
 packages:
   - "packages/core"
   - "packages/extension"
+  - "packages/sunder-runtime"
   - "chromium-extension"

@@ -1,25 +1,83 @@
-# OpenBrowser
+# OpenSurfer Browser
 
-OpenBrowser is an open-source, AI-native browser built on Chromium — a truly privacy-first alternative to ChatGPT Atlas, Perplexity Comet, and Dia. Instead of sending your data away, OpenBrowser brings powerful AI directly into your browser, so you stay in control.
+A Chromium-based browser that learns what software can do by watching you use it — then lets AI operate any app you've connected, compose cross-app workflows, and chat with full awareness of your software stack.
 
-## Key Features
+Built on [OpenBrowser](https://github.com/OpenBrowserAI/openbrowser).
 
-- **Native AI Agents**: Run AI agents directly in your browser without external services
-- **Privacy First**: Use your own API keys or run local models - your data never leaves your computer
-- **Open Source**: Fully transparent and community-driven development
-- **Chromium-Based**: Built on the trusted Chromium foundation for compatibility and performance
+---
 
-## Community
+## Architecture
 
-Join us and help shape the future of AI-powered browsing:
+```
+OpenSurfer Browser
+├── Chromium shell                ← OpenBrowser fork (branding, theme, UI patches)
+│
+├── chromium-extension/           ← Sidebar (React + TypeScript)
+│   ├── Chat tab                  ← OpenBrowser's AI chat, unchanged
+│   └── Capabilities tab          ← new: discovered apps, workflows, compose
+│
+├── packages/core                 ← OpenBrowser's AI layer (chat, agents, LLM providers)
+├── packages/sunder-runtime       ← new: capability discovery + workflow engine
+│   └── SunderClient              ← typed wrapper → opensurfer server (localhost:4173)
+│
+└── chromium/patches/
+    ├── branding/                 ← OpenSurfer name + icons
+    ├── theme/                    ← UI patches
+    ├── openbrowser_integration/  ← sidebar injection
+    └── opensurfer_observer/      ← planned: native network + DOM observation
+```
 
-- **Discord**: [Join our community](https://discord.gg/FTq7WwYYJp)
-- **X (Twitter)**: [Follow us @openbrowser_ai](https://x.com/openbrowser_ai)
+The **Sunder Runtime** (`packages/sunder-runtime`) is the capability engine:
+- Connects to the local [opensurfer](https://github.com/opensurfer/opensurfer) server
+- Discovers what every connected app can do (no API docs, no connectors)
+- Composes multi-step workflows across apps in natural language
+- Executes capabilities through a trust gate (read/write/destructive)
+
+The **chat tab** uses OpenBrowser's existing AI infrastructure (`packages/core`) with support for Anthropic, OpenAI, Gemini, Bedrock, and local models.
+
+---
+
+## Packages
+
+| package | description |
+|---|---|
+| `packages/core` | OpenBrowser AI layer — LLM providers, agents, chat, memory |
+| `packages/extension` | Shared browser utilities |
+| `packages/sunder-runtime` | Sunder capability client — discovery, resolve, compose, run |
+| `chromium-extension` | React sidebar — Chat + Capabilities tabs |
+
+---
+
+## Getting started
+
+### Extension only (no Chromium build)
+
+```bash
+git clone https://github.com/opensurfer/browser
+cd browser
+pnpm install
+cd chromium-extension && pnpm build
+```
+
+Load `chromium-extension/dist` as an unpacked extension in Chrome.
+
+Start the opensurfer capability server:
+
+```bash
+git clone https://github.com/opensurfer/opensurfer
+cd opensurfer && node server.mjs
+```
+
+### Full browser build
+
+See [chromium/contributing.md](./chromium/contributing.md) for the full Chromium build setup (depot_tools, ~20GB source fetch, autoninja).
+
+---
 
 ## Contributing
 
-We welcome contributions! Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on how to get started.
+See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 ## License
 
-OpenBrowser is open source under MIT licence
+MIT — see [LICENSE](./LICENSE). Forked from [OpenBrowserAI/openbrowser](https://github.com/OpenBrowserAI/openbrowser).
