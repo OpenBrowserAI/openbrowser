@@ -394,6 +394,55 @@ async function handleOsTrace(_requestId: string, data: any): Promise<void> {
   }
 }
 
+// ── session bridge ────────────────────────────────────────────────────────────
+// Polls the opensurfer server for queued capability runs, executes them in the
+// extension's context (which carries the user's cookies/auth), returns results.
+async function sessionBridgeTick(): Promise<void> {
+  let job: any;
+  try {
+    const res = await fetch("http://localhost:4173/api/session-queue");
+    job = await res.json();
+  } catch {
+    return; // server not running
+  }
+  if (!job?.id) return;
+
+  const { id, method = "GET", url, headers = {}, body } = job.req ?? job;
+  let result: any;
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: { "content-type": "application/json", ...headers },
+      body: body ?? undefined,
+      credentials: "include"
+    });
+    const text = await response.text();
+    let parsed: any;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      parsed = text.slice(0, 4000);
+    }
+    result = { status: response.status, ok: response.ok, body: parsed };
+  } catch (e: any) {
+    result = { status: 0, ok: false, error: e.message };
+  }
+
+  try {
+    await fetch(`http://localhost:4173/api/session-result/${id}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(result)
+    });
+  } catch {
+    // server went away
+  }
+}
+
+function startSessionBridge(): void {
+  setInterval(sessionBridgeTick, 2000);
+}
+
 const eventHandlers: Record<
   string,
   (requestId: string, data: any) => Promise<void>
@@ -445,3 +494,5 @@ if ((chrome as any).sidePanel) {
   // open panel on action click
   (chrome as any).sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 }
+
+startSessionBridge();
