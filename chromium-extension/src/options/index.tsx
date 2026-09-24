@@ -241,7 +241,7 @@ const OptionsPage = () => {
           <div className="flex items-center gap-4">
             <img
               src={isDarkMode ? "/icon_dark.png" : "/icon_light.png"}
-              alt="OpenBrowser Logo"
+              alt="OpenSurfer Logo"
               className="w-12 h-12 radius-8px"
             />
             <div>
