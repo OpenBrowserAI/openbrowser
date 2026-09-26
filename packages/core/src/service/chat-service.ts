@@ -24,6 +24,7 @@ export default interface ChatService {
       livecrawl?: "fallback" | "preferred";
       type?: "auto" | "fast" | "deep";
       contextMaxCharacters?: number;
+      provider?: "exa" | "tavily";
     }
   ): Promise<WebSearchResult[]>;
 }
