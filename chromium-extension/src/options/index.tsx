@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { Form, Input, Button, message, Select, Checkbox, Spin } from "antd";
+import { Form, Input, Button, message, Select, Checkbox, Spin, Radio } from "antd";
 import { SaveOutlined, LoadingOutlined } from "@ant-design/icons";
 import "../sidebar/index.css";
 import { ThemeProvider } from "../sidebar/providers/ThemeProvider";
@@ -34,7 +34,9 @@ const OptionsPage = () => {
 
   const [webSearchConfig, setWebSearchConfig] = useState({
     enabled: false,
-    apiKey: ""
+    apiKey: "",
+    provider: "exa" as "exa" | "tavily",
+    tavilyApiKey: ""
   });
 
   const [historyLLMConfig, setHistoryLLMConfig] = useState<Record<string, any>>(
@@ -124,10 +126,17 @@ const OptionsPage = () => {
           setHistoryLLMConfig(result.historyLLMConfig);
         }
         if (result.webSearchConfig) {
-          setWebSearchConfig(result.webSearchConfig);
+          setWebSearchConfig({
+            enabled: result.webSearchConfig.enabled || false,
+            apiKey: result.webSearchConfig.apiKey || "",
+            provider: result.webSearchConfig.provider || "exa",
+            tavilyApiKey: result.webSearchConfig.tavilyApiKey || ""
+          });
           form.setFieldsValue({
             webSearchEnabled: result.webSearchConfig.enabled,
-            exaApiKey: result.webSearchConfig.apiKey
+            exaApiKey: result.webSearchConfig.apiKey,
+            webSearchProvider: result.webSearchConfig.provider || "exa",
+            tavilyApiKey: result.webSearchConfig.tavilyApiKey
           });
         }
       }
@@ -138,7 +147,7 @@ const OptionsPage = () => {
     form
       .validateFields()
       .then((value) => {
-        const { webSearchEnabled, exaApiKey, ...llmConfigValue } = value;
+        const { webSearchEnabled, exaApiKey, webSearchProvider, tavilyApiKey, ...llmConfigValue } = value;
 
         setConfig(llmConfigValue);
         setHistoryLLMConfig({
@@ -148,7 +157,9 @@ const OptionsPage = () => {
 
         const newWebSearchConfig = {
           enabled: webSearchEnabled || false,
-          apiKey: exaApiKey || ""
+          apiKey: exaApiKey || "",
+          provider: webSearchProvider || "exa",
+          tavilyApiKey: tavilyApiKey || ""
         };
         setWebSearchConfig(newWebSearchConfig);
 
@@ -401,7 +412,7 @@ const OptionsPage = () => {
               >
                 <Checkbox className="checkbox-theme text-theme-primary">
                   <span className="text-sm font-medium text-theme-primary">
-                    Enable web search (Exa AI)
+                    Enable web search
                   </span>
                 </Checkbox>
               </Form.Item>
@@ -409,33 +420,75 @@ const OptionsPage = () => {
               <Form.Item
                 noStyle
                 shouldUpdate={(prevValues, currentValues) =>
-                  prevValues.webSearchEnabled !== currentValues.webSearchEnabled
+                  prevValues.webSearchEnabled !== currentValues.webSearchEnabled ||
+                  prevValues.webSearchProvider !== currentValues.webSearchProvider
                 }
               >
                 {({ getFieldValue }) =>
                   getFieldValue("webSearchEnabled") ? (
-                    <Form.Item
-                      name="exaApiKey"
-                      label={
-                        <span className="text-sm font-medium text-theme-primary">
-                          Exa API Key{" "}
-                          <span
-                            className="text-theme-primary"
-                            style={{ opacity: 0.5 }}
-                          >
-                            (Optional)
+                    <>
+                      <Form.Item
+                        name="webSearchProvider"
+                        label={
+                          <span className="text-sm font-medium text-theme-primary">
+                            Search Provider
                           </span>
-                        </span>
-                      }
-                      tooltip="Uses free tier if not provided"
-                    >
-                      <Input.Password
-                        placeholder="sk-..."
-                        size="large"
-                        className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
-                        allowClear
-                      />
-                    </Form.Item>
+                        }
+                        initialValue="exa"
+                      >
+                        <Radio.Group>
+                          <Radio value="exa" className="text-theme-primary">Exa AI</Radio>
+                          <Radio value="tavily" className="text-theme-primary">Tavily</Radio>
+                        </Radio.Group>
+                      </Form.Item>
+
+                      {getFieldValue("webSearchProvider") === "tavily" ? (
+                        <Form.Item
+                          name="tavilyApiKey"
+                          label={
+                            <span className="text-sm font-medium text-theme-primary">
+                              Tavily API Key
+                            </span>
+                          }
+                          rules={[
+                            {
+                              required: true,
+                              message: "Tavily API key is required"
+                            }
+                          ]}
+                        >
+                          <Input.Password
+                            placeholder="tvly-..."
+                            size="large"
+                            className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
+                            allowClear
+                          />
+                        </Form.Item>
+                      ) : (
+                        <Form.Item
+                          name="exaApiKey"
+                          label={
+                            <span className="text-sm font-medium text-theme-primary">
+                              Exa API Key{" "}
+                              <span
+                                className="text-theme-primary"
+                                style={{ opacity: 0.5 }}
+                              >
+                                (Optional)
+                              </span>
+                            </span>
+                          }
+                          tooltip="Uses free tier if not provided"
+                        >
+                          <Input.Password
+                            placeholder="sk-..."
+                            size="large"
+                            className="w-full bg-theme-input border-theme-input text-theme-primary input-theme-focus radius-8px"
+                            allowClear
+                          />
+                        </Form.Item>
+                      )}
+                    </>
                   ) : null
                 }
               </Form.Item>
