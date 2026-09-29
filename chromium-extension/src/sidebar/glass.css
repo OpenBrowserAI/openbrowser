@@ -319,3 +319,67 @@ body {
   background: var(--sidebar-row-subtle-active-surface);
   color: hsl(var(--foreground));
 }
+
+/* ============================================================
+   Utility override layer.
+   The content components still ship hardcoded light Tailwind color
+   utilities from the original design. Remap them to the Buzz tokens
+   so the whole surface — composer, cards, message text, tab bodies —
+   reads as the same warm-dark canvas instead of light grey. Scoped
+   under .os-shell so specificity (2 classes) beats the stock utility.
+   ============================================================ */
+
+/* Surfaces */
+.os-shell .bg-white,
+.os-shell .bg-gray-50,
+.os-shell .bg-gray-100 {
+  background-color: transparent !important;
+}
+/* Elevated blocks that genuinely need a fill (cards, inputs) get a
+   translucent token surface rather than full transparency. */
+.os-shell .os-card,
+.os-shell .ant-input,
+.os-shell textarea,
+.os-shell input[type="text"] {
+  background-color: hsl(var(--card) / 0.5) !important;
+}
+
+/* Borders */
+.os-shell .border-gray-100,
+.os-shell .border-gray-200,
+.os-shell .border-gray-300 {
+  border-color: hsl(var(--sidebar-border) / 0.6) !important;
+}
+
+/* Text */
+.os-shell .text-gray-900 {
+  color: hsl(var(--foreground)) !important;
+}
+.os-shell .text-gray-700,
+.os-shell .text-gray-600 {
+  color: hsl(var(--foreground) / 0.85) !important;
+}
+.os-shell .text-gray-500,
+.os-shell .text-gray-400 {
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+/* Hover states */
+.os-shell .hover\:bg-gray-50:hover,
+.os-shell .hover\:bg-gray-100:hover {
+  background-color: var(--sidebar-row-subtle-active-surface) !important;
+}
+.os-shell .hover\:text-gray-700:hover {
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Ant inputs/controls */
+.os-shell .ant-input,
+.os-shell .ant-input-affix-wrapper {
+  color: hsl(var(--foreground)) !important;
+  border-color: hsl(var(--border) / 0.7) !important;
+}
+.os-shell .ant-input::placeholder,
+.os-shell textarea::placeholder {
+  color: hsl(var(--muted-foreground)) !important;
+}
