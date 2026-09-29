@@ -285,11 +285,26 @@ body {
   font-size: var(--text-sm);
 }
 
-/* Composer — transparent over the canvas with a hairline top border. */
+/* Composer — a rounded input dock floating over the canvas, Buzz-style. */
 .os-composer {
-  padding: 8px 10px 12px;
-  border-top: 1px solid hsl(var(--sidebar-border) / 0.6);
+  padding: 10px 12px 14px;
   background: transparent;
+}
+.os-composer-box {
+  border: 1px solid hsl(var(--border) / 0.7);
+  border-radius: var(--radius);
+  background: hsl(var(--card) / 0.55);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12);
+  overflow: hidden;
+}
+.os-composer-box:focus-within {
+  border-color: hsl(var(--ring) / 0.5);
+}
+.os-composer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 6px 6px;
 }
 
 /* Thin scrollbars tinted by the row-state color. */
@@ -382,4 +397,42 @@ body {
 .os-shell .ant-input::placeholder,
 .os-shell textarea::placeholder {
   color: hsl(var(--muted-foreground)) !important;
+}
+
+/* The extension's own theme-* utilities are wired to Chrome's theme vars,
+   which don't match Buzz. Remap them onto the Buzz tokens. Two-class
+   specificity beats the single-class utility even with !important. */
+.os-shell .bg-theme-input,
+.os-shell .bg-theme-input * {
+  background-color: hsl(var(--card) / 0.55) !important;
+}
+.os-shell .bg-theme-primary {
+  background-color: transparent !important;
+}
+.os-shell .bg-theme-secondary {
+  background-color: hsl(var(--card) / 0.35) !important;
+}
+.os-shell .border-theme-input,
+.os-shell .border-theme-primary,
+.os-shell .border-theme-secondary {
+  border-color: hsl(var(--border) / 0.7) !important;
+}
+.os-shell .text-theme-primary,
+.os-shell .text-theme-primary * {
+  color: hsl(var(--foreground)) !important;
+}
+.os-shell .text-theme-icon,
+.os-shell .text-theme-icon * {
+  color: hsl(var(--muted-foreground)) !important;
+}
+.os-shell .fill-theme-icon,
+.os-shell .fill-theme-icon svg,
+.os-shell .fill-theme-icon svg * {
+  fill: hsl(var(--muted-foreground)) !important;
+}
+
+/* The composer container in ChatInput — give it the Buzz dock look. */
+.os-shell .bg-theme-input.radius-8px {
+  border-radius: var(--radius) !important;
+  background-color: hsl(var(--card) / 0.55) !important;
 }
