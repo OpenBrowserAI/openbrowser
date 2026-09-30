@@ -7,12 +7,7 @@ import { WorkflowCard } from "./WorkflowCard";
 import { MarkdownRenderer } from "../MarkdownRenderer";
 import { AgentExecutionCard } from "./AgentExecutionCard";
 import { Typography, Image, Spin } from "antd";
-import {
-  RobotOutlined,
-  UserOutlined,
-  FileOutlined,
-  ExclamationCircleOutlined
-} from "@ant-design/icons";
+import { Bot, User, File as FileIcon, CircleAlert } from "lucide-react";
 
 const { Text, Paragraph } = Typography;
 
@@ -123,7 +118,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         {/* User Icon */}
         <div className="flex-shrink-0">
           <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-            <UserOutlined className="text-gray-600" />
+            <User size={15} className="text-gray-600" />
           </div>
         </div>
 
@@ -156,7 +151,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                       />
                     ) : (
                       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded border border-gray-200">
-                        <FileOutlined className="text-gray-500" />
+                        <FileIcon size={14} className="text-gray-500" />
                         <Text className="text-gray-700 text-sm">
                           {file.filename}
                         </Text>
@@ -178,7 +173,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       {/* AI Icon */}
       <div className="flex-shrink-0">
         <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-          <RobotOutlined className="text-gray-600" />
+          <Bot size={15} className="text-gray-600" />
         </div>
       </div>
 
@@ -263,7 +258,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         )}
         {message.error && (
           <div className="mt-2 flex items-start gap-2 text-sm text-red-600">
-            <ExclamationCircleOutlined className="mt-0.5" />
+            <CircleAlert size={14} className="mt-0.5" />
             <span>{String(message.error)}</span>
           </div>
         )}

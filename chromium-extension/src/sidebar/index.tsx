@@ -12,7 +12,7 @@ import { useChatCallbacks } from "./hooks/useChatCallbacks";
 import { useSessionManagement } from "./hooks/useSessionManagement";
 import { ThemeProvider } from "./providers/ThemeProvider";
 import { message as AntdMessage } from "antd";
-import { HistoryOutlined, SettingOutlined } from "@ant-design/icons";
+import { History, Settings } from "lucide-react";
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 type Tab = "chat" | "capabilities" | "workflows";
@@ -337,7 +337,7 @@ const AppRun = () => {
               aria-label="Session history"
               onClick={handleShowSessionHistory}
             >
-              <HistoryOutlined />
+              <History size={16} strokeWidth={2} />
             </button>
             <button
               type="button"
@@ -345,7 +345,7 @@ const AppRun = () => {
               aria-label="Settings"
               onClick={() => chrome.runtime.openOptionsPage()}
             >
-              <SettingOutlined />
+              <Settings size={16} strokeWidth={2} />
             </button>
           </div>
         )}

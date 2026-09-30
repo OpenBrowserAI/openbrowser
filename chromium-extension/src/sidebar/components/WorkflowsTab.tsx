@@ -8,14 +8,7 @@ import {
   Spin,
   Popconfirm
 } from "antd";
-import {
-  ThunderboltOutlined,
-  DeleteOutlined,
-  PlusOutlined,
-  ReloadOutlined,
-  ClockCircleOutlined,
-  ApiOutlined
-} from "@ant-design/icons";
+import { Zap, Trash2, Plus, RefreshCw, Clock, Webhook } from "lucide-react";
 import type { Trigger } from "../services/opensurfer";
 import * as opensurfer from "../services/opensurfer";
 
@@ -42,11 +35,13 @@ function TriggerCard({
   return (
     <div className="px-3 py-3 border-b border-gray-100 last:border-0">
       <div className="flex items-start gap-2">
-        <ThunderboltOutlined
+        <Zap
+          size={14}
           style={{
-            fontSize: 14,
             marginTop: 2,
-            color: trigger.enabled ? "#3b82f6" : "#9ca3af"
+            color: trigger.enabled
+              ? "hsl(var(--primary))"
+              : "hsl(var(--muted-foreground))"
           }}
         />
         <div className="flex-1 min-w-0">
@@ -67,7 +62,7 @@ function TriggerCard({
               className="text-xs block mt-0.5"
               style={{ color: "var(--chrome-text-primary)", opacity: 0.35 }}
             >
-              <ClockCircleOutlined className="mr-1" />
+              <Clock size={11} className="mr-1 inline" />
               last fired {new Date(trigger.lastFired).toLocaleString()}
             </Text>
           )}
@@ -80,7 +75,12 @@ function TriggerCard({
             okText="Delete"
             cancelText="Cancel"
           >
-            <Button type="text" size="small" icon={<DeleteOutlined />} danger />
+            <Button
+              type="text"
+              size="small"
+              icon={<Trash2 size={14} />}
+              danger
+            />
           </Popconfirm>
         </div>
       </div>
@@ -165,11 +165,11 @@ export function WorkflowsTab() {
   if (connected === false) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 p-6">
-        <ApiOutlined
+        <Webhook
+          size={40}
           style={{
-            fontSize: 40,
-            color: "var(--chrome-text-primary)",
-            opacity: 0.2
+            color: "hsl(var(--muted-foreground))",
+            opacity: 0.35
           }}
         />
         <Text
@@ -178,7 +178,7 @@ export function WorkflowsTab() {
         >
           OpenSurfer server not running
         </Text>
-        <Button icon={<ReloadOutlined />} size="small" onClick={load}>
+        <Button icon={<RefreshCw size={14} />} size="small" onClick={load}>
           Retry
         </Button>
       </div>
@@ -219,7 +219,7 @@ export function WorkflowsTab() {
           />
           <Button
             type="primary"
-            icon={<PlusOutlined />}
+            icon={<Plus size={15} />}
             loading={creating}
             onClick={handleCreate}
             disabled={!newGoal.trim()}
@@ -232,11 +232,11 @@ export function WorkflowsTab() {
       <div className="flex-1 overflow-y-auto bg-white">
         {triggers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
-            <ThunderboltOutlined
+            <Zap
+              size={32}
               style={{
-                fontSize: 32,
-                color: "var(--chrome-text-primary)",
-                opacity: 0.15
+                color: "hsl(var(--muted-foreground))",
+                opacity: 0.35
               }}
             />
             <Text
@@ -272,7 +272,7 @@ export function WorkflowsTab() {
             <Button
               type="text"
               size="small"
-              icon={<ReloadOutlined />}
+              icon={<RefreshCw size={14} />}
               onClick={load}
             />
           </Tooltip>

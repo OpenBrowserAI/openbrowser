@@ -1,12 +1,12 @@
 import React, { useRef } from "react";
 import {
-  SendOutlined,
-  StopOutlined,
-  FileOutlined,
-  DeleteOutlined,
-  PaperClipOutlined,
-  PlusOutlined
-} from "@ant-design/icons";
+  ArrowUp,
+  Square,
+  File as FileIcon,
+  X as XIcon,
+  Paperclip,
+  Plus
+} from "lucide-react";
 import type { UploadedFile } from "../types";
 import { Button, Space, Image, Typography } from "antd";
 import { WebpageMentionInput } from "./WebpageMentionInput";
@@ -66,7 +66,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                       preview={false}
                     />
                   ) : (
-                    <FileOutlined className="mr-2 fill-theme-icon" />
+                    <FileIcon size={14} className="mr-2" />
                   )}
                   <Text className="text-xs mr-2 max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-theme-primary">
                     {file.filename}
@@ -74,7 +74,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                   <Button
                     type="text"
                     size="small"
-                    icon={<DeleteOutlined />}
+                    icon={<XIcon size={14} />}
                     onClick={() => onRemoveFile(file.id)}
                     className="p-0 w-5 h-5"
                   />
@@ -114,7 +114,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           {/* Left: Attachment Button */}
           <Button
             type="text"
-            icon={<PaperClipOutlined />}
+            icon={<Paperclip size={16} />}
             onClick={() => fileInputRef.current?.click()}
             disabled={sending || currentMessageId !== null}
             className="text-gray-500 hover:text-gray-700"
@@ -125,14 +125,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             <Button
               type="text"
               danger
-              icon={<StopOutlined className="fill-red-500" />}
+              icon={<Square size={15} fill="currentColor" />}
               onClick={onStop}
               className="text-red-500"
             />
           ) : isEmpty ? (
             <Button
               type="text"
-              icon={<PlusOutlined className="fill-theme-icon" />}
+              icon={<Plus size={17} />}
               onClick={onNewSession}
               disabled={sending}
               className="text-theme-icon"
@@ -140,7 +140,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           ) : (
             <Button
               type="text"
-              icon={<SendOutlined className="fill-theme-icon" />}
+              icon={<ArrowUp size={17} />}
               onClick={onSend}
               loading={sending}
               disabled={sending}
